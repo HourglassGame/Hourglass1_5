@@ -18,7 +18,14 @@ BITMAP* buffer;
 char CurrentPath[_MAX_PATH];
 char levelPath[_MAX_PATH];
 char imagePath[_MAX_PATH];
-bool wall[31][21];
+
+
+const int level_width = 32;
+const int level_height = 21;
+
+const int block_size = 32;
+
+bool wall[level_width][level_height];
 
 void Draw()
 {
@@ -38,50 +45,28 @@ void StringAdd(char* string1, char* string2, char* newString)
     
 }
 
-void LoadLevel(char* fileName)
-{
+void LoadLevel(char* filePath)
+{      
+    // fixme: (level_height+1) should not be required
     ifstream inputFile;
-    char* filePath;
-    filePath = strcat(CurrentPath,"/resources/levels/");
-    int i;
-    for (i=0;filePath[i];i++);
-    for (int j=0;fileName[j];i++,j++) filePath[i] = fileName[j];
-   
     inputFile.open(filePath);
+    char wallString[level_width*(level_height+1)];
+    inputFile.getline(wallString, level_width*(level_height+1), '\n');
+    //textout_ex( buffer, font, wallString, 150, 450, makecol( 255, 0, 0), makecol( 0, 0, 0) );
 
-    for (int i = 0; i <= 31; ++i)
+    int i = 0;
+    for (int x = 0; x < level_width; ++x,++i)
     {
-        for (int j = 0; j <= 21; ++j)
+        for (int y = 0; y < level_height; ++y,++i)
         {
-            // wall map reading with 1 or 0 stream. level will be stored as a string of 1 and 0.
-            char testString[5];
-            inputFile.getline(testString, 5, '\n');
-            if (i == 0 && j == 0)
-            {
-                textout_ex( buffer, font, filePath, 150, 350, makecol( 255, 0, 0), makecol( 0, 0, 0) );
-            }
-            if (strcmp(testString,"False")) 
-            {
-                wall[i][j] = true;
-            } 
-            else
-            {
-                wall[i][j] = false;
-            }
+            char temp = wallString[i];
+            wall[x][y] = atoi(&temp); 
         }
     }
-    /* VB
-    For i = 0 To 31
-            For j = 0 To 21
-                wall(i, j) = oRead.ReadLine()
-            Next
-    Next
-    */
 }
 
 int main()
 {
-
     allegro_init();
     install_keyboard();
     set_color_depth(32);
@@ -89,7 +74,7 @@ int main()
     // GFX_AUTODETECT as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     
-    // Get working directory
+    // Get working directory and setup paths
     getcwd(CurrentPath, _MAX_PATH);
     char *levelPathName = "/resources/levels/";
     char *imagePathName = "/resources/images/";
@@ -109,10 +94,24 @@ int main()
     double step_interval = 0.029*CLOCKS_PER_SEC;
     draw_sprite( buffer, foreground, 0, 0);
 
+    // load level
+    StringAdd(levelPath,"testlevel.lvl",tempPath);
+    LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
+    
+    // test loaded level
+    for (int x = 0; x < level_width; ++x)
+    {
+        for (int y = 0; y < level_height; ++y)
+        {
+            if (wall[x][y])
+            {
+               rectfill( buffer, (x+0.4)*block_size, (y+0.4)*block_size, (x+0.6)*block_size, (y+0.6)*block_size, makecol ( 70, 70, 70));
+            } 
+        }
+    }
+    
     // game loop timing
     int count = 0;
-    
-    //LoadLevel("Level9.lvl");
     // Game Loop
     start_timer = clock();
     
