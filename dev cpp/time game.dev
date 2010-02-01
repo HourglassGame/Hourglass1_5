@@ -1,7 +1,7 @@
 [Project]
 FileName=time game.dev
 Name=time game
-UnitCount=1
+UnitCount=3
 Type=0
 Ver=1
 ObjFiles=
@@ -56,4 +56,24 @@ OriginalFilename=
 ProductName=
 ProductVersion=
 AutoIncBuildNr=0
+
+[Unit2]
+FileName=Guy.h
+CompileCpp=1
+Folder=time game
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit3]
+FileName=Guy.cpp
+CompileCpp=1
+Folder=time game
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
 

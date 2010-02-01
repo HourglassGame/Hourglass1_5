@@ -7,6 +7,10 @@
 #include <ctime> // for timing
 #include <fstream> // for file I/O
 
+#include "Guy.h"
+
+Guy player;
+
 using namespace std;
 
 // timing
@@ -14,7 +18,9 @@ double elpased_time;
 clock_t start_timer,finish_timer;
 
 BITMAP* foreground;
+BITMAP* guy_left;
 BITMAP* buffer;
+
 char CurrentPath[_MAX_PATH];
 char levelPath[_MAX_PATH];
 char imagePath[_MAX_PATH];
@@ -69,6 +75,11 @@ void LoadLevel(char* filePath)
     }
 }
 
+void drawGuy()
+{
+    
+}
+
 int main()
 {
     allegro_init();
@@ -93,6 +104,8 @@ int main()
     StringAdd(imagePath,"testlevel.bmp",tempPath);
     foreground = load_bitmap(tempPath, NULL);
     
+    StringAdd(imagePath,"rhino_left.bmp",tempPath);
+    guy_left = load_bitmap(tempPath, NULL);
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
     draw_sprite( buffer, foreground, 0, 0); // move to somewhere else
@@ -139,6 +152,8 @@ int main()
             count ++;
             sprintf(testString,"%d",count);
             textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed
+            
+            player.DrawSprite(buffer,guy_left);
             
             Draw(); // draw buffer to screen
             
