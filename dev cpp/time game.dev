@@ -1,7 +1,7 @@
 [Project]
 FileName=time game.dev
 Name=time game
-UnitCount=3
+UnitCount=5
 Type=0
 Ver=1
 ObjFiles=
@@ -71,6 +71,26 @@ BuildCmd=
 FileName=Guy.cpp
 CompileCpp=1
 Folder=time game
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit4]
+FileName=MetaGuy.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit5]
+FileName=MetaGuy..cpp
+CompileCpp=1
+Folder=
 Compile=1
 Link=1
 Priority=1000

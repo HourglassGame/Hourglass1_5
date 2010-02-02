@@ -7,9 +7,16 @@
 #include <ctime> // for timing
 #include <fstream> // for file I/O
 
+// Relative time: steps that the player has experianced since the start of the game.
+// Absolute time: steps since the start of the game.
+int relativeTime;
+int absoluteTime;
+
 #include "Guy.h"
+#include "MetaGuy.h"
 
 Guy player;
+MetaGuy metaguy;
 
 using namespace std;
 
@@ -19,6 +26,9 @@ clock_t start_timer,finish_timer;
 
 BITMAP* foreground;
 BITMAP* guy_left;
+BITMAP* guy_right;
+BITMAP* guy_left_stop;
+BITMAP* guy_right_stop;
 BITMAP* buffer;
 
 char CurrentPath[_MAX_PATH];
@@ -56,6 +66,7 @@ void StringAdd(char* string1, char* string2, char* newString)
 
 void LoadLevel(char* filePath)
 {      
+    
     // fixme: (level_height+1) should not be required
     ifstream inputFile;
     inputFile.open(filePath);
@@ -75,13 +86,24 @@ void LoadLevel(char* filePath)
     }
 }
 
-void drawGuy()
+BITMAP* LoadImage(char* imageName)
 {
-    
+    char tempPath[_MAX_PATH];
+    StringAdd(imagePath,imageName,tempPath);
+    BITMAP* tempBitmap;
+    tempBitmap = load_bitmap(tempPath, NULL);
+    if (!tempBitmap)
+    {
+        char tempString[_MAX_PATH+30];
+        StringAdd("Error Loading image, path: ",tempPath,tempString);
+        allegro_message(tempString, allegro_error);
+    }
+    return tempBitmap;
 }
 
 int main()
 {
+
     allegro_init();
     install_keyboard();
     set_color_depth(32);
@@ -99,35 +121,42 @@ int main()
     StringAdd(CurrentPath,levelPathName,levelPath);
     StringAdd(CurrentPath,imagePathName,imagePath);
     
-    // how to load images
-    char tempPath[_MAX_PATH];
-    StringAdd(imagePath,"testlevel.bmp",tempPath);
-    foreground = load_bitmap(tempPath, NULL);
+    //load images
+    foreground = LoadImage("testlevel.bmp");
+    guy_left = LoadImage("rhino_left.bmp");
+    guy_right = LoadImage("rhino_right.bmp");
+    guy_left_stop = LoadImage("rhino_left_stop.bmp");
+    guy_right_stop = LoadImage("rhino_right_stop.bmp");
     
-    StringAdd(imagePath,"rhino_left.bmp",tempPath);
-    guy_left = load_bitmap(tempPath, NULL);
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
     draw_sprite( buffer, foreground, 0, 0); // move to somewhere else
 
-    // load level
+    // load level 
+    char tempPath[_MAX_PATH];
     StringAdd(levelPath,"testlevel.lvl",tempPath);
     LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
     
     // test loaded level
+    /*
     for (int x = 0; x < level_width; ++x)
     {
         for (int y = 0; y < level_height; ++y)
         {
+            //char testString[20];
+            //sprintf(testString,"%d",wall[x][y]);
+            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
+            
             if (wall[x][y])
             {
                rectfill( buffer, (x+0.4)*block_size, (y+0.4)*block_size, (x+0.6)*block_size, (y+0.6)*block_size, makecol ( 70, 70, 70));
             } 
         }
     }
+    */
     
-    // game loop timing
-    int count = 0;
+    player.SetStart(double(200),double(200),0,0,0,0);
+    
     // Game Loop 
     double step_interval = 0.029*CLOCKS_PER_SEC; // minimun time between steps
     start_timer = clock(); // timers for stable steps/second
@@ -141,19 +170,24 @@ int main()
         {
             start_timer = clock(); 
             
-            // blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
-            rectfill( buffer, 100, 100, 250, 250, makecol ( 0, 0, 0));
-            
+            // float to string:
+            //arg3(string) = arg1(double) to string with arg2(int) figures.
+            //gcvt(elpased_time, 10, testString);
+
+            //blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
+            rectfill( buffer, 100, 100, 250, 350, makecol ( 0, 0, 0));
             char testString[20];
-            // arg3(string) = arg1(double) to string with arg2(int) figures.
-            gcvt(elpased_time, 10, testString);
-            textout_ex( buffer, font, tempPath, 150, 150, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // check path works
-            
-            count ++;
-            sprintf(testString,"%d",count);
+            sprintf(testString,"%d",relativeTime);
             textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed
             
-            player.DrawSprite(buffer,guy_left);
+            metaguy.GetInput(relativeTime);
+            
+            player.ForwardTimeStep(absoluteTime);
+            
+            player.DrawSprite(absoluteTime);
+            
+            relativeTime++;
+            absoluteTime++;
             
             Draw(); // draw buffer to screen
             
@@ -163,6 +197,10 @@ int main()
     // remember to cleanup all bitmaps
     destroy_bitmap( foreground);
     destroy_bitmap( buffer);
+    destroy_bitmap( guy_left);
+    destroy_bitmap( guy_right);
+    destroy_bitmap( guy_left_stop);
+    destroy_bitmap( guy_right_stop);
     
     //readkey();
     
@@ -170,3 +208,5 @@ int main()
     
 }   
 END_OF_MAIN();
+
+
