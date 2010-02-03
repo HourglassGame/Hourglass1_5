@@ -12,17 +12,25 @@ public:
     
     int GetOrder();
     void SetOrder(int newOrder);
+    
+    void SetId(int newId);
 
     void DrawSprite(int time); 
-    void Guy::unDrawSprite();
+    void unDrawSprite();
     
     void SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time); 
     void ForwardTimeStep(int time);
 
 protected:
+
+    int id; // array number in guy array
     
+    // where drawing occured last time
     int prevDrawX;
     int prevDrawY;
+    bool prevDrawHead; 
+    //Was something (arrow, box etc..) drawn above my head? 
+    //Then I guess I'd better erase 'else it will clutter up the next frame.
     
     // position in absolute time
     double x[5400];
@@ -33,6 +41,8 @@ protected:
     // start times, for spawning
     int startAbsTime;
     int startRelTime;
+    
+    bool carryingBox; // Am I carrying a box? Well, am I?
     
     int timeOffset; // difference between start rel and abs time
     

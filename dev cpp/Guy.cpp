@@ -1,14 +1,19 @@
 #include "Guy.h"
+#include "Box.h"
 #include "MetaGuy.h"
 #include <math.h>
 #include <iostream> 
 
+// bitmaps used to draw
 extern BITMAP* guy_left;
 extern BITMAP* guy_right;
 extern BITMAP* guy_left_stop;
 extern BITMAP* guy_right_stop;
 
+extern BITMAP* box_sprite;
+
 extern BITMAP* background;
+extern BITMAP* foreground;
 extern BITMAP* buffer;
 
 // wall segment count within level
@@ -18,18 +23,31 @@ const int block_size = 32;
 
 extern bool wall[level_width][level_height];
 extern MetaGuy metaguy;
+
+// external objects for collision ect..
+extern int guyCount;
 extern Guy guy[];
 
-extern int guyCount;
+extern int boxCount;
+extern Box box[];
 
 extern int relativeTime;
 extern int absoluteTime;
 extern int propagationAim;
 
+// physics magic numbers
 const double moveSpeed = 3.6;
 const double jumpSpeed = 8;
 const double gravity = 0.17;
 
+// box variables
+const int boxCarryOffsetX = -7;
+const int boxCarryOffsetY = -32;
+const int boxWidth = 32;
+const int boxHeight = 32;
+const int boxcSize = 12; // size from top of box that can be collided with
+
+// collision width and height
 const int cWidth = 24;
 const int cHeight = 32;
 
@@ -64,6 +82,12 @@ void Guy::SetOrder(int newOrder)
 {
     order = newOrder;
 }
+
+void Guy::SetId(int newId)
+{
+    id = newId;
+}
+
 void Guy::ForwardTimeStep(int time)
 {
     // input is in relative time
@@ -139,6 +163,25 @@ void Guy::ForwardTimeStep(int time)
             }
         }
         
+        //check Box collision in Y direction
+        if (ySpeed[time] > 0) // down
+        {
+             for (int i = 0; i < boxCount; ++i)
+            {
+                if (time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
+                {
+                    double boxX = box[i].GetX(time-1)+box[i].GetXspeed(time-1);
+                    double boxY = box[i].GetY(time-1)+box[i].GetYspeed(time-1);
+                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (newY+cHeight <= boxY+boxcSize) )
+                    {
+                        ySpeed[time] = 0;
+                        newY = boxY-cHeight;
+                        jump = true;
+                    }
+                }
+            }
+        }
+        
         // set new locations
         x[time] = newX;
         y[time] = newY;
@@ -199,6 +242,12 @@ void Guy::unDrawSprite()
         blit(background ,buffer ,prevDrawX-block_size,prevDrawY-block_size,prevDrawX,prevDrawY,23,32);
         //rectfill( buffer ,prevDrawX , prevDrawY, prevDrawX+23, prevDrawY+31, makecol ( 0, 0, 0));
         prevDrawX = 0;
+        if (prevDrawHead)
+        {
+            blit(background ,buffer ,prevDrawX-block_size+boxCarryOffsetX,prevDrawY-block_size+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
+            masked_blit(foreground ,buffer ,prevDrawX-block_size+boxCarryOffsetX,prevDrawY-block_size+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
+            prevDrawHead = false;   
+        }
     }
 }
 

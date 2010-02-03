@@ -16,10 +16,13 @@ int absoluteTime;
 int propagationAim;
 
 #include "Guy.h"
+#include "Box.h"
 #include "MetaGuy.h"
 
 Guy guy[100];
 int guyCount; // number of guys 'created'
+Box box[100];
+int boxCount; // number of boxes 'created'
 
 MetaGuy metaguy; // Stores input in relative time
 
@@ -30,12 +33,14 @@ double elpased_time;
 clock_t start_timer,finish_timer;
 
 // images
-BITMAP* foreground;
-BITMAP* background;
 BITMAP* guy_left;
 BITMAP* guy_right;
 BITMAP* guy_left_stop;
 BITMAP* guy_right_stop;
+BITMAP* box_sprite;
+
+BITMAP* foreground;
+BITMAP* background;
 BITMAP* buffer;
 
 // file paths
@@ -138,6 +143,7 @@ int main()
     guy_right = LoadImage("rhino_right.bmp");
     guy_left_stop = LoadImage("rhino_left_stop.bmp");
     guy_right_stop = LoadImage("rhino_right_stop.bmp");
+    box_sprite = LoadImage("box.bmp");
     
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
@@ -168,9 +174,26 @@ int main()
     }
     */
     
-    guy[0].SetStart(double(200),double(200),0,0,0,0);
+    box[boxCount].SetStart(double(300),double(200),0,0,0);
+    box[boxCount].SetId(boxCount);
+    boxCount = 1;
+    
+    box[boxCount].SetStart(double(400),double(200),0,0,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    box[boxCount].SetStart(double(380),double(160),0,0,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+     box[boxCount].SetStart(double(360),double(100),0,0,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    guy[guyCount].SetStart(double(200),double(200),0,0,0,0);
     guyCount = 1;
     guy[0].SetOrder(guyCount);
+   
     
     // Game Loop 
     double step_interval = 0.029*CLOCKS_PER_SEC; // minimun time between steps
@@ -208,6 +231,15 @@ int main()
                 metaguy.GetInput(relativeTime);
             }
             
+            for (int i = 0; i < boxCount; ++i)
+            {
+                box[i].ForwardTimeStep(absoluteTime);
+                if (!propagationAim)
+                {
+                    box[i].unDrawSprite();
+                }
+            }
+            
             for (int i = 0; i < guyCount; ++i)
             {
                 guy[i].ForwardTimeStep(absoluteTime);
@@ -219,6 +251,10 @@ int main()
             
             if (!propagationAim)
             {
+                 for (int i = 0; i < boxCount; ++i)
+                {
+                    box[i].DrawSprite(absoluteTime);
+                }
                 for (int i = 0; i < guyCount; ++i)
                 {
                     guy[i].DrawSprite(absoluteTime);
