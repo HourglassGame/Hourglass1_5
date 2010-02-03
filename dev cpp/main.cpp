@@ -11,14 +11,17 @@
 // Absolute time: steps since the start of the game.
 int relativeTime;
 int absoluteTime;
+
+// the time which propagation will stop at
 int propagationAim;
 
 #include "Guy.h"
 #include "MetaGuy.h"
 
 Guy guy[100];
-int guyCount;
-MetaGuy metaguy;
+int guyCount; // number of guys 'created'
+
+MetaGuy metaguy; // Stores input in relative time
 
 using namespace std;
 
@@ -26,16 +29,19 @@ using namespace std;
 double elpased_time;
 clock_t start_timer,finish_timer;
 
+// images
 BITMAP* foreground;
+BITMAP* background;
 BITMAP* guy_left;
 BITMAP* guy_right;
 BITMAP* guy_left_stop;
 BITMAP* guy_right_stop;
 BITMAP* buffer;
 
-char CurrentPath[_MAX_PATH];
-char levelPath[_MAX_PATH];
-char imagePath[_MAX_PATH];
+// file paths
+char CurrentPath[_MAX_PATH]; // .exe path
+char levelPath[_MAX_PATH]; // .lvl path
+char imagePath[_MAX_PATH]; // .bmp path
 
 // wall segment count within level
 const int level_width = 32;
@@ -69,7 +75,7 @@ void StringAdd(char* string1, char* string2, char* newString)
 void LoadLevel(char* filePath)
 {      
     
-    // fixme: (level_height+1) should not be required
+    // fixme: (level_height+1) should not be required. Redo level format to fix when creating editor
     ifstream inputFile;
     inputFile.open(filePath);
     char wallString[level_width*(level_height+1)];
@@ -90,6 +96,7 @@ void LoadLevel(char* filePath)
 
 BITMAP* LoadImage(char* imageName)
 {
+    // loads a bitmap
     char tempPath[_MAX_PATH];
     StringAdd(imagePath,imageName,tempPath);
     BITMAP* tempBitmap;
@@ -105,11 +112,10 @@ BITMAP* LoadImage(char* imageName)
 
 int main()
 {
-
-    allegro_init();
-    install_keyboard();
-    install_mouse(); 
-    show_os_cursor(MOUSE_CURSOR_ARROW);
+    allegro_init(); // for all allegro functions
+    install_keyboard(); // for keyboard use
+    install_mouse();  // for mouse use
+    show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
     set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
     // GFX_AUTODETECT as first param for fullscreen
@@ -126,6 +132,7 @@ int main()
     StringAdd(CurrentPath,imagePathName,imagePath);
     
     //load images
+    background = LoadImage("background.bmp");
     foreground = LoadImage("testlevel.bmp");
     guy_left = LoadImage("rhino_left.bmp");
     guy_right = LoadImage("rhino_right.bmp");
@@ -134,7 +141,9 @@ int main()
     
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
-    draw_sprite( buffer, foreground, 0, 0); // move to somewhere else
+    // Draw foreground and background
+    draw_sprite( buffer, background, block_size, block_size); 
+    draw_sprite( buffer, foreground, 0, 0); 
 
     // load level 
     char tempPath[_MAX_PATH];
@@ -181,7 +190,7 @@ int main()
             //gcvt(elpased_time, 10, testString);
 
             //blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
-            rectfill( buffer, 100, 100, 250, 350, makecol ( 0, 0, 0));
+            rectfill( buffer, 100, 150, 250, 250, makecol ( 0, 0, 0));
             char testString[20];
             sprintf(testString,"%d",absoluteTime);
             textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed

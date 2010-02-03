@@ -7,6 +7,8 @@ extern BITMAP* guy_left;
 extern BITMAP* guy_right;
 extern BITMAP* guy_left_stop;
 extern BITMAP* guy_right_stop;
+
+extern BITMAP* background;
 extern BITMAP* buffer;
 
 // wall segment count within level
@@ -194,7 +196,8 @@ void Guy::unDrawSprite()
 {
     if (prevDrawX)
     {
-        rectfill( buffer ,prevDrawX , prevDrawY, prevDrawX+23, prevDrawY+31, makecol ( 0, 0, 0));
+        blit(background ,buffer ,prevDrawX-block_size,prevDrawY-block_size,prevDrawX,prevDrawY,23,32);
+        //rectfill( buffer ,prevDrawX , prevDrawY, prevDrawX+23, prevDrawY+31, makecol ( 0, 0, 0));
         prevDrawX = 0;
     }
 }
