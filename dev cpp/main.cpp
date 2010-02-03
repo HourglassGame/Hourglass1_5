@@ -11,11 +11,13 @@
 // Absolute time: steps since the start of the game.
 int relativeTime;
 int absoluteTime;
+int propagationAim;
 
 #include "Guy.h"
 #include "MetaGuy.h"
 
-Guy player;
+Guy guy[100];
+int guyCount;
 MetaGuy metaguy;
 
 using namespace std;
@@ -106,6 +108,8 @@ int main()
 
     allegro_init();
     install_keyboard();
+    install_mouse(); 
+    show_os_cursor(MOUSE_CURSOR_ARROW);
     set_color_depth(32);
     set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
     // GFX_AUTODETECT as first param for fullscreen
@@ -155,7 +159,9 @@ int main()
     }
     */
     
-    player.SetStart(double(200),double(200),0,0,0,0);
+    guy[0].SetStart(double(200),double(200),0,0,0,0);
+    guyCount = 1;
+    guy[0].SetOrder(guyCount);
     
     // Game Loop 
     double step_interval = 0.029*CLOCKS_PER_SEC; // minimun time between steps
@@ -166,7 +172,7 @@ int main()
         finish_timer = clock();
         elpased_time = (double(finish_timer)-double(start_timer));
         
-        if (elpased_time >= step_interval) 
+        if (elpased_time >= step_interval or propagationAim) 
         {
             start_timer = clock(); 
             
@@ -177,19 +183,43 @@ int main()
             //blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
             rectfill( buffer, 100, 100, 250, 350, makecol ( 0, 0, 0));
             char testString[20];
-            sprintf(testString,"%d",relativeTime);
+            sprintf(testString,"%d",absoluteTime);
             textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed
             
-            metaguy.GetInput(relativeTime);
+            sprintf(testString,"%d",(mouse_x*3));
+            textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
             
-            player.ForwardTimeStep(absoluteTime);
+            if (absoluteTime >= propagationAim)
+            {
+                propagationAim = 0;
+            }
             
-            player.DrawSprite(absoluteTime);
+            if (!propagationAim)
+            {
+                metaguy.GetInput(relativeTime);
+            }
             
-            relativeTime++;
+            for (int i = 0; i < guyCount; ++i)
+            {
+                guy[i].ForwardTimeStep(absoluteTime);
+                if (!propagationAim)
+                {
+                    guy[i].unDrawSprite();
+                }
+            }
+            
+            if (!propagationAim)
+            {
+                for (int i = 0; i < guyCount; ++i)
+                {
+                    guy[i].DrawSprite(absoluteTime);
+                }
+                relativeTime++;
+                Draw();
+            }
             absoluteTime++;
             
-            Draw(); // draw buffer to screen
+            // draw buffer to screen
             
         }
     }  

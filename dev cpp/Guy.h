@@ -7,8 +7,15 @@ public:
 
     double GetX(int time);
     double GetY(int time);
+    double GetXspeed(int time);
+    double GetYspeed(int time);
+    
+    int GetOrder();
+    void SetOrder(int newOrder);
 
     void DrawSprite(int time); 
+    void Guy::unDrawSprite();
+    
     void SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time); 
     void ForwardTimeStep(int time);
 
@@ -37,6 +44,8 @@ protected:
     int timeDirection;
     
     bool playerCharacter; // ie the oldest instance
+    
+    int order; // order that the guy is in. ie 1 = oldest, 2 = second oldest...
         
     int subimage;
     
