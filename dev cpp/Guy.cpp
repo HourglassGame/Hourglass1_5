@@ -36,7 +36,7 @@ extern int absoluteTime;
 extern int propagationAim;
 
 // physics magic numbers
-const double moveSpeed = 3.6;
+const double moveSpeed = 4;
 const double jumpSpeed = 8;
 const double gravity = 0.17;
 
@@ -45,7 +45,6 @@ const int boxCarryOffsetX = -7;
 const int boxCarryOffsetY = -32;
 const int boxWidth = 32;
 const int boxHeight = 32;
-const int boxcSize = 12; // size from top of box that can be collided with
 
 // collision width and height
 const int cWidth = 24;
@@ -170,9 +169,9 @@ void Guy::ForwardTimeStep(int time)
             {
                 if (time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
                 {
-                    double boxX = box[i].GetX(time-1)+box[i].GetXspeed(time-1);
-                    double boxY = box[i].GetY(time-1)+box[i].GetYspeed(time-1);
-                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (newY+cHeight <= boxY+boxcSize) )
+                    double boxX = box[i].GetX(time);
+                    double boxY = box[i].GetY(time);
+                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (oldY+cHeight <= boxY) )     
                     {
                         ySpeed[time] = 0;
                         newY = boxY-cHeight;

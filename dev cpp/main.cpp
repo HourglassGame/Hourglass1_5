@@ -29,7 +29,7 @@ MetaGuy metaguy; // Stores input in relative time
 using namespace std;
 
 // timing
-double elpased_time;
+double elapsed_time;
 clock_t start_timer,finish_timer;
 
 // images
@@ -117,6 +117,7 @@ BITMAP* LoadImage(char* imageName)
 
 int main()
 {
+
     allegro_init(); // for all allegro functions
     install_keyboard(); // for keyboard use
     install_mouse();  // for mouse use
@@ -157,7 +158,7 @@ int main()
     LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
     
     // test loaded level
-    /*
+    
     for (int x = 0; x < level_width; ++x)
     {
         for (int y = 0; y < level_height; ++y)
@@ -168,11 +169,11 @@ int main()
             
             if (wall[x][y])
             {
-               rectfill( buffer, (x+0.4)*block_size, (y+0.4)*block_size, (x+0.6)*block_size, (y+0.6)*block_size, makecol ( 70, 70, 70));
+               rectfill( buffer, int((x+0.4)*block_size), int((y+0.4)*block_size), int((x+0.6)*block_size), int((y+0.6)*block_size), makecol ( 70, 70, 70));
             } 
         }
     }
-    */
+    
     
     box[boxCount].SetStart(double(300),double(200),0,0,0);
     box[boxCount].SetId(boxCount);
@@ -182,11 +183,35 @@ int main()
     box[boxCount].SetId(boxCount);
     boxCount++;
     
+    box[boxCount].SetStart(double(380),double(120),0,0,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    box[boxCount].SetStart(double(800),double(160),-10,-2,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    box[boxCount].SetStart(double(680),double(60),0,5,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    box[boxCount].SetStart(double(420),double(270),0,0,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
     box[boxCount].SetStart(double(380),double(160),0,0,0);
     box[boxCount].SetId(boxCount);
     boxCount++;
     
-     box[boxCount].SetStart(double(360),double(100),0,0,0);
+    box[boxCount].SetStart(double(300),double(160),0,-10,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    box[boxCount].SetStart(double(250),double(160),5,-5,0);
+    box[boxCount].SetId(boxCount);
+    boxCount++;
+    
+    box[boxCount].SetStart(double(360),double(80),0,0,0);
     box[boxCount].SetId(boxCount);
     boxCount++;
     
@@ -202,9 +227,9 @@ int main()
     while( !key[KEY_ESC])
     { 
         finish_timer = clock();
-        elpased_time = (double(finish_timer)-double(start_timer));
+        elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elpased_time >= step_interval or propagationAim) 
+        if (elapsed_time >= step_interval or propagationAim) 
         {
             start_timer = clock(); 
             
@@ -221,22 +246,63 @@ int main()
             sprintf(testString,"%d",(mouse_x*3));
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
             
+            // stop propagation if aim time is reached
             if (absoluteTime >= propagationAim)
             {
                 propagationAim = 0;
             }
             
+            // get input if not propagating
             if (!propagationAim)
             {
                 metaguy.GetInput(relativeTime);
             }
             
+            // order boxes from highest to lowest for easy collision checking, find a faster method that does not include many nested loops.
+            
+            int activeBoxes = 0;
+            int activeBoxOrder[boxCount];
+           
+            sprintf(testString,"%d",activeBoxes);
+            //allegro_message(testString, allegro_error);
+            
+            
             for (int i = 0; i < boxCount; ++i)
             {
-                box[i].ForwardTimeStep(absoluteTime);
+                if (absoluteTime > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or absoluteTime <= box[i].GetEndAbsTime() ))
+                {
+                    double boxY = box[i].GetY(absoluteTime-1);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-1) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; k = k-1)
+                            {
+                                activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+                
                 if (!propagationAim)
                 {
                     box[i].unDrawSprite();
+                }
+            }
+            
+            // step through boxes in height order
+            for (int i = 0; i < activeBoxes; ++i)
+            {
+                box[activeBoxOrder[i]].ForwardTimeStep(absoluteTime);
+                 if (!propagationAim)
+                {
+                    box[activeBoxOrder[i]].DrawSprite(absoluteTime);
+                    sprintf(testString,"%d",i);
+                    textout_ex( buffer, font, testString, box[activeBoxOrder[i]].GetX(absoluteTime)+4, box[activeBoxOrder[i]].GetY(absoluteTime)+4, makecol( 255, 255, 0), makecol( 0, 0, 0) );
                 }
             }
             
@@ -253,7 +319,7 @@ int main()
             {
                  for (int i = 0; i < boxCount; ++i)
                 {
-                    box[i].DrawSprite(absoluteTime);
+                    //box[i].DrawSprite(absoluteTime);
                 }
                 for (int i = 0; i < guyCount; ++i)
                 {

@@ -22,9 +22,8 @@ const double gravity = 0.17;
 // box variables
 const int boxWidth = 32;
 const int boxHeight = 32;
-const int boxcSize = 12; // size from top of box that can be collided with
 
-// collision width and height
+// collision width and height. it is the same as boxWidth but it makes pretty code and portable from guy physics ;D.
 const int cWidth = 32;
 const int cHeight = 32;
 
@@ -76,6 +75,7 @@ void Box::ForwardTimeStep(int time)
         
         // add gravity
         ySpeed[time] = ySpeed[time-1] + gravity;
+        xSpeed[time] = xSpeed[time-1];
         
         // new positions for collision checking
         double newX = oldX + xSpeed[time];
@@ -125,10 +125,12 @@ void Box::ForwardTimeStep(int time)
             {
                 if (i != id and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
                 {
-                    double boxX = box[i].GetX(time-1)+box[i].GetXspeed(time-1);
-                    double boxY = box[i].GetY(time-1)+box[i].GetYspeed(time-1);
-                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (newY+cHeight <= boxY+boxcSize) )
+                    // boxes are stepped through in height order so getting current position is all good!
+                    double boxX = box[i].GetX(time);
+                    double boxY = box[i].GetY(time);
+                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (oldY+cHeight <= boxY) ) 
                     {
+                        xSpeed[time] = 0;
                         ySpeed[time] = 0;
                         newY = boxY-cHeight;
                     }
