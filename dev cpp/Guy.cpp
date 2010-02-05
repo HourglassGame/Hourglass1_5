@@ -165,7 +165,7 @@ void Guy::ForwardTimeStep(int time)
         //check Box collision in Y direction
         if (ySpeed[time] > 0) // down
         {
-             for (int i = 0; i < boxCount; ++i)
+            for (int i = 0; i < boxCount; ++i)
             {
                 if (time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
                 {
@@ -221,6 +221,54 @@ void Guy::ForwardTimeStep(int time)
     
 }
 
+void Guy::UpdateBoxCarrying(int time)
+{
+     // input is in relative time
+    int absTime = time-timeOffset;
+    
+    // only move if past start time
+    if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
+    {
+        //pickup or drop box
+        if (metaguy.inputDown[absTime] and !metaguy.inputDown[absTime-1]) // down
+        {
+            if (carryingBox[time-1])
+            {
+                box[carryBoxId[time-1]].DropBox(x[time]+boxCarryOffsetX,y[time]+boxCarryOffsetY,xSpeed[time],ySpeed[time],time);
+                carryingBox[time] = false;
+            }
+            else
+            {
+                for (int i = 0; i < boxCount; ++i)
+                {
+                    if (time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
+                    {
+                        double boxX = box[i].GetX(time-1);
+                        double boxY = box[i].GetY(time-1);
+                        if (( x[time-1] < boxX+boxWidth) and (x[time]+cWidth > boxX) and ( y[time]+cHeight > boxY) and (y[time] < boxY+boxHeight) )     
+                        {
+                            box[i].SetCarried(time+1);
+                            carryingBox[time] = true;
+                            carryBoxId[time] = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (carryingBox[time-1])
+            {
+                box[carryBoxId[time-1]].SetCarried(time+1);
+                carryingBox[time] = true;
+                carryBoxId[time] = carryBoxId[time-1];
+            }
+        }
+    }
+    
+}
+
 
 void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time)
 {
@@ -240,13 +288,13 @@ void Guy::unDrawSprite()
     {
         blit(background ,buffer ,prevDrawX-block_size,prevDrawY-block_size,prevDrawX,prevDrawY,23,32);
         //rectfill( buffer ,prevDrawX , prevDrawY, prevDrawX+23, prevDrawY+31, makecol ( 0, 0, 0));
-        prevDrawX = 0;
         if (prevDrawHead)
         {
             blit(background ,buffer ,prevDrawX-block_size+boxCarryOffsetX,prevDrawY-block_size+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
-            masked_blit(foreground ,buffer ,prevDrawX-block_size+boxCarryOffsetX,prevDrawY-block_size+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
+            masked_blit(foreground ,buffer ,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
             prevDrawHead = false;   
         }
+        prevDrawX = 0;
     }
 }
 
@@ -280,6 +328,12 @@ void Guy::DrawSprite(int time)
             {
                 masked_blit(guy_left ,buffer ,36*subimage,0,drawX,drawY,23,32);
             }   
+        }
+        
+        if (carryingBox[time])
+        {
+            draw_sprite( buffer, box_sprite, drawX+boxCarryOffsetX,drawY+boxCarryOffsetY);
+            prevDrawHead = true;
         }
         
         prevDrawX = drawX;

@@ -18,6 +18,12 @@ public:
     int GetStartAbsTime();
     int GetEndAbsTime();
     
+    void SetEnd(int newEndType, int abs_time);
+    
+    void SetCarried(int abs_time);
+    void DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
+    bool GetCarried(int abs_time);
+    
     void SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time); 
     void ForwardTimeStep(int time);
 
@@ -34,6 +40,8 @@ protected:
     double y[5400];
     double xSpeed[5400];
     double ySpeed[5400];
+    
+    bool carried[5400];
     
     // start times, for spawning
     int startAbsTime;

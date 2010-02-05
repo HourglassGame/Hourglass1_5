@@ -55,6 +55,24 @@ void Box::SetId(int newId)
     id = newId;
 }
 
+void Box::SetCarried(int abs_time)
+{
+    carried[abs_time] = true;
+}
+bool Box::GetCarried(int abs_time)
+{
+    return carried[abs_time];
+}
+
+void Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
+{
+    carried[abs_time] = false;
+    x[abs_time] = newX;
+    y[abs_time] = newY;
+    xSpeed[abs_time] = newXspeed;
+    ySpeed[abs_time] = newYspeed;
+}
+
 int Box::GetStartAbsTime()
 {
     return startAbsTime;
@@ -68,8 +86,10 @@ void Box::ForwardTimeStep(int time)
 {
     
     // only move if past start time
-    if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
+    if (!carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime))
     {
+        carried[time+1] = false;
+        
         double oldX = x[time-1];
         double oldY = y[time-1];
         
@@ -162,6 +182,12 @@ void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int
     ySpeed[abs_time] = newYspeed;
 }
 
+void Box::SetEnd(int newEndType, int abs_time)
+{
+    endAbsTime = abs_time;
+    endType = newEndType;
+}
+
 void Box::unDrawSprite()
 {
     if (prevDrawX)
@@ -173,7 +199,7 @@ void Box::unDrawSprite()
 
 void Box::DrawSprite(int time)
 {
-    if (time > startAbsTime and (!endAbsTime or time <= endAbsTime)) 
+    if (!carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime)) 
     {
         int drawX = int(x[time]);
         int drawY = int(y[time]);

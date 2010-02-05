@@ -266,10 +266,9 @@ int main()
             sprintf(testString,"%d",activeBoxes);
             //allegro_message(testString, allegro_error);
             
-            
             for (int i = 0; i < boxCount; ++i)
             {
-                if (absoluteTime > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or absoluteTime <= box[i].GetEndAbsTime() ))
+                if (!box[i].GetCarried(absoluteTime) and absoluteTime > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or absoluteTime <= box[i].GetEndAbsTime() ))
                 {
                     double boxY = box[i].GetY(absoluteTime-1);
                     activeBoxOrder[activeBoxes] = i;
@@ -298,17 +297,12 @@ int main()
             for (int i = 0; i < activeBoxes; ++i)
             {
                 box[activeBoxOrder[i]].ForwardTimeStep(absoluteTime);
-                 if (!propagationAim)
-                {
-                    box[activeBoxOrder[i]].DrawSprite(absoluteTime);
-                    sprintf(testString,"%d",i);
-                    textout_ex( buffer, font, testString, box[activeBoxOrder[i]].GetX(absoluteTime)+4, box[activeBoxOrder[i]].GetY(absoluteTime)+4, makecol( 255, 255, 0), makecol( 0, 0, 0) );
-                }
             }
             
             for (int i = 0; i < guyCount; ++i)
             {
                 guy[i].ForwardTimeStep(absoluteTime);
+                guy[i].UpdateBoxCarrying(absoluteTime);
                 if (!propagationAim)
                 {
                     guy[i].unDrawSprite();
@@ -319,7 +313,7 @@ int main()
             {
                  for (int i = 0; i < boxCount; ++i)
                 {
-                    //box[i].DrawSprite(absoluteTime);
+                    box[i].DrawSprite(absoluteTime);
                 }
                 for (int i = 0; i < guyCount; ++i)
                 {

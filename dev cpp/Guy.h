@@ -20,6 +20,7 @@ public:
     
     void SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time); 
     void ForwardTimeStep(int time);
+    void UpdateBoxCarrying(int time);
 
 protected:
 
@@ -42,7 +43,8 @@ protected:
     int startAbsTime;
     int startRelTime;
     
-    bool carryingBox; // Am I carrying a box? Well, am I?
+    bool carryingBox[5400]; // Am I carrying a box? Well, am I?
+    int carryBoxId[5400]; // ID of box
     
     int timeOffset; // difference between start rel and abs time
     
