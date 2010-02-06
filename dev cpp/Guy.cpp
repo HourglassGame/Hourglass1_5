@@ -205,7 +205,7 @@ void Guy::ForwardTimeStep(int time)
                 {
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
-                    if (( newX <= boxX+Box::GetBoxWidth()) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
+                    if (( newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
                     {
                         ySpeed[time] = 0;
                         newY = boxY-GUY_COLLISION_HEIGHT;
@@ -287,7 +287,7 @@ void Guy::UpdateBoxCarrying(int time)
                     {
                         double boxX = box[i].GetX(time-1);
                         double boxY = box[i].GetY(time-1);
-                        if (( x[time-1] < boxX+Box::GetBoxWidth()) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::GetBoxHeight()) )     
+                        if (( x[time-1] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
                         {
                             box[i].SetCarried(time+1);
                             carryingBox[time] = true;
@@ -332,8 +332,8 @@ void Guy::unDrawSprite()
         //rectfill( buffer ,prevDrawX , prevDrawY, prevDrawX+23, prevDrawY+31, makecol ( 0, 0, 0));
         if (prevDrawHead)
         {
-            blit(background ,buffer ,prevDrawX-BLOCK_SIZE+BOX_CARRY_OFFSET_X,prevDrawY-BLOCK_SIZE+BOX_CARRY_OFFSET_Y,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,Box::GetBoxWidth(),Box::GetBoxHeight());
-            masked_blit(foreground ,buffer ,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,Box::GetBoxWidth(),Box::GetBoxHeight());
+            blit(background ,buffer ,prevDrawX-BLOCK_SIZE+BOX_CARRY_OFFSET_X,prevDrawY-BLOCK_SIZE+BOX_CARRY_OFFSET_Y,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,Box::BOX_WIDTH,Box::BOX_HEIGHT);
+            masked_blit(foreground ,buffer ,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,Box::BOX_WIDTH,Box::BOX_HEIGHT);
             prevDrawHead = false;   
         }
         prevDrawX = 0;

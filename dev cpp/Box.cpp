@@ -28,15 +28,6 @@ Box::Box()
 
 }
 
-int Box::GetBoxWidth()
-{
-    return BOX_WIDTH;
-}
-
-int Box::GetBoxHeight()
-{
-    return BOX_HEIGHT;
-}
 double Box::GetX(int time)
 {
     return x[time];

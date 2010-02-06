@@ -17,7 +17,8 @@ int propagationAim;
 
 #include "Guy.h"
 #include "Box.h"
-//#include "MetaGuy.h"
+
+const double STEP_TIME = 0.029;
 
 const int MAX_GUYS = 100;
 const int MAX_BOXES = 100;
@@ -224,7 +225,7 @@ int main()
    
     
     // Game Loop 
-    double step_interval = 0.029*CLOCKS_PER_SEC; // minimun time between steps
+    double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
     start_timer = clock(); // timers for stable steps/second
     
     while( !key[KEY_ESC])

@@ -1,7 +1,7 @@
 [Project]
 FileName=time game.dev
 Name=time game
-UnitCount=5
+UnitCount=7
 Type=0
 Ver=1
 ObjFiles=
@@ -78,7 +78,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit6]
-FileName=Box.h
+FileName=guymanager.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -88,7 +88,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit7]
-FileName=Box.cpp
+FileName=guymanager.cpp
 CompileCpp=1
 Folder=
 Compile=1
