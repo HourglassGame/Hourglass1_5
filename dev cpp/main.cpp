@@ -123,7 +123,7 @@ int main()
     install_mouse();  // for mouse use
     show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
-    set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
+    set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0); 
     // GFX_AUTODETECT as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     

@@ -90,7 +90,7 @@ void Guy::SetId(int newId)
 void Guy::ForwardTimeStep(int time)
 {
     // input is in relative time
-    int absTime = time-timeOffset;
+    int personalTime = time-timeOffset;
     
     // only move if past start time
     if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
@@ -100,13 +100,13 @@ void Guy::ForwardTimeStep(int time)
         double oldY = y[time-1];
         
         // set xspeed from input
-        if (metaguy.inputLeft[absTime])
+        if (metaguy.inputLeft[personalTime])
         {
             draw_moving = true;
             draw_facing = false;
             xSpeed[time] = -moveSpeed;
         }
-        else if (metaguy.inputRight[absTime])
+        else if (metaguy.inputRight[personalTime])
         {
             draw_moving = true;
             draw_facing = true;
@@ -186,18 +186,18 @@ void Guy::ForwardTimeStep(int time)
         y[time] = newY;
         
         // jump next step
-        if (metaguy.inputUp[absTime] and jump)
+        if (metaguy.inputUp[personalTime] and jump)
         {
             ySpeed[time] = -jumpSpeed;
         }
         
         // time travel
         
-        if (metaguy.inputSpecial[absTime] == 1)
+        if (metaguy.inputSpecial[personalTime] == 1)
         {
             if (order == guyCount)
             {
-                int portTime = metaguy.inputSpecialArg1[absTime];
+                int portTime = metaguy.inputSpecialArg1[personalTime];
                 guy[guyCount].SetStart(guy[guyCount-1].GetX(absoluteTime),guy[guyCount-1].GetY(absoluteTime),guy[guyCount-1].GetXspeed(absoluteTime),guy[guyCount-1].GetYspeed(absoluteTime),relativeTime,portTime);
                 guy[guyCount].SetOrder(guyCount+1);
                 if (absoluteTime < portTime)
@@ -224,13 +224,13 @@ void Guy::ForwardTimeStep(int time)
 void Guy::UpdateBoxCarrying(int time)
 {
      // input is in relative time
-    int absTime = time-timeOffset;
+    int personalTime = time-timeOffset;
     
     // only move if past start time
     if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
     {
         //pickup or drop box
-        if (metaguy.inputDown[absTime] and !metaguy.inputDown[absTime-1]) // down
+        if (metaguy.inputDown[personalTime] and !metaguy.inputDown[personalTime-1]) // down
         {
             if (carryingBox[time-1])
             {
