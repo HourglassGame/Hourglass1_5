@@ -9,23 +9,23 @@ extern BITMAP* foreground;
 extern BITMAP* buffer;
 
 // wall segment count within level
-const int level_width = 32;
-const int level_height = 21;
-const int block_size = 32;
+const int LEVEL_WIDTH = 32;
+const int LEVEL_HEIGHT = 21;
+const int BLOCK_SIZE = 32;
 
-extern bool wall[level_width][level_height];
+extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 extern int boxCount;
 extern Box box[];
 
 const double gravity = 0.17;
 
 // box variables
-const int boxWidth = 32;
-const int boxHeight = 32;
+const int BOX_WIDTH = 32;
+const int BOX_HEIGHT = 32;
 
-// collision width and height. it is the same as boxWidth but it makes pretty code and portable from guy physics ;D.
-const int cWidth = 32;
-const int cHeight = 32;
+// collision width and height. it is the same as BOX_WIDTH but it makes pretty code and portable from guy physics ;D.
+const int BOX_COLLISION_WIDTH = 32;
+const int BOX_COLLISION_HEIGHT = 32;
 
 Box::Box()
 {
@@ -70,21 +70,21 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     
     // check for being dropped into a wall
     //up
-    if (wall[int(newX/block_size)][int(newY/block_size)] or ((newX - floor(newX/block_size)*block_size > block_size-cWidth) and wall[int((newX+cWidth)/block_size)][int(newY/block_size)]))
+    if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
     {
         //right
-        if ( wall[int((newX+cWidth)/block_size)][int(newY/block_size)] and ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int((newX+cWidth)/block_size)][int((newY+cHeight)/block_size)]))
+        if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
         {
-            newX = floor((newX+cWidth)/block_size)*block_size - cWidth;
+            newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
         }
         //left
-        else if (wall[int(newX/block_size)][int(newY/block_size)] and ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int(newX/block_size)][int((newY+cHeight)/block_size)]))
+        else if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
         {
-            newX = (floor(newX/block_size) + 1)*block_size;
+            newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
         }
         else
         {
-            newY = (floor(newY/block_size) + 1)*block_size;
+            newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
         }
     }
     
@@ -96,7 +96,7 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
         // boxes are stepped through in height order so getting current position is all good!
             double boxX = box[i].GetX(abs_time);
             double boxY = box[i].GetY(abs_time);
-            if (( newX < boxX+boxWidth) and (newX+cWidth > boxX) and ( newY+cHeight > boxY) and (newY < boxY+cHeight) ) 
+            if (( newX < boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH > boxX) and ( newY+BOX_COLLISION_HEIGHT > boxY) and (newY < boxY+BOX_COLLISION_HEIGHT) ) 
             {
                 dropped = false;
             }
@@ -152,38 +152,38 @@ void Box::ForwardTimeStep(int time)
         //check wall collision in Y direction
         if (ySpeed[time] > 0) // down
         {
-            if (wall[int(oldX/block_size)][int((newY+cHeight)/block_size)] or ((oldX - floor(oldX/block_size)*block_size > block_size-cWidth) and wall[int((oldX+cWidth)/block_size)][int((newY+cHeight)/block_size)]))
+            if (wall[int(oldX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
             {
                 ySpeed[time] = 0;
                 xSpeed[time] = 0;
-                newY = floor((newY+cHeight)/block_size)*block_size - cHeight;
+                newY = floor((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_HEIGHT;
                 supported = true;
             }
         }
         else if (ySpeed[time] < 0) // up
         {
-            if (wall[int(oldX/block_size)][int(newY/block_size)] or ((oldX - floor(oldX/block_size)*block_size > block_size-cWidth) and wall[int((oldX+cWidth)/block_size)][int(newY/block_size)]))
+            if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
             {
                 ySpeed[time] = 0;
-                newY = (floor(newY/block_size) + 1)*block_size;
+                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
             }
         }
         
         //check wall collision in X direction
         if (xSpeed[time] > 0) // right
         {
-            if ( wall[int((newX+cWidth)/block_size)][int(newY/block_size)] or ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int((newX+cWidth)/block_size)][int((newY+cHeight)/block_size)]))
+            if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
             {
                 xSpeed[time] = 0;
-                newX = floor((newX+cWidth)/block_size)*block_size - cWidth;
+                newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
             }
         }
         else if (xSpeed[time] < 0) // left
         {
-            if (wall[int(newX/block_size)][int(newY/block_size)] or ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int(newX/block_size)][int((newY+cHeight)/block_size)]))
+            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
             {
                 xSpeed[time] = 0;
-                newX = (floor(newX/block_size) + 1)*block_size;
+                newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
             }
         }
         
@@ -197,11 +197,11 @@ void Box::ForwardTimeStep(int time)
                     // boxes are stepped through in height order so getting current position is all good!
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
-                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (oldY+cHeight <= boxY) ) 
+                    if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
                     {
                         xSpeed[time] = 0;
                         ySpeed[time] = 0;
-                        newY = boxY-cHeight;
+                        newY = boxY-BOX_COLLISION_HEIGHT;
                         supported = true;
                     }
                 }
@@ -242,7 +242,7 @@ void Box::unDrawSprite()
 {
     if (prevDrawX)
     {
-        blit(background ,buffer ,prevDrawX-block_size,prevDrawY-block_size,prevDrawX,prevDrawY,32,32);
+        blit(background ,buffer ,prevDrawX-BLOCK_SIZE,prevDrawY-BLOCK_SIZE,prevDrawX,prevDrawY,32,32);
         prevDrawX = 0;
     }
 }

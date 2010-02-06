@@ -17,11 +17,11 @@ extern BITMAP* foreground;
 extern BITMAP* buffer;
 
 // wall segment count within level
-const int level_width = 32;
-const int level_height = 21;
-const int block_size = 32;
+const int LEVEL_WIDTH = 32;
+const int LEVEL_HEIGHT = 21;
+const int BLOCK_SIZE = 32;
 
-extern bool wall[level_width][level_height];
+extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 extern MetaGuy metaguy;
 
 // external objects for collision ect..
@@ -36,19 +36,19 @@ extern int absoluteTime;
 extern int propagationAim;
 
 // physics magic numbers
-const double moveSpeed = 4;
-const double jumpSpeed = 8;
-const double gravity = 0.17;
+const double MOVE_SPEED = 4;
+const double JUMP_SPEED = 8;
+const double GRAVITY = 0.17;
 
 // box variables
-const int boxCarryOffsetX = -4;
-const int boxCarryOffsetY = -32;
-const int boxWidth = 32;
-const int boxHeight = 32;
+const int BOX_CARRY_OFFSET_X = -4;
+const int BOX_CARRY_OFFSET_Y = -32;
+const int BOX_WIDTH = 32;
+const int BOX_HEIGHT = 32;
 
-// collision width and height
-const int cWidth = 24;
-const int cHeight = 32;
+// width and height for purposes of collision detection
+const int GUY_COLLISION_WIDTH = 24;
+const int GUY_COLLISION_HEIGHT = 32;
 
 Guy::Guy()
 {
@@ -104,13 +104,13 @@ void Guy::ForwardTimeStep(int time)
         {
             draw_moving = true;
             draw_facing = false;
-            xSpeed[time] = -moveSpeed;
+            xSpeed[time] = -MOVE_SPEED;
         }
         else if (metaguy.inputRight[personalTime])
         {
             draw_moving = true;
             draw_facing = true;
-            xSpeed[time] = moveSpeed;
+            xSpeed[time] = MOVE_SPEED;
         }
         else
         {
@@ -118,8 +118,8 @@ void Guy::ForwardTimeStep(int time)
             xSpeed[time] = 0;
         }
         
-        // add gravity
-        ySpeed[time] = ySpeed[time-1] + gravity;
+        // add GRAVITY
+        ySpeed[time] = ySpeed[time-1] + GRAVITY;
         
         // new positions for collision checking
         double newX = oldX + xSpeed[time];
@@ -128,37 +128,37 @@ void Guy::ForwardTimeStep(int time)
         //check wall collision in Y direction
         if (ySpeed[time] > 0) // down
         {
-            if (wall[int(oldX/block_size)][int((newY+cHeight)/block_size)] or ((oldX - floor(oldX/block_size)*block_size > block_size-cWidth) and wall[int((oldX+cWidth)/block_size)][int((newY+cHeight)/block_size)]))
+            if (wall[int(oldX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
             {
                 ySpeed[time] = 0;
-                newY = floor((newY+cHeight)/block_size)*block_size - cHeight;
+                newY = floor((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - GUY_COLLISION_HEIGHT;
                 jump = true;
             }
         }
         else if (ySpeed[time] < 0) // up
         {
-            if (wall[int(oldX/block_size)][int(newY/block_size)] or ((oldX - floor(oldX/block_size)*block_size > block_size-cWidth) and wall[int((oldX+cWidth)/block_size)][int(newY/block_size)]))
+            if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
             {
                 ySpeed[time] = 0;
-                newY = (floor(newY/block_size) + 1)*block_size;
+                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
             }
         }
         
         //check wall collision in X direction
         if (xSpeed[time] > 0) // right
         {
-            if ( wall[int((newX+cWidth)/block_size)][int(newY/block_size)] or ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int((newX+cWidth)/block_size)][int((newY+cHeight)/block_size)]))
+            if ( wall[int((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_HEIGHT) and wall[int((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
             {
                 xSpeed[time] = 0;
-                newX = floor((newX+cWidth)/block_size)*block_size - cWidth;
+                newX = floor((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - GUY_COLLISION_WIDTH;
             }
         }
         else if (xSpeed[time] < 0) // left
         {
-            if (wall[int(newX/block_size)][int(newY/block_size)] or ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int(newX/block_size)][int((newY+cHeight)/block_size)]))
+            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
             {
                 xSpeed[time] = 0;
-                newX = (floor(newX/block_size) + 1)*block_size;
+                newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
             }
         }
         
@@ -171,10 +171,10 @@ void Guy::ForwardTimeStep(int time)
                 {
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
-                    if (( newX <= boxX+boxWidth) and (newX+cWidth >= boxX) and ( newY+cHeight >= boxY) and (oldY+cHeight <= boxY) )     
+                    if (( newX <= boxX+BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
                     {
                         ySpeed[time] = 0;
-                        newY = boxY-cHeight;
+                        newY = boxY-GUY_COLLISION_HEIGHT;
                         jump = true;
                     }
                 }
@@ -188,7 +188,7 @@ void Guy::ForwardTimeStep(int time)
         // jump next step
         if (metaguy.inputUp[personalTime] and jump)
         {
-            ySpeed[time] = -jumpSpeed;
+            ySpeed[time] = -JUMP_SPEED;
         }
         
         // time travel
@@ -234,7 +234,7 @@ void Guy::UpdateBoxCarrying(int time)
         {
             if (carryingBox[time-1])
             {
-                if (box[carryBoxId[time-1]].DropBox(x[time]+boxCarryOffsetX,y[time]+boxCarryOffsetY,0,0,time) )
+                if (box[carryBoxId[time-1]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
                 {
                     carryingBox[time] = false;
                 }
@@ -253,7 +253,7 @@ void Guy::UpdateBoxCarrying(int time)
                     {
                         double boxX = box[i].GetX(time-1);
                         double boxY = box[i].GetY(time-1);
-                        if (( x[time-1] < boxX+boxWidth) and (x[time]+cWidth > boxX) and ( y[time]+cHeight > boxY) and (y[time] < boxY+boxHeight) )     
+                        if (( x[time-1] < boxX+BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+BOX_HEIGHT) )     
                         {
                             box[i].SetCarried(time+1);
                             carryingBox[time] = true;
@@ -294,12 +294,12 @@ void Guy::unDrawSprite()
 {
     if (prevDrawX)
     {
-        blit(background ,buffer ,prevDrawX-block_size,prevDrawY-block_size,prevDrawX,prevDrawY,23,32);
+        blit(background ,buffer ,prevDrawX-BLOCK_SIZE,prevDrawY-BLOCK_SIZE,prevDrawX,prevDrawY,23,32);
         //rectfill( buffer ,prevDrawX , prevDrawY, prevDrawX+23, prevDrawY+31, makecol ( 0, 0, 0));
         if (prevDrawHead)
         {
-            blit(background ,buffer ,prevDrawX-block_size+boxCarryOffsetX,prevDrawY-block_size+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
-            masked_blit(foreground ,buffer ,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,prevDrawX+boxCarryOffsetX,prevDrawY+boxCarryOffsetY,boxWidth,boxHeight);
+            blit(background ,buffer ,prevDrawX-BLOCK_SIZE+BOX_CARRY_OFFSET_X,prevDrawY-BLOCK_SIZE+BOX_CARRY_OFFSET_Y,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,BOX_WIDTH,BOX_HEIGHT);
+            masked_blit(foreground ,buffer ,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,prevDrawX+BOX_CARRY_OFFSET_X,prevDrawY+BOX_CARRY_OFFSET_Y,BOX_WIDTH,BOX_HEIGHT);
             prevDrawHead = false;   
         }
         prevDrawX = 0;
@@ -340,7 +340,7 @@ void Guy::DrawSprite(int time)
         
         if (carryingBox[time])
         {
-            draw_sprite( buffer, box_sprite, drawX+boxCarryOffsetX,drawY+boxCarryOffsetY);
+            draw_sprite( buffer, box_sprite, drawX+BOX_CARRY_OFFSET_X,drawY+BOX_CARRY_OFFSET_Y);
             prevDrawHead = true;
         }
         

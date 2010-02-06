@@ -19,9 +19,12 @@ int propagationAim;
 #include "Box.h"
 #include "MetaGuy.h"
 
-Guy guy[100];
+const int MAX_GUYS = 100;
+const int MAX_BOXES = 100;
+
+Guy guy[MAX_GUYS];
 int guyCount; // number of guys 'created'
-Box box[100];
+Box box[MAX_BOXES];
 int boxCount; // number of boxes 'created'
 
 MetaGuy metaguy; // Stores input in relative time
@@ -49,14 +52,14 @@ char levelPath[_MAX_PATH]; // .lvl path
 char imagePath[_MAX_PATH]; // .bmp path
 
 // wall segment count within level
-const int level_width = 32;
-const int level_height = 21;
+const int LEVEL_WIDTH = 32;
+const int LEVEL_HEIGHT = 21;
 
 // size of a wall segment
-const int block_size = 32;
+const int BLOCK_SIZE = 32;
 
 // wall array
-bool wall[level_width][level_height];
+bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 
 void Draw()
 {
@@ -83,15 +86,15 @@ void LoadLevel(char* filePath)
     // fixme: (level_height+1) should not be required. Redo level format to fix when creating editor
     ifstream inputFile;
     inputFile.open(filePath);
-    char wallString[level_width*(level_height+1)];
-    inputFile.getline(wallString, level_width*(level_height+1), '\n');
+    char wallString[LEVEL_WIDTH*(LEVEL_HEIGHT+1)];
+    inputFile.getline(wallString, LEVEL_WIDTH*(LEVEL_HEIGHT+1), '\n');
     //textout_ex( buffer, font, wallString, 150, 450, makecol( 255, 0, 0), makecol( 0, 0, 0) );
 
     // read wall array
     int i = 0;
-    for (int x = 0; x < level_width; ++x,++i)
+    for (int x = 0; x < LEVEL_WIDTH; ++x,++i)
     {
-        for (int y = 0; y < level_height; ++y,++i)
+        for (int y = 0; y < LEVEL_HEIGHT; ++y,++i)
         {
             char temp = wallString[i];
             wall[x][y] = atoi(&temp); 
@@ -149,7 +152,7 @@ int main()
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
     // Draw foreground and background
-    draw_sprite( buffer, background, block_size, block_size); 
+    draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE); 
     draw_sprite( buffer, foreground, 0, 0); 
 
     // load level 
@@ -159,9 +162,9 @@ int main()
     
     // test loaded level
     
-    for (int x = 0; x < level_width; ++x)
+    for (int x = 0; x < LEVEL_WIDTH; ++x)
     {
-        for (int y = 0; y < level_height; ++y)
+        for (int y = 0; y < LEVEL_HEIGHT; ++y)
         {
             //char testString[20];
             //sprintf(testString,"%d",wall[x][y]);
@@ -169,7 +172,7 @@ int main()
             
             if (wall[x][y])
             {
-               rectfill( buffer, int((x+0.4)*block_size), int((y+0.4)*block_size), int((x+0.6)*block_size), int((y+0.6)*block_size), makecol ( 70, 70, 70));
+               rectfill( buffer, int((x+0.4)*BLOCK_SIZE), int((y+0.4)*BLOCK_SIZE), int((x+0.6)*BLOCK_SIZE), int((y+0.6)*BLOCK_SIZE), makecol ( 70, 70, 70));
             } 
         }
     }
