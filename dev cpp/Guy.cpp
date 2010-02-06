@@ -1,6 +1,6 @@
 #include "Guy.h"
 #include "Box.h"
-#include "MetaGuy.h"
+//#include "MetaGuy.h"
 #include <math.h>
 #include <iostream> 
 
@@ -22,7 +22,7 @@ const int LEVEL_HEIGHT = 21;
 const int BLOCK_SIZE = 32;
 
 extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
-extern MetaGuy metaguy;
+//extern MetaGuy metaguy;
 
 // external objects for collision ect..
 extern int guyCount;
@@ -48,9 +48,45 @@ const int BOX_CARRY_OFFSET_Y = -32;
 const int GUY_COLLISION_WIDTH = 24;
 const int GUY_COLLISION_HEIGHT = 32;
 
+// Input Storing
+static bool leftMousePressed;
+    
+static bool inputLeft[9000];
+static bool inputRight[9000];
+static bool inputUp[9000];
+static bool inputDown[9000];
+    
+// store attempted events, eg: jump to X, or jump X back in time.
+// 0 = no action
+// 1 = free chronoport with time arg1
+static int inputSpecial[9000];
+static int inputSpecialArg1[9000];
+
 Guy::Guy()
 {
     
+}
+
+void Guy::StoreInput(int time)
+{
+    inputLeft[time] = key[KEY_A];
+    inputRight[time] = key[KEY_D];
+    inputUp[time] = key[KEY_W];
+    inputDown[time] = key[KEY_S];
+    
+    if (mouse_b & 1) // left mouse is pressed
+    {
+        if (!leftMousePressed)
+        {
+            inputSpecial[time] = 1;
+            inputSpecialArg1[time] = mouse_x*3;
+        }
+        leftMousePressed = true;
+    }
+    else
+    {
+        leftMousePressed = false;
+    }    
 }
 
 double Guy::GetX(int time)
@@ -98,13 +134,13 @@ void Guy::ForwardTimeStep(int time)
         double oldY = y[time-1];
         
         // set xspeed from input
-        if (metaguy.inputLeft[personalTime])
+        if (inputLeft[personalTime])
         {
             draw_moving = true;
             draw_facing = false;
             xSpeed[time] = -MOVE_SPEED;
         }
-        else if (metaguy.inputRight[personalTime])
+        else if (inputRight[personalTime])
         {
             draw_moving = true;
             draw_facing = true;
@@ -184,18 +220,18 @@ void Guy::ForwardTimeStep(int time)
         y[time] = newY;
         
         // jump next step
-        if (metaguy.inputUp[personalTime] and jump)
+        if (inputUp[personalTime] and jump)
         {
             ySpeed[time] = -JUMP_SPEED;
         }
         
         // time travel
         
-        if (metaguy.inputSpecial[personalTime] == 1)
+        if (inputSpecial[personalTime] == 1)
         {
             if (order == guyCount)
             {
-                int portTime = metaguy.inputSpecialArg1[personalTime];
+                int portTime = inputSpecialArg1[personalTime];
                 guy[guyCount].SetStart(guy[guyCount-1].GetX(absoluteTime),guy[guyCount-1].GetY(absoluteTime),guy[guyCount-1].GetXspeed(absoluteTime),guy[guyCount-1].GetYspeed(absoluteTime),relativeTime,portTime);
                 guy[guyCount].SetOrder(guyCount+1);
                 if (absoluteTime < portTime)
@@ -228,7 +264,7 @@ void Guy::UpdateBoxCarrying(int time)
     if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
     {
         //pickup or drop box
-        if (metaguy.inputDown[personalTime] and !metaguy.inputDown[personalTime-1]) // down
+        if (inputDown[personalTime] and !inputDown[personalTime-1]) // down
         {
             if (carryingBox[time-1])
             {

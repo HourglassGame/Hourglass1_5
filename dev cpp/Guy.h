@@ -10,6 +10,8 @@ public:
     double GetXspeed(int time);
     double GetYspeed(int time);
     
+
+ 
     int GetOrder();
     void SetOrder(int newOrder);
     
@@ -21,6 +23,8 @@ public:
     void SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time); 
     void ForwardTimeStep(int time);
     void UpdateBoxCarrying(int time);
+
+    static void StoreInput(int time);
 
 private:
 
@@ -65,4 +69,8 @@ private:
     bool draw_moving;
     bool draw_facing; // left = false, right = true
         
+        
+
+
+     
 };

@@ -17,7 +17,7 @@ int propagationAim;
 
 #include "Guy.h"
 #include "Box.h"
-#include "MetaGuy.h"
+//#include "MetaGuy.h"
 
 const int MAX_GUYS = 100;
 const int MAX_BOXES = 100;
@@ -27,7 +27,7 @@ int guyCount; // number of guys 'created'
 Box box[MAX_BOXES];
 int boxCount; // number of boxes 'created'
 
-MetaGuy metaguy; // Stores input in relative time
+//MetaGuy metaguy; // Stores input in relative time
 
 using namespace std;
 
@@ -258,7 +258,7 @@ int main()
             // get input if not propagating
             if (!propagationAim)
             {
-                metaguy.GetInput(relativeTime);
+                Guy::StoreInput(relativeTime);
             }
             
             // order boxes from highest to lowest for easy collision checking, find a faster method that does not include many nested loops.
