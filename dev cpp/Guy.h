@@ -50,10 +50,11 @@ private:
     double departureY;
     double departureXspeed;
     double departureYspeed;
-    
-    double depatureTimeDestination;
-    
     bool departureCarrying;
+    
+    int depatureTimeDestination;
+    
+    
     
     // start times, for spawning
     int startAbsTime;

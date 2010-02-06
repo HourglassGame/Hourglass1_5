@@ -310,8 +310,16 @@ void Guy::UpdateTimeTravel(int time)
             {
                 absoluteTime = portTime;
             }
-            guyCount++;
+            
+            departureX = x[time];
+            departureY = y[time];
+            departureXspeed = xSpeed[time];
+            departureYspeed = ySpeed[time];
+            departureCarrying = carryingBox[time];
             depatureTimeDestination = portTime;
+             
+            guyCount++;
+            
             endAbsTime = time;
             endRelTime = relativeTime;
         }
@@ -322,12 +330,23 @@ void Guy::UpdateTimeTravel(int time)
             {
                 box[carryBoxId[time]].SetEnd(1,time);
             }
-            guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
-            if (absoluteTime < depatureTimeDestination)
+            
+            if (int(departureX) != int(x[time]) or int(departureY) != int(y[time]) or int(departureXspeed != xSpeed[time]) or int(departureYspeed != ySpeed[time]) or departureCarrying != carryingBox[time])
             {
-                absoluteTime = depatureTimeDestination;
-                propagationAim = absoluteTime;
+                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
+                if (absoluteTime > depatureTimeDestination)
+                {
+                    propagationAim = absoluteTime;
+                    absoluteTime = depatureTimeDestination;
+                }
+                departureX = x[time];
+                departureY = y[time];
+                departureXspeed = xSpeed[time];
+                departureYspeed = ySpeed[time];
+                departureCarrying = carryingBox[time];
             }
+            
+            
         }
     }    
 }
