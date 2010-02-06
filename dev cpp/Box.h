@@ -27,12 +27,10 @@ public:
     bool DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
     bool GetCarried(int abs_time);
     
-    static int GetBoxWidth();
-    static int GetBoxHeight();
     
     void ForwardTimeStep(int time);
 
-private:
+protected:
     
     int id; // array number in box array
     
@@ -56,17 +54,6 @@ private:
     // end times, for paradox checking
     int endAbsTime;   
     int endType;
-    
     // type of ending. For triggering or not triggering paradox detection.
     // 1 = picked up by guy.
-    
-    // box variables
-    static const int BOX_WIDTH = 32;
-    static const int BOX_HEIGHT = 32;
-
-    // collision width and height. it is the same as BOX_WIDTH but it makes pretty code and portable from guy physics ;D.    
-    static const int BOX_COLLISION_WIDTH = BOX_WIDTH;
-    static const int BOX_COLLISION_HEIGHT = BOX_HEIGHT;
-    
-    static const double GRAVITY = 0.17;
 };

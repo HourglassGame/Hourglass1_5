@@ -17,26 +17,21 @@ extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 extern int boxCount;
 extern Box box[];
 
+const double gravity = 0.17;
 
+// box variables
+const int BOX_WIDTH = 32;
+const int BOX_HEIGHT = 32;
 
-
-
-
+// collision width and height. it is the same as BOX_WIDTH but it makes pretty code and portable from guy physics ;D.
+const int BOX_COLLISION_WIDTH = 32;
+const int BOX_COLLISION_HEIGHT = 32;
 
 Box::Box()
 {
-
+    
 }
 
-int Box::GetBoxWidth()
-{
-    return BOX_WIDTH;
-}
-
-int Box::GetBoxHeight()
-{
-    return BOX_HEIGHT;
-}
 double Box::GetX(int time)
 {
     return x[time];
@@ -146,8 +141,8 @@ void Box::ForwardTimeStep(int time)
         double oldX = x[time-1];
         double oldY = y[time-1];
         
-        // add GRAVITY
-        ySpeed[time] = ySpeed[time-1] + GRAVITY;
+        // add gravity
+        ySpeed[time] = ySpeed[time-1] + gravity;
         xSpeed[time] = xSpeed[time-1];
         
         // new positions for collision checking
