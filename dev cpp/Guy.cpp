@@ -31,6 +31,10 @@ extern Guy guy[];
 extern int boxCount;
 extern Box box[];
 
+extern Box MintConditionBox;
+
+extern bool DeadBox[];
+
 extern int relativeTime;
 extern int absoluteTime;
 extern int propagationAim;
@@ -126,132 +130,102 @@ void Guy::ForwardTimeStep(int time)
     // input is in relative time
     int personalTime = time-timeOffset;
     
-    // only move if past start time
-    if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
+    bool jump = false; // is it allowed to jump?
+    double oldX = x[time-1];
+    double oldY = y[time-1];
+        
+    // set xspeed from input
+    if (inputLeft[personalTime])
     {
-        bool jump = false; // is it allowed to jump?
-        double oldX = x[time-1];
-        double oldY = y[time-1];
+        draw_moving = true;
+        draw_facing = false;
+        xSpeed[time] = -MOVE_SPEED;
+    }
+    else if (inputRight[personalTime])
+    {
+        draw_moving = true;
+        draw_facing = true;
+        xSpeed[time] = MOVE_SPEED;
+    }
+    else
+    {
+        draw_moving = false;
+        xSpeed[time] = 0;
+    }
         
-        // set xspeed from input
-        if (inputLeft[personalTime])
-        {
-            draw_moving = true;
-            draw_facing = false;
-            xSpeed[time] = -MOVE_SPEED;
-        }
-        else if (inputRight[personalTime])
-        {
-            draw_moving = true;
-            draw_facing = true;
-            xSpeed[time] = MOVE_SPEED;
-        }
-        else
-        {
-            draw_moving = false;
-            xSpeed[time] = 0;
-        }
+    // add GRAVITY
+    ySpeed[time] = ySpeed[time-1] + GRAVITY;
         
-        // add GRAVITY
-        ySpeed[time] = ySpeed[time-1] + GRAVITY;
-        
-        // new positions for collision checking
-        double newX = oldX + xSpeed[time];
-        double newY = oldY + ySpeed[time];
+    // new positions for collision checking
+    double newX = oldX + xSpeed[time];
+    double newY = oldY + ySpeed[time];
         
         //check wall collision in Y direction
-        if (ySpeed[time] > 0) // down
+    if (ySpeed[time] > 0) // down
+    {
+        if (wall[int(oldX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
         {
-            if (wall[int(oldX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
-            {
-                ySpeed[time] = 0;
-                newY = floor((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - GUY_COLLISION_HEIGHT;
-                jump = true;
-            }
+            ySpeed[time] = 0;
+            newY = floor((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - GUY_COLLISION_HEIGHT;
+            jump = true;
         }
-        else if (ySpeed[time] < 0) // up
-        {
-            if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
-            {
-                ySpeed[time] = 0;
-                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
-            }
-        }
-        
-        //check wall collision in X direction
-        if (xSpeed[time] > 0) // right
-        {
-            if ( wall[int((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_HEIGHT) and wall[int((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
-            {
-                xSpeed[time] = 0;
-                newX = floor((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - GUY_COLLISION_WIDTH;
-            }
-        }
-        else if (xSpeed[time] < 0) // left
-        {
-            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
-            {
-                xSpeed[time] = 0;
-                newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
-            }
-        }
-        
-        //check Box collision in Y direction
-        if (ySpeed[time] > 0) // down
-        {
-            for (int i = 0; i < boxCount; ++i)
-            {
-                if (box[i].GetSupported() and !box[i].GetCarried(absoluteTime) and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
-                {
-                    double boxX = box[i].GetX(time);
-                    double boxY = box[i].GetY(time);
-                    if (( newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
-                    {
-                        ySpeed[time] = 0;
-                        newY = boxY-GUY_COLLISION_HEIGHT;
-                        jump = true;
-                    }
-                }
-            }
-        }
-        
-        // set new locations
-        x[time] = newX;
-        y[time] = newY;
-        
-        // jump next step
-        if (inputUp[personalTime] and jump)
-        {
-            ySpeed[time] = -JUMP_SPEED;
-        }
-        
-        // time travel
-        
-        if (inputSpecial[personalTime] == 1)
-        {
-            if (order == guyCount)
-            {
-                int portTime = inputSpecialArg1[personalTime];
-                guy[guyCount].SetStart(guy[guyCount-1].GetX(absoluteTime),guy[guyCount-1].GetY(absoluteTime),guy[guyCount-1].GetXspeed(absoluteTime),guy[guyCount-1].GetYspeed(absoluteTime),relativeTime,portTime);
-                guy[guyCount].SetOrder(guyCount+1);
-                if (absoluteTime < portTime)
-                {
-                    propagationAim = portTime;
-                }
-                else
-                {
-                    absoluteTime = portTime;
-                }
-                guyCount++;
-                endAbsTime = time;
-            }
-            else
-            {
-                endAbsTime = time;
-            }
-        }     
-        
     }
+    else if (ySpeed[time] < 0) // up
+    {
+        if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+        {
+            ySpeed[time] = 0;
+            newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+        }
+    }
+        
+    //check wall collision in X direction
+    if (xSpeed[time] > 0) // right
+    {
+        if ( wall[int((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_HEIGHT) and wall[int((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        {
+            xSpeed[time] = 0;
+            newX = floor((newX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - GUY_COLLISION_WIDTH;
+        }
+    }
+    else if (xSpeed[time] < 0) // left
+    {
+        if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        {
+            xSpeed[time] = 0;
+            newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+        }
+    }
+        
+    //check Box collision in Y direction
+    if (ySpeed[time] > 0) // down
+    {
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetActive(time) and box[i].GetSupported())
+            {
+                double boxX = box[i].GetX(time);
+                double boxY = box[i].GetY(time);
+                if (( newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
+                {
+                    ySpeed[time] = 0;
+                    newY = boxY-GUY_COLLISION_HEIGHT;
+                    jump = true;
+                }
+            }
+        }
+    }
+        
+    // set new locations
+    x[time] = newX;
+    y[time] = newY;
+        
+    // jump next step
+    if (inputUp[personalTime] and jump)
+    {
+        ySpeed[time] = -JUMP_SPEED;
+    }    
+        
     
 }
 
@@ -260,59 +234,110 @@ void Guy::UpdateBoxCarrying(int time)
      // input is in relative time
     int personalTime = time-timeOffset;
     
-    // only move if past start time
-    if (time > startAbsTime and (!endAbsTime or time <= endAbsTime))
+    //pickup or drop box
+    if (inputDown[personalTime] and !inputDown[personalTime-1]) // down
     {
-        //pickup or drop box
-        if (inputDown[personalTime] and !inputDown[personalTime-1]) // down
+        if (carryingBox[time-1])
         {
-            if (carryingBox[time-1])
+            if (box[carryBoxId[time-1]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
             {
-                if (box[carryBoxId[time-1]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
-                {
-                    carryingBox[time] = false;
-                }
-                else
-                {
-                    box[carryBoxId[time-1]].SetCarried(time+1);
-                    carryingBox[time] = true;
-                    carryBoxId[time] = carryBoxId[time-1];
-                }
+                carryingBox[time] = false;
             }
             else
-            {
-                for (int i = 0; i < boxCount; ++i)
-                {
-                    if (!box[i].GetCarried(absoluteTime) and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
-                    {
-                        double boxX = box[i].GetX(time-1);
-                        double boxY = box[i].GetY(time-1);
-                        if (( x[time-1] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
-                        {
-                            box[i].SetCarried(time+1);
-                            carryingBox[time] = true;
-                            carryBoxId[time] = i;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (carryingBox[time-1])
             {
                 box[carryBoxId[time-1]].SetCarried(time+1);
                 carryingBox[time] = true;
                 carryBoxId[time] = carryBoxId[time-1];
             }
         }
+        else
+        {
+            carryingBox[time] = false;
+            for (int i = 0; i < boxCount; ++i)
+            {
+                if (box[i].GetActive(time))
+                {
+                    double boxX = box[i].GetX(time-1);
+                    double boxY = box[i].GetY(time-1);
+                    if (( x[time-1] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
+                    {
+                        box[i].SetCarried(time+1);
+                        carryingBox[time] = true;
+                        carryBoxId[time] = i;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        if (carryingBox[time-1])
+        {
+            box[carryBoxId[time-1]].SetCarried(time+1);
+            carryingBox[time] = true;
+            carryBoxId[time] = carryBoxId[time-1];
+        }
+        else
+        {
+            carryingBox[time] = false;
+        }
     }
     
 }
 
+void Guy::UpdateTimeTravel(int time)
+{
+    int personalTime = time-timeOffset;
+ // time travel
+        
+    if (inputSpecial[personalTime] == 1)
+    {
+        if (order+1 == guyCount)
+        {
+            int portTime = inputSpecialArg1[personalTime];
+            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime);
+            guy[guyCount].SetOrder(guyCount);
+            if (carryingBox[absoluteTime])
+            {
+                box[carryBoxId[time]].SetEnd(1,time);
+            }
+            if (absoluteTime < portTime)
+            {
+                propagationAim = portTime;
+            }
+            else
+            {
+                absoluteTime = portTime;
+            }
+            guyCount++;
+            depatureTimeDestination = portTime;
+            endAbsTime = time;
+            endRelTime = relativeTime;
+        }
+        else
+        {
+            endAbsTime = time;
+            if (carryingBox[absoluteTime])
+            {
+                box[carryBoxId[time]].SetEnd(1,time);
+            }
+            guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
+            if (absoluteTime < depatureTimeDestination)
+            {
+                absoluteTime = depatureTimeDestination;
+                propagationAim = absoluteTime;
+            }
+        }
+    }    
+}
 
-void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time)
+bool Guy::GetActive(int time)
+{
+    return (time > startAbsTime and (!endAbsTime or time <= endAbsTime));
+}
+
+void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,bool newCarryingBox,int rel_time,int abs_time)
 {
     startRelTime = rel_time;
     startAbsTime = abs_time;
@@ -320,6 +345,38 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int
     y[abs_time] = newY;
     xSpeed[abs_time] = newXspeed;
     ySpeed[abs_time] = newYspeed;
+    
+    if (newCarryingBox and !carryingBox[abs_time]) // create box
+    {
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (DeadBox[i])
+            {
+                box[i] = MintConditionBox;
+                carryBoxId[abs_time] = i;
+                box[i].SetStart(0,0,0,0,abs_time);
+                box[i].SetId(i);
+                box[i].SetCarried(abs_time+1);
+                carryingBox[abs_time] = true;
+                DeadBox[i] = false;
+                break;
+            }
+            if (!carryingBox[abs_time])
+            {
+                carryBoxId[abs_time] = boxCount;
+                box[boxCount].SetStart(0,0,0,0,abs_time);
+                box[boxCount].SetId(boxCount);
+                box[boxCount].SetCarried(abs_time+1);
+                carryingBox[abs_time] = true;
+                boxCount++;
+            }
+        }
+    }
+    else if (!newCarryingBox and carryingBox[abs_time]) // destroy a box
+    {
+        DeadBox[carryBoxId[abs_time]] = true;
+        carryingBox[abs_time] = false;
+    }
     
     timeOffset = abs_time - rel_time;
 }

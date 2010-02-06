@@ -17,10 +17,7 @@ extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 extern int boxCount;
 extern Box box[];
 
-
-
-
-
+extern bool DeadBox[];
 
 
 Box::Box()
@@ -87,7 +84,7 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     //check box collision
     for (int i = 0; i < boxCount; ++i)
     {
-        if (i != id and abs_time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or abs_time <= box[i].GetEndAbsTime() ))
+        if (!DeadBox[i] and box[i].GetSupported() and !box[i].GetCarried(abs_time) and i != id and abs_time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or abs_time <= box[i].GetEndAbsTime() ))
         {
         // boxes are stepped through in height order so getting current position is all good!
             double boxX = box[i].GetX(abs_time);
@@ -129,8 +126,9 @@ void Box::ForwardTimeStep(int time)
 {
     
     // only move if past start time
-    if (!carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime))
+    if (GetActive(time))
     {
+        
         carried[time+1] = false;
         supported = false;
         
@@ -188,7 +186,7 @@ void Box::ForwardTimeStep(int time)
         {
             for (int i = 0; i < boxCount; ++i)
             {
-                if (box[i].GetSupported() and !box[i].GetCarried(time) and i != id and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
+                if (i != id and box[i].GetActive(time) and box[i].GetSupported())
                 {
                     // boxes are stepped through in height order so getting current position is all good!
                     double boxX = box[i].GetX(time);
@@ -212,10 +210,17 @@ void Box::ForwardTimeStep(int time)
         {
             // paradox checking goes here eventually
             endAbsTime = 0;
+            
         }
+       
         
     }
     
+}
+
+bool Box::GetActive(int time)
+{
+    return (!DeadBox[id] and !carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime ));
 }
 
 
@@ -245,7 +250,7 @@ void Box::unDrawSprite()
 
 void Box::DrawSprite(int time)
 {
-    if (!carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime)) 
+    if (GetActive(time)) 
     {
         int drawX = int(x[time]);
         int drawY = int(y[time]);

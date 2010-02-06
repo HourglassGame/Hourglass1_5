@@ -14,6 +14,8 @@ public:
     double GetXspeed(int time);
     double GetYspeed(int time);
     
+    bool GetActive(int time);
+    
     void SetId(int newId);
 
     void DrawSprite(int time); 
@@ -57,11 +59,8 @@ private:
     // end times, for paradox checking
     int endAbsTime;   
     int endType;
-    
     // type of ending. For triggering or not triggering paradox detection.
-    // 1 = picked up by guy.
-    
-
+    // 1 = taken through time while carried.
 
 
     // collision width and height. it is the same as BOX_WIDTH but it makes pretty code and portable from guy physics ;D.    

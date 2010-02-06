@@ -28,6 +28,10 @@ int guyCount; // number of guys 'created'
 Box box[MAX_BOXES];
 int boxCount; // number of boxes 'created'
 
+Box MintConditionBox; // never taken out of it's packet. For overriding dead box arrays 
+
+bool DeadBox[MAX_BOXES]; // true for unused box indexes
+
 //MetaGuy metaguy; // Stores input in relative time
 
 using namespace std;
@@ -127,8 +131,8 @@ int main()
     install_mouse();  // for mouse use
     show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
-    set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0); 
-    // GFX_AUTODETECT as first param for fullscreen
+    set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
+    // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     
     buffer = create_bitmap( 1024, 768); // create buffer, all drawing done to buffer
@@ -162,7 +166,7 @@ int main()
     LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
     
     // test loaded level
-    
+    /*
     for (int x = 0; x < LEVEL_WIDTH; ++x)
     {
         for (int y = 0; y < LEVEL_HEIGHT; ++y)
@@ -177,11 +181,11 @@ int main()
             } 
         }
     }
-    
+    */
     
     box[boxCount].SetStart(double(300),double(200),0,0,0);
     box[boxCount].SetId(boxCount);
-    boxCount = 1;
+    boxCount++;
     
     box[boxCount].SetStart(double(400),double(200),0,0,0);
     box[boxCount].SetId(boxCount);
@@ -219,9 +223,9 @@ int main()
     box[boxCount].SetId(boxCount);
     boxCount++;
     
-    guy[guyCount].SetStart(double(200),double(200),0,0,0,0);
-    guyCount = 1;
+    guy[guyCount].SetStart(double(200),double(200),0,0,false,0,0);
     guy[0].SetOrder(guyCount);
+    guyCount = 1;
    
     
     // Game Loop 
@@ -272,7 +276,7 @@ int main()
             
             for (int i = 0; i < boxCount; ++i)
             {
-                if (!box[i].GetCarried(absoluteTime) and absoluteTime > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or absoluteTime <= box[i].GetEndAbsTime() ))
+                if (!DeadBox[i] and !box[i].GetCarried(absoluteTime) and absoluteTime > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or absoluteTime <= box[i].GetEndAbsTime() ))
                 {
                     double boxY = box[i].GetY(absoluteTime-1);
                     activeBoxOrder[activeBoxes] = i;
@@ -280,7 +284,7 @@ int main()
                     {
                         if (box[activeBoxOrder[j]].GetY(absoluteTime-1) < boxY)
                         {
-                            for (int k = activeBoxes; k > j; k = k-1)
+                            for (int k = activeBoxes; k > j; --k)
                             {
                                 activeBoxOrder[k] = activeBoxOrder[k-1];
                             }
@@ -305,8 +309,12 @@ int main()
             
             for (int i = 0; i < guyCount; ++i)
             {
-                guy[i].ForwardTimeStep(absoluteTime);
-                guy[i].UpdateBoxCarrying(absoluteTime);
+                if (guy[i].GetActive(absoluteTime))
+                {
+                    guy[i].ForwardTimeStep(absoluteTime);
+                    guy[i].UpdateBoxCarrying(absoluteTime);
+                    guy[i].UpdateTimeTravel(absoluteTime);
+                }
                 if (!propagationAim)
                 {
                     guy[i].unDrawSprite();
@@ -326,6 +334,7 @@ int main()
                 relativeTime++;
                 Draw();
             }
+            
             absoluteTime++;
             
             // draw buffer to screen

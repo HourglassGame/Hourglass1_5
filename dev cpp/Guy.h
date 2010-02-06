@@ -10,7 +10,7 @@ public:
     double GetXspeed(int time);
     double GetYspeed(int time);
     
-
+    bool GetActive(int time);
  
     int GetOrder();
     void SetOrder(int newOrder);
@@ -20,9 +20,11 @@ public:
     void DrawSprite(int time); 
     void unDrawSprite();
     
-    void SetStart(double newX,double newY,double newXspeed,double newYspeed,int rel_time,int abs_time); 
+    void SetStart(double newX,double newY,double newXspeed,double newYspeed, bool newCarryingBox, int rel_time,int abs_time); 
+    
     void ForwardTimeStep(int time);
     void UpdateBoxCarrying(int time);
+    void UpdateTimeTravel(int time);
 
     static void StoreInput(int time);
 
@@ -42,6 +44,16 @@ private:
     double y[5400];
     double xSpeed[5400];
     double ySpeed[5400];
+    
+    // departure variables
+    double departureX;
+    double departureY;
+    double departureXspeed;
+    double departureYspeed;
+    
+    double depatureTimeDestination;
+    
+    bool departureCarrying;
     
     // start times, for spawning
     int startAbsTime;
