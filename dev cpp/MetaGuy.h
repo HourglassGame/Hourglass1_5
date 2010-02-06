@@ -25,6 +25,6 @@ public:
     
     void GetInput(int time);
 
-protected:
+private:
         
 };

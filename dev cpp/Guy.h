@@ -22,7 +22,7 @@ public:
     void ForwardTimeStep(int time);
     void UpdateBoxCarrying(int time);
 
-protected:
+private:
 
     int id; // array number in guy array
     
