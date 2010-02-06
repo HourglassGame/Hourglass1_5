@@ -10,6 +10,8 @@ public:
     double GetXspeed(int time);
     double GetYspeed(int time);
     
+
+ 
     int GetOrder();
     void SetOrder(int newOrder);
     
@@ -22,7 +24,9 @@ public:
     void ForwardTimeStep(int time);
     void UpdateBoxCarrying(int time);
 
-protected:
+    static void StoreInput(int time);
+
+private:
 
     int id; // array number in guy array
     
@@ -65,4 +69,8 @@ protected:
     bool draw_moving;
     bool draw_facing; // left = false, right = true
         
+        
+
+
+     
 };
