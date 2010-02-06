@@ -188,7 +188,7 @@ void Box::ForwardTimeStep(int time)
         {
             for (int i = 0; i < boxCount; ++i)
             {
-                if (i != id and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
+                if (box[i].GetSupported() and !box[i].GetCarried(time) and i != id and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
                 {
                     // boxes are stepped through in height order so getting current position is all good!
                     double boxX = box[i].GetX(time);
