@@ -41,7 +41,7 @@ const double jumpSpeed = 8;
 const double gravity = 0.17;
 
 // box variables
-const int boxCarryOffsetX = -7;
+const int boxCarryOffsetX = -4;
 const int boxCarryOffsetY = -32;
 const int boxWidth = 32;
 const int boxHeight = 32;
@@ -167,7 +167,7 @@ void Guy::ForwardTimeStep(int time)
         {
             for (int i = 0; i < boxCount; ++i)
             {
-                if (time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
+                if (box[i].GetSupported() and !box[i].GetCarried(absoluteTime) and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
                 {
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
@@ -234,14 +234,22 @@ void Guy::UpdateBoxCarrying(int time)
         {
             if (carryingBox[time-1])
             {
-                box[carryBoxId[time-1]].DropBox(x[time]+boxCarryOffsetX,y[time]+boxCarryOffsetY,xSpeed[time],ySpeed[time],time);
-                carryingBox[time] = false;
+                if (box[carryBoxId[time-1]].DropBox(x[time]+boxCarryOffsetX,y[time]+boxCarryOffsetY,0,0,time) )
+                {
+                    carryingBox[time] = false;
+                }
+                else
+                {
+                    box[carryBoxId[time-1]].SetCarried(time+1);
+                    carryingBox[time] = true;
+                    carryBoxId[time] = carryBoxId[time-1];
+                }
             }
             else
             {
                 for (int i = 0; i < boxCount; ++i)
                 {
-                    if (time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
+                    if (!box[i].GetCarried(absoluteTime) and time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or time <= box[i].GetEndAbsTime() ))
                     {
                         double boxX = box[i].GetX(time-1);
                         double boxY = box[i].GetY(time-1);

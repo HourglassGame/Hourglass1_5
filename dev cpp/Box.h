@@ -18,13 +18,16 @@ public:
     int GetStartAbsTime();
     int GetEndAbsTime();
     
+    bool GetSupported();
+    
+    void SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time); 
     void SetEnd(int newEndType, int abs_time);
     
     void SetCarried(int abs_time);
-    void DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
+    bool DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
     bool GetCarried(int abs_time);
     
-    void SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time); 
+    
     void ForwardTimeStep(int time);
 
 protected:
@@ -42,6 +45,8 @@ protected:
     double ySpeed[5400];
     
     bool carried[5400];
+    
+    bool supported; // checked every frame before guys and other boxes land, no large array
     
     // start times, for spawning
     int startAbsTime;

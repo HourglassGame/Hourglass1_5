@@ -64,13 +64,60 @@ bool Box::GetCarried(int abs_time)
     return carried[abs_time];
 }
 
-void Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
+bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
-    carried[abs_time] = false;
-    x[abs_time] = newX;
-    y[abs_time] = newY;
-    xSpeed[abs_time] = newXspeed;
-    ySpeed[abs_time] = newYspeed;
+    bool dropped = true;
+    
+    // check for being dropped into a wall
+    //up
+    if (wall[int(newX/block_size)][int(newY/block_size)] or ((newX - floor(newX/block_size)*block_size > block_size-cWidth) and wall[int((newX+cWidth)/block_size)][int(newY/block_size)]))
+    {
+        //right
+        if ( wall[int((newX+cWidth)/block_size)][int(newY/block_size)] and ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int((newX+cWidth)/block_size)][int((newY+cHeight)/block_size)]))
+        {
+            newX = floor((newX+cWidth)/block_size)*block_size - cWidth;
+        }
+        //left
+        else if (wall[int(newX/block_size)][int(newY/block_size)] and ((newY - floor(newY/block_size)*block_size > block_size-cHeight) and wall[int(newX/block_size)][int((newY+cHeight)/block_size)]))
+        {
+            newX = (floor(newX/block_size) + 1)*block_size;
+        }
+        else
+        {
+            newY = (floor(newY/block_size) + 1)*block_size;
+        }
+    }
+    
+    //check box collision
+    for (int i = 0; i < boxCount; ++i)
+    {
+        if (i != id and abs_time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or abs_time <= box[i].GetEndAbsTime() ))
+        {
+        // boxes are stepped through in height order so getting current position is all good!
+            double boxX = box[i].GetX(abs_time);
+            double boxY = box[i].GetY(abs_time);
+            if (( newX < boxX+boxWidth) and (newX+cWidth > boxX) and ( newY+cHeight > boxY) and (newY < boxY+cHeight) ) 
+            {
+                dropped = false;
+            }
+        }
+    }
+    
+    if (dropped)
+    {
+        carried[abs_time] = false;
+        x[abs_time] = newX;
+        y[abs_time] = newY;
+        xSpeed[abs_time] = newXspeed;
+        ySpeed[abs_time] = newYspeed;
+    }
+    
+    return dropped;
+}
+
+bool Box::GetSupported()
+{
+    return supported;   
 }
 
 int Box::GetStartAbsTime()
@@ -89,6 +136,7 @@ void Box::ForwardTimeStep(int time)
     if (!carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime))
     {
         carried[time+1] = false;
+        supported = false;
         
         double oldX = x[time-1];
         double oldY = y[time-1];
@@ -109,6 +157,7 @@ void Box::ForwardTimeStep(int time)
                 ySpeed[time] = 0;
                 xSpeed[time] = 0;
                 newY = floor((newY+cHeight)/block_size)*block_size - cHeight;
+                supported = true;
             }
         }
         else if (ySpeed[time] < 0) // up
@@ -153,6 +202,7 @@ void Box::ForwardTimeStep(int time)
                         xSpeed[time] = 0;
                         ySpeed[time] = 0;
                         newY = boxY-cHeight;
+                        supported = true;
                     }
                 }
             }
