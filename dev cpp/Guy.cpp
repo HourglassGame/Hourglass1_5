@@ -1,5 +1,6 @@
 #include "Guy.h"
 #include "Box.h"
+#include "PropManager.h"
 //#include "MetaGuy.h"
 #include <math.h>
 #include <iostream> 
@@ -24,7 +25,9 @@ const int BLOCK_SIZE = 32;
 extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 //extern MetaGuy metaguy;
 
+extern PropManager propManager;
 // external objects for collision ect..
+
 extern int guyCount;
 extern Guy guy[];
 
@@ -37,7 +40,8 @@ extern bool DeadBox[];
 
 extern int relativeTime;
 extern int absoluteTime;
-extern int propagationAim;
+
+extern bool paradoxTriggered;
 
 // physics magic numbers
 const double MOVE_SPEED = 4;
@@ -304,17 +308,17 @@ void Guy::UpdateTimeTravel(int time)
             }
             if (absoluteTime < portTime)
             {
-                propagationAim = portTime;
+                propManager.CreatePropagation(absoluteTime,portTime);
             }
             else
             {
                 absoluteTime = portTime;
             }
             
-            departureX = x[time];
-            departureY = y[time];
-            departureXspeed = xSpeed[time];
-            departureYspeed = ySpeed[time];
+            departureX = int(x[time]);
+            departureY = int(y[time]);
+            departureXspeed = int(xSpeed[time]);
+            departureYspeed = int(ySpeed[time]);
             departureCarrying = carryingBox[time];
             depatureTimeDestination = portTime;
              
@@ -331,18 +335,35 @@ void Guy::UpdateTimeTravel(int time)
                 box[carryBoxId[time]].SetEnd(1,time);
             }
             
-            if (int(departureX) != int(x[time]) or int(departureY) != int(y[time]) or int(departureXspeed != xSpeed[time]) or int(departureYspeed != ySpeed[time]) or departureCarrying != carryingBox[time])
+            if (departureX != int(x[time]) or departureY != int(y[time]) or departureXspeed != int(xSpeed[time]) or departureYspeed != int(ySpeed[time]) or departureCarrying != carryingBox[time])
             {
+                for (int i = 0; i < paradoxChecks; ++i)
+                {
+                    if (departureX == paradoxCheckX[i] and departureY == paradoxCheckY[i] and departureXspeed == paradoxCheckXspeed[i] and departureYspeed == paradoxCheckYspeed[i] and departureCarrying == paradoxCheckCarrying[i])
+                    {
+                        paradoxTriggered == true;
+                        allegro_message("PARADOX! (foo)", allegro_error);
+                        break;
+                    }
+                }
+                
                 guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
                 if (absoluteTime > depatureTimeDestination)
                 {
-                    propagationAim = absoluteTime;
-                    absoluteTime = depatureTimeDestination;
+                    propManager.CreatePropagation(depatureTimeDestination,absoluteTime);
                 }
-                departureX = x[time];
-                departureY = y[time];
-                departureXspeed = xSpeed[time];
-                departureYspeed = ySpeed[time];
+                
+                paradoxCheckX[paradoxChecks] = departureX;
+                paradoxCheckY[paradoxChecks] = departureY;
+                paradoxCheckXspeed[paradoxChecks] = departureXspeed;
+                paradoxCheckYspeed[paradoxChecks] = departureYspeed;
+                paradoxCheckCarrying[paradoxChecks] = departureCarrying;
+                paradoxChecks++;
+                
+                departureX = int(x[time]);
+                departureY = int(y[time]);
+                departureXspeed = int(xSpeed[time]);
+                departureYspeed = int(ySpeed[time]);
                 departureCarrying = carryingBox[time];
             }
             
@@ -354,6 +375,11 @@ void Guy::UpdateTimeTravel(int time)
 bool Guy::GetActive(int time)
 {
     return (time > startAbsTime and (!endAbsTime or time <= endAbsTime));
+}
+
+void Guy::ResetParadoxChecking()
+{
+    paradoxChecks = 0;
 }
 
 void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,bool newCarryingBox,int rel_time,int abs_time)
@@ -380,15 +406,15 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
                 DeadBox[i] = false;
                 break;
             }
-            if (!carryingBox[abs_time])
-            {
-                carryBoxId[abs_time] = boxCount;
-                box[boxCount].SetStart(0,0,0,0,abs_time);
-                box[boxCount].SetId(boxCount);
-                box[boxCount].SetCarried(abs_time+1);
-                carryingBox[abs_time] = true;
-                boxCount++;
-            }
+        }
+        if (!carryingBox[abs_time])
+        {
+            carryBoxId[abs_time] = boxCount;
+            box[boxCount].SetStart(0,0,0,0,abs_time);
+            box[boxCount].SetId(boxCount);
+            box[boxCount].SetCarried(abs_time+1);
+            carryingBox[abs_time] = true;
+            boxCount++;
         }
     }
     else if (!newCarryingBox and carryingBox[abs_time]) // destroy a box

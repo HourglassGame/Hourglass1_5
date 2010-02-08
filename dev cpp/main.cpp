@@ -13,15 +13,18 @@ int relativeTime;
 int absoluteTime;
 
 // the time which propagation will stop at
-int propagationAim;
+int propagating;
 
 #include "Guy.h"
 #include "Box.h"
+#include "PropManager.h"
 
 const double STEP_TIME = 0.029;
 
 const int MAX_GUYS = 100;
 const int MAX_BOXES = 100;
+
+PropManager propManager;
 
 Guy guy[MAX_GUYS];
 int guyCount; // number of guys 'created'
@@ -59,6 +62,8 @@ char imagePath[_MAX_PATH]; // .bmp path
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
 const int LEVEL_HEIGHT = 21;
+
+bool paradoxTriggered; // you just lost the game
 
 // size of a wall segment
 const int BLOCK_SIZE = 32;
@@ -237,7 +242,7 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval or propagationAim) 
+        if (elapsed_time >= step_interval or propagating) 
         {
             start_timer = clock(); 
             
@@ -255,13 +260,16 @@ int main()
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
             
             // stop propagation if aim time is reached
-            if (absoluteTime >= propagationAim)
+            if (propManager.UpdatePropagation())
             {
-                propagationAim = 0;
+                for (int i = 0; i < guyCount; ++i)
+                {
+                    guy[i].ResetParadoxChecking();
+                }
             }
             
             // get input if not propagating
-            if (!propagationAim)
+            if (!propagating)
             {
                 Guy::StoreInput(relativeTime);
             }
@@ -276,7 +284,7 @@ int main()
             
             for (int i = 0; i < boxCount; ++i)
             {
-                if (!DeadBox[i] and !box[i].GetCarried(absoluteTime) and absoluteTime > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or absoluteTime <= box[i].GetEndAbsTime() ))
+                if (box[i].GetActive(absoluteTime))
                 {
                     double boxY = box[i].GetY(absoluteTime-1);
                     activeBoxOrder[activeBoxes] = i;
@@ -295,7 +303,7 @@ int main()
                     activeBoxes++;
                 }
                 
-                if (!propagationAim)
+                if (!propagating)
                 {
                     box[i].unDrawSprite();
                 }
@@ -315,13 +323,13 @@ int main()
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
                 }
-                if (!propagationAim)
+                if (!propagating)
                 {
                     guy[i].unDrawSprite();
                 }
             }
             
-            if (!propagationAim)
+            if (!propagating)
             {
                  for (int i = 0; i < boxCount; ++i)
                 {

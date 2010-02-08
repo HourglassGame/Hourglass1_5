@@ -15,6 +15,8 @@ public:
     int GetOrder();
     void SetOrder(int newOrder);
     
+    void ResetParadoxChecking();
+    
     void SetId(int newId);
 
     void DrawSprite(int time); 
@@ -46,15 +48,20 @@ private:
     double ySpeed[5400];
     
     // departure variables
-    double departureX;
-    double departureY;
-    double departureXspeed;
-    double departureYspeed;
+    int departureX;
+    int departureY;
+    int departureXspeed;
+    int departureYspeed;
     bool departureCarrying;
     
     int depatureTimeDestination;
     
-    
+    int paradoxCheckX[50];
+    int paradoxCheckY[50];
+    int paradoxCheckXspeed[50];
+    int paradoxCheckYspeed[50];
+    bool paradoxCheckCarrying[50];
+    int paradoxChecks;
     
     // start times, for spawning
     int startAbsTime;

@@ -5,8 +5,8 @@ CPP  = g++.exe -D__DEBUG__
 CC   = gcc.exe -D__DEBUG__
 WINDRES = windres.exe
 RES  = 
-OBJ  = main.o Guy.o Box.o guymanager.o $(RES)
-LINKOBJ  = main.o Guy.o Box.o guymanager.o $(RES)
+OBJ  = main.o Guy.o Box.o guymanager.o PropManager.o $(RES)
+LINKOBJ  = main.o Guy.o Box.o guymanager.o PropManager.o $(RES)
 LIBS =  -L"C:/Dev-Cpp/lib" -mwindows ../../lib/liballeg.a  -g3 
 INCS =  -I"C:/Dev-Cpp/include" 
 CXXINCS =  -I"C:/Dev-Cpp/lib/gcc/mingw32/3.4.2/include"  -I"C:/Dev-Cpp/include/c++/3.4.2/backward"  -I"C:/Dev-Cpp/include/c++/3.4.2/mingw32"  -I"C:/Dev-Cpp/include/c++/3.4.2"  -I"C:/Dev-Cpp/include" 
@@ -37,3 +37,6 @@ Box.o: Box.cpp
 
 guymanager.o: guymanager.cpp
 	$(CPP) -c guymanager.cpp -o guymanager.o $(CXXFLAGS)
+
+PropManager.o: PropManager.cpp
+	$(CPP) -c PropManager.cpp -o PropManager.o $(CXXFLAGS)
