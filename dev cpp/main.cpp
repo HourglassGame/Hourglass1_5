@@ -168,6 +168,24 @@ BITMAP* LoadImage(char* imageName)
     return tempBitmap;
 }
 
+void TestLevel()
+{
+    for (int x = 0; x < LEVEL_WIDTH; ++x)
+    {
+        for (int y = 0; y < LEVEL_HEIGHT; ++y)
+        {
+            //char testString[20];
+            //sprintf(testString,"%d",wall[x][y]);
+            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
+            
+            if (wall[x][y])
+            {
+               rectfill( buffer, int((x+0.4)*BLOCK_SIZE), int((y+0.4)*BLOCK_SIZE), int((x+0.6)*BLOCK_SIZE), int((y+0.6)*BLOCK_SIZE), makecol ( 70, 70, 70));
+            } 
+        }
+    }
+}
+
 int main()
 {
 
@@ -211,22 +229,7 @@ int main()
     LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
     
     // test loaded level
-    /*
-    for (int x = 0; x < LEVEL_WIDTH; ++x)
-    {
-        for (int y = 0; y < LEVEL_HEIGHT; ++y)
-        {
-            //char testString[20];
-            //sprintf(testString,"%d",wall[x][y]);
-            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
-            
-            if (wall[x][y])
-            {
-               rectfill( buffer, int((x+0.4)*BLOCK_SIZE), int((y+0.4)*BLOCK_SIZE), int((x+0.6)*BLOCK_SIZE), int((y+0.6)*BLOCK_SIZE), makecol ( 70, 70, 70));
-            } 
-        }
-    }
-    */
+    // TestLevel();
     
     box[boxCount].SetStart(double(300),double(200),0,0,0);
     box[boxCount].SetId(boxCount);
