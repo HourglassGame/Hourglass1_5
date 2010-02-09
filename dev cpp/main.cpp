@@ -55,9 +55,9 @@ BITMAP* background;
 BITMAP* buffer;
 
 // file paths
-char CurrentPath[_MAX_PATH]; // .exe path
-char levelPath[_MAX_PATH]; // .lvl path
-char imagePath[_MAX_PATH]; // .bmp path
+char CurrentPath[_MAX_PATH] = {'\0'}; // .exe path
+char levelPath[_MAX_PATH] = {'\0'}; // .lvl path
+char imagePath[_MAX_PATH] = {'\0'}; // .bmp path
 
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
@@ -90,7 +90,8 @@ void StringAdd(char* string1, char* string2, char* newString)
     
 }
 
-void LoadLevel(char* filePath)
+/*
+void LoadLevelOld(char* filePath)
 {      
     
     // fixme: (level_height+1) should not be required. Redo level format to fix when creating editor
@@ -110,6 +111,45 @@ void LoadLevel(char* filePath)
             wall[x][y] = atoi(&temp); 
         }
     }
+}
+*/
+
+void LoadLevel (char* filePath)
+{
+    ifstream inputFile;
+    inputFile.open(filePath);
+    char wallString[LEVEL_WIDTH+1];
+    for (int i=0; i < LEVEL_HEIGHT; i++)
+    {
+        inputFile.getline(wallString,(LEVEL_WIDTH+1), '\n');
+        for (int j=0; j < LEVEL_WIDTH; j++)
+        {
+            char temp = wallString[j];
+            wall[j][i] = atoi(&temp);            
+        }
+    }
+}
+
+void MakeLevelFile(char* outputPath)
+{
+    ofstream outputFile;
+    outputFile.open(outputPath);
+    for (int i=0; i < LEVEL_HEIGHT; i++)
+    {
+        for(int j=0;j < LEVEL_WIDTH; j++)
+        {
+             if (wall[j][i])
+             {
+                 outputFile.put('1');
+             }
+             else
+             {
+                 outputFile.put('0'); 
+             }
+        }
+        outputFile.put('\n');
+    }
+    outputFile.close();
 }
 
 BITMAP* LoadImage(char* imageName)
@@ -136,7 +176,7 @@ int main()
     install_mouse();  // for mouse use
     show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
-    set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
+    set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0); 
     // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     
