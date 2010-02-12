@@ -206,16 +206,16 @@ void Guy::ForwardTimeStep(int time)
     {
         for (int i = 0; i < boxCount; ++i)
         {
-            if (box[i].GetActive(time) and box[i].GetSupported())
+            if (box[i].GetActive(time))
             {
-                double boxX = box[i].GetX(time);
-                double boxY = box[i].GetY(time);
-                if (( newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
-                {
-                    ySpeed[time] = 0;
-                    newY = boxY-GUY_COLLISION_HEIGHT;
-                    jump = true;
-                }
+                    double boxX = box[i].GetX(time);
+                    double boxY = box[i].GetY(time);
+                    if (( newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
+                    {
+                        ySpeed[time] = box[i].GetYspeed(time);
+                        newY = boxY-GUY_COLLISION_HEIGHT;
+                        jump = true;
+                    }
             }
         }
     }
