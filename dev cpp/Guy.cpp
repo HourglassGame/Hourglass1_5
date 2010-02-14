@@ -249,7 +249,7 @@ void Guy::UpdateBoxCarrying(int time)
             }
             else
             {
-                box[carryBoxId[time-1]].SetCarried(time+1);
+                //box[carryBoxId[time-1]].SetExist(time,false);
                 carryingBox[time] = true;
                 carryBoxId[time] = carryBoxId[time-1];
             }
@@ -265,7 +265,7 @@ void Guy::UpdateBoxCarrying(int time)
                     double boxY = box[i].GetY(time-1);
                     if (( x[time-1] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
                     {
-                        box[i].SetCarried(time+1);
+                        box[i].SetExist(time,false);
                         carryingBox[time] = true;
                         carryBoxId[time] = i;
                         break;
@@ -278,7 +278,7 @@ void Guy::UpdateBoxCarrying(int time)
     {
         if (carryingBox[time-1])
         {
-            box[carryBoxId[time-1]].SetCarried(time+1);
+            //box[carryBoxId[time-1]].SetCarried(time+1);
             carryingBox[time] = true;
             carryBoxId[time] = carryBoxId[time-1];
         }
@@ -302,10 +302,6 @@ void Guy::UpdateTimeTravel(int time)
             int portTime = inputSpecialArg1[personalTime];
             guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime);
             guy[guyCount].SetOrder(guyCount);
-            if (carryingBox[absoluteTime])
-            {
-                box[carryBoxId[time]].SetEnd(1,time);
-            }
             if (absoluteTime < portTime)
             {
                 propManager.CreatePropagation(absoluteTime,portTime);
@@ -330,10 +326,6 @@ void Guy::UpdateTimeTravel(int time)
         else
         {
             endAbsTime = time;
-            if (carryingBox[absoluteTime])
-            {
-                box[carryBoxId[time]].SetEnd(1,time);
-            }
             
             if (departureX != int(x[time]) or departureY != int(y[time]) or departureXspeed != int(xSpeed[time]) or departureYspeed != int(ySpeed[time]) or departureCarrying != carryingBox[time])
             {
@@ -399,9 +391,9 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
             {
                 box[i] = MintConditionBox;
                 carryBoxId[abs_time] = i;
-                box[i].SetStart(0,0,0,0,abs_time);
+                //box[i].SetStart(0,0,0,0,abs_time);
                 box[i].SetId(i);
-                box[i].SetCarried(abs_time+1);
+                //box[i].SetExist(abs_time,false);
                 carryingBox[abs_time] = true;
                 DeadBox[i] = false;
                 break;
@@ -410,9 +402,9 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
         if (!carryingBox[abs_time])
         {
             carryBoxId[abs_time] = boxCount;
-            box[boxCount].SetStart(0,0,0,0,abs_time);
+            //box[boxCount].SetStart(0,0,0,0,abs_time);
             box[boxCount].SetId(boxCount);
-            box[boxCount].SetCarried(abs_time+1);
+            //box[boxCount].SetExist(abs_time,false);
             carryingBox[abs_time] = true;
             boxCount++;
         }

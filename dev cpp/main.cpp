@@ -194,7 +194,7 @@ int main()
     install_mouse();  // for mouse use
     show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
-    set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0); 
+    set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
     // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     
@@ -275,6 +275,8 @@ int main()
     guy[0].SetOrder(guyCount);
     guyCount = 1;
    
+    absoluteTime = 1;
+    relativeTime = 1;
     
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
@@ -321,12 +323,16 @@ int main()
             
             int activeBoxes = 0;
             int activeBoxOrder[boxCount];
+            
+            
            
             sprintf(testString,"%d",activeBoxes);
             //allegro_message(testString, allegro_error);
             
             for (int i = 0; i < boxCount; ++i)
             {
+                box[i].UpdateExist(absoluteTime);
+                
                 if (box[i].GetActive(absoluteTime))
                 {
                     double boxY = box[i].GetY(absoluteTime-1);

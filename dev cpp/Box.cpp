@@ -48,13 +48,13 @@ void Box::SetId(int newId)
     id = newId;
 }
 
-void Box::SetCarried(int abs_time)
+void Box::SetExist(int abs_time,bool state)
 {
-    carried[abs_time] = true;
+    exist[abs_time] = state;
 }
-bool Box::GetCarried(int abs_time)
+bool Box::GetExist(int abs_time)
 {
-    return carried[abs_time];
+    return exist[abs_time];
 }
 
 bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
@@ -84,7 +84,7 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     //check box collision
     for (int i = 0; i < boxCount; ++i)
     {
-        if (!DeadBox[i] and box[i].GetSupported() and !box[i].GetCarried(abs_time) and i != id and abs_time > box[i].GetStartAbsTime() and (!box[i].GetEndAbsTime() or abs_time <= box[i].GetEndAbsTime() ))
+        if (!DeadBox[i] and box[i].GetSupported() and box[i].GetExist(abs_time))
         {
         // boxes are stepped through in height order so getting current position is all good!
             double boxX = box[i].GetX(abs_time);
@@ -98,7 +98,7 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     
     if (dropped)
     {
-        carried[abs_time] = false;
+        exist[abs_time] = true;
         x[abs_time] = newX;
         y[abs_time] = newY;
         xSpeed[abs_time] = newXspeed;
@@ -122,14 +122,20 @@ int Box::GetEndAbsTime()
     return endAbsTime;
 }
 
+void Box::UpdateExist(int time)
+{
+    exist[time] = exist[time-1];
+}
+
 void Box::ForwardTimeStep(int time)
 {
+    
+    
     
     // only move if past start time
     if (GetActive(time))
     {
         
-        carried[time+1] = false;
         supported = false;
         
         double oldX = x[time-1];
@@ -205,38 +211,25 @@ void Box::ForwardTimeStep(int time)
         // set new locations
         x[time] = newX;
         y[time] = newY; 
-        
-        if (time == endAbsTime)
-        {
-            // paradox checking goes here eventually
-            endAbsTime = 0;
-            
-        }
        
-        
     }
     
 }
 
 bool Box::GetActive(int time)
 {
-    return (!DeadBox[id] and !carried[time] and time > startAbsTime and (!endAbsTime or time <= endAbsTime ));
+    return (!DeadBox[id] and exist[time]);
 }
 
 
 void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
+    exist[abs_time] = true;
     startAbsTime = abs_time;
     x[abs_time] = newX;
     y[abs_time] = newY;
     xSpeed[abs_time] = newXspeed;
     ySpeed[abs_time] = newYspeed;
-}
-
-void Box::SetEnd(int newEndType, int abs_time)
-{
-    endAbsTime = abs_time;
-    endType = newEndType;
 }
 
 void Box::unDrawSprite()
