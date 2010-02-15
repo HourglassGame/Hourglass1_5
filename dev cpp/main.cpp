@@ -118,7 +118,6 @@ void TestLevel(double squareSize)
             //char testString[20];
             //sprintf(testString,"%d",wall[x][y]);
             //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
-            
             if (wall[x][y])
             {
                rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((y+(0.5-squareSize/2))*BLOCK_SIZE), int((x+(0.5+squareSize/2))*BLOCK_SIZE), int((y+(0.5+squareSize/2))*BLOCK_SIZE), makecol ( 70, 70, 70));
@@ -126,25 +125,7 @@ void TestLevel(double squareSize)
         }
     }
 }
-/*
-void TestLevel(double squareSize)
-{
-    for (int x = 0; x < LEVEL_WIDTH; ++x)
-    {
-        for (int y = 0; y < LEVEL_HEIGHT; ++y)
-        {
-            //char testString[20];
-            //sprintf(testString,"%d",wall[x][y]);
-            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
-            
-            if (wall[x][y])
-            {
-               rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((0.5-squareSize/2)*BLOCK_SIZE), int((0.5+squareSize/2)*BLOCK_SIZE), int((0.5-squareSize/2)*BLOCK_SIZE), makecol ( 0, 0, 0));
-            } 
-        }
-    }
-}
-*/
+
 void LoadLevel (char* filePath)
 {
      ifstream inputFile;
@@ -158,7 +139,7 @@ void LoadLevel (char* filePath)
         {          
             inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
             string gotLine(line);
-            if (gotLine.compare(0,6,"[WALL]",0,6)==0) //Did I get "[WALL]"? Compare is actually designed for ordering strings alphabetically
+            if (gotLine.compare(0,6,"[WALL]")==0) //Did I get "[WALL]"? Compare is actually designed for ordering strings alphabetically
             {
                wallFound = true;
                char wallString[LEVEL_WIDTH];
@@ -173,18 +154,18 @@ void LoadLevel (char* filePath)
                   }
                }
             }
-            else if (gotLine.compare(0,7,"<BOXES>",0,7)==0) // Did I get "<BOXES>"
+            else if (gotLine.compare(0,7,"<BOXES>")==0) // Did I get "<BOXES>"
             {
                inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                gotLine = line;
-               while (gotLine.compare(0,8,"</BOXES>",0,8)!= 0)
+               while (gotLine.compare(0,8,"</BOXES>")!= 0)
                {
-                  if (gotLine.compare(0,5,"<BOX>",0,5)==0)
+                  if (gotLine.compare(0,5,"<BOX>")==0)
                   {
                      map<string,string> boxData;
                      inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                      gotLine = line;
-                     while (gotLine.compare(0,6,"</BOX>",0,6)!=0)
+                     while (gotLine.compare(0,6,"</BOX>")!=0)
                      {
                         string::size_type it = gotLine.find("=");
                         boxData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
@@ -204,18 +185,18 @@ void LoadLevel (char* filePath)
                   gotLine = line;
                }
             }
-            else if (gotLine.compare(0,6,"<GUYS>",0,6)==0)
+            else if (gotLine.compare(0,6,"<GUYS>")==0)
             {
                inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                gotLine = line;
-               while (gotLine.compare(0,8,"</GUYS>",0,8)!= 0)
+               while (gotLine.compare(0,8,"</GUYS>")!= 0)
                {
-                  if (gotLine.compare(0,5,"<GUY>",0,5)==0)
+                  if (gotLine.compare(0,5,"<GUY>")==0)
                   {
                      map<string,string> guyData;
                      inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                      gotLine = line;
-                     while (gotLine.compare(0,6,"</GUY>",0,6)!=0)
+                     while (gotLine.compare(0,6,"</GUY>")!=0)
                      {
                         string::size_type it = gotLine.find("=");
                         guyData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
@@ -237,12 +218,12 @@ void LoadLevel (char* filePath)
                   gotLine = line;
                }
             }
-            else if (gotLine.compare(0,8,"<IMAGES>",0,8)==0)
+            else if (gotLine.compare(0,8,"<IMAGES>")==0)
             {
                map<string,string> imageData;
                inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                gotLine = line;
-               while (gotLine.compare(0,9,"</IMAGES>",0,9)!= 0)
+               while (gotLine.compare(0,9,"</IMAGES>")!= 0)
                {
                   string::size_type it = gotLine.find("=");
                   imageData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
@@ -258,10 +239,9 @@ void LoadLevel (char* filePath)
                {
                   background = LoadImage("background.bmp");
                   draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
-                  drawBackground = false;                              
+                  drawBackground = false;
                }
                draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
-               bool drawForeground = true;
                try
                {
                   foreground = LoadImage(imageData["FOREGROUND"].data());    
@@ -269,12 +249,9 @@ void LoadLevel (char* filePath)
                catch (ImageNotLoadedException)
                {
                   TestLevel(1);
-                  drawForeground = false;
+                  foreground = LoadImage("foreground.bmp");
                }
-               if (drawForeground)
-               {
-                  draw_sprite( buffer, foreground, 0, 0);
-               }
+               draw_sprite( buffer, foreground, 0, 0);
             }
         }
         if ((wallFound) == false)
