@@ -6,18 +6,23 @@
 #include <iostream> // for strcat
 #include <ctime> // for timing
 #include <fstream> // for file I/O
+#include <string> // for strings
+#include <map> //used in LoadLevel
+
+#include "Guy.h"
+#include "Box.h"
+#include "PropManager.h"
+
+#include "Exceptions.h" //For all my exceptions
 
 // Relative time: steps that the player has experianced since the start of the game.
 // Absolute time: steps since the start of the game.
+
 int relativeTime;
 int absoluteTime;
 
 // the time which propagation will stop at
 int propagating;
-
-#include "Guy.h"
-#include "Box.h"
-#include "PropManager.h"
 
 const double STEP_TIME = 0.029;
 
@@ -27,13 +32,13 @@ const int MAX_BOXES = 100;
 PropManager propManager;
 
 Guy guy[MAX_GUYS];
-int guyCount; // number of guys 'created'
+int guyCount = 0; // number of guys 'created'
 Box box[MAX_BOXES];
-int boxCount; // number of boxes 'created'
+int boxCount = 0; // number of boxes 'created'
 
 Box MintConditionBox; // never taken out of it's packet. For overriding dead box arrays 
 
-bool DeadBox[MAX_BOXES]; // true for unused box indexes
+bool DeadBox[MAX_BOXES] = {false}; // true for unused box indexes
 
 //MetaGuy metaguy; // Stores input in relative time
 
@@ -90,44 +95,76 @@ void StringAdd(char* string1, char* string2, char* newString)
     
 }
 
-/*
-void LoadLevelOld(char* filePath)
-{      
-    
-    // fixme: (level_height+1) should not be required. Redo level format to fix when creating editor
-    ifstream inputFile;
-    inputFile.open(filePath);
-    char wallString[LEVEL_WIDTH*(LEVEL_HEIGHT+1)];
-    inputFile.getline(wallString, LEVEL_WIDTH*(LEVEL_HEIGHT+1), '\n');
-    //textout_ex( buffer, font, wallString, 150, 450, makecol( 255, 0, 0), makecol( 0, 0, 0) );
-
-    // read wall array
-    int i = 0;
-    for (int x = 0; x < LEVEL_WIDTH; ++x,++i)
-    {
-        for (int y = 0; y < LEVEL_HEIGHT; ++y,++i)
-        {
-            char temp = wallString[i];
-            wall[x][y] = atoi(&temp); 
-        }
-    }
-}
-*/
-
 void LoadLevel (char* filePath)
 {
-    ifstream inputFile;
-    inputFile.open(filePath);
-    char wallString[LEVEL_WIDTH+1];
-    for (int i=0; i < LEVEL_HEIGHT; i++)
-    {
-        inputFile.getline(wallString,(LEVEL_WIDTH+1), '\n');
-        for (int j=0; j < LEVEL_WIDTH; j++)
-        {
-            char temp = wallString[j];
-            wall[j][i] = atoi(&temp);            
+     ifstream inputFile;
+     inputFile.open(filePath);
+     if (inputFile.is_open())
+     {
+        bool wallFound = false; //was "[WALL]" found in the file?
+        const int MAX_LINE_LENGTH = 300; //MAX_LINE_LENGTH, Blasphomy! This is Madness! THIS IS SPARTAA!!!!!
+        char line[MAX_LINE_LENGTH];
+        while (!inputFile.eof())
+        {          
+            inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+            string gotLine(line);
+            if (gotLine.compare(0,6,"[WALL]",0,6)==0) //Did I get "[WALL]"? Compare is actually designed for ordering strings alphabetically
+            {
+               wallFound = true;
+               char wallString[LEVEL_WIDTH];
+               for (int i=0; i < LEVEL_HEIGHT; i++)
+               {
+                  //getline extracts - for getline(char* s,int n,char delim) - at most n-1 characters
+                  inputFile.getline(wallString,(LEVEL_WIDTH+1),'\n');
+                  for (int j=0; j < LEVEL_WIDTH; j++)
+                  {
+                     char temp = wallString[j];
+                     wall[j][i] = atoi(&temp);
+                  }
+               }
+            }
+            else if (gotLine.compare(0,7,"<BOXES>",0,7)==0) // Did I get "<BOXES>"
+            {
+               inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+               gotLine = line;
+               while (gotLine.compare(0,8,"</BOXES>",0,8)!= 0)
+               {
+                  if (gotLine.compare(0,5,"<BOX>",0,5)==0)
+                  {
+                     map<string,string> boxData;
+                     inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                     gotLine = line;
+                     while (gotLine.compare(0,6,"</BOX>",0,6)!=0)
+                     {
+                        string::size_type it = gotLine.find("=");
+                        boxData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
+                        inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                        gotLine = line;
+                     }
+                     double xPos = atof(boxData["X_POS"].data());
+                     double yPos = atof(boxData["Y_POS"].data());
+                     double xSpeed = atof(boxData["X_SPEED"].data());
+                     double ySpeed = atof(boxData["Y_SPEED"].data());
+                     //int absTime = atoi(boxData["ABS_TIME"].data());
+                     box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,0);
+                     box[boxCount].SetId(boxCount);
+                     boxCount++;
+                  }
+                  inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                  gotLine = line;
+               }
+            }
         }
-    }
+        if ((wallFound) == false)
+        {
+          throw WallNotFoundException();
+        }
+        inputFile.close();
+     }
+     else
+     {
+     throw FileNotOpenedException(); //could not open file
+     }
 }
 
 void MakeLevelFile(char* outputPath)
@@ -188,13 +225,12 @@ void TestLevel()
 
 int main()
 {
-
     allegro_init(); // for all allegro functions
     install_keyboard(); // for keyboard use
     install_mouse();  // for mouse use
     show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
-    set_gfx_mode( GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0); 
+    set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0); 
     // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     
@@ -226,50 +262,24 @@ int main()
     // load level 
     char tempPath[_MAX_PATH];
     StringAdd(levelPath,"testlevel.lvl",tempPath);
-    LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
-    
+    try
+    { 
+        LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
+    }
+    catch (FileNotOpenedException)
+    {
+        char message[MAX_PATH+27];
+        sprintf(message,"File:\n%s\ncould not be loaded",tempPath);
+        allegro_message(message,allegro_error);
+        return (1); // Could not load level
+    }
+    catch (WallNotFoundException)
+    {
+       allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
+       return (1); // Could not load level     
+    }
     // test loaded level
     // TestLevel();
-    
-    box[boxCount].SetStart(double(300),double(200),0,0,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(400),double(200),0,0,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(380),double(120),0,0,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(800),double(160),-10,-2,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(680),double(60),0,5,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(420),double(270),0,0,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(380),double(160),0,0,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(300),double(160),0,-10,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(250),double(160),5,-5,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
-    
-    box[boxCount].SetStart(double(360),double(80),0,0,0);
-    box[boxCount].SetId(boxCount);
-    boxCount++;
     
     guy[guyCount].SetStart(double(200),double(200),0,0,false,0,0);
     guy[0].SetOrder(guyCount);
@@ -323,8 +333,6 @@ int main()
             
             int activeBoxes = 0;
             int activeBoxOrder[boxCount];
-            
-            
            
             sprintf(testString,"%d",activeBoxes);
             //allegro_message(testString, allegro_error);
@@ -408,7 +416,6 @@ int main()
     destroy_bitmap( guy_right_stop);
     
     //readkey();
-    
     return 0;
     
 }   

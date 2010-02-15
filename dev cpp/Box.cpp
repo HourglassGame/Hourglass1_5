@@ -84,7 +84,7 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     //check box collision
     for (int i = 0; i < boxCount; ++i)
     {
-        if (!DeadBox[i] and box[i].GetSupported() and box[i].GetExist(abs_time))
+        if (!DeadBox[i] and box[i].GetExist(abs_time))
         {
         // boxes are stepped through in height order so getting current position is all good!
             double boxX = box[i].GetX(abs_time);
@@ -192,7 +192,7 @@ void Box::ForwardTimeStep(int time)
         {
             for (int i = 0; i < boxCount; ++i)
             {
-                if (i != id and box[i].GetActive(time) and box[i].GetSupported())
+                if (i != id and box[i].GetActive(time))
                 {
                     // boxes are stepped through in height order so getting current position is all good!
                     double boxX = box[i].GetX(time);
