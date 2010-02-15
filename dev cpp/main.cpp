@@ -334,12 +334,19 @@ int main()
     StringAdd(CurrentPath,imagePathName,imagePath);
     
     //load images
-    guy_left = LoadImage("rhino_left.bmp");
-    guy_right = LoadImage("rhino_right.bmp");
-    guy_left_stop = LoadImage("rhino_left_stop.bmp");
-    guy_right_stop = LoadImage("rhino_right_stop.bmp");
-    box_sprite = LoadImage("box.bmp");
-    
+    try
+    {
+        guy_left = LoadImage("rhino_left.bmp");
+        guy_right = LoadImage("rhino_right.bmp");
+        guy_left_stop = LoadImage("rhino_left_stop.bmp");
+        guy_right_stop = LoadImage("rhino_right_stop.bmp");
+        box_sprite = LoadImage("box.bmp");
+    }
+    catch (ImageNotLoadedException)
+    {
+          allegro_message("Unable to load some image, exiting",allegro_error); // should add "Which Image" functionallity to ImageNotLoadedException
+          return(2); // Failed to load images
+    }
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
     // load level 
