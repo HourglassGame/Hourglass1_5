@@ -147,7 +147,6 @@ void TestLevel(double squareSize)
 */
 void LoadLevel (char* filePath)
 {
-     background = LoadImage("background.bmp");
      ifstream inputFile;
      inputFile.open(filePath);
      if (inputFile.is_open())
