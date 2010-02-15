@@ -230,7 +230,6 @@ void LoadLevel (char* filePath)
                   inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                   gotLine = line;
                }
-               bool drawBackground = true;
                try
                {
                   background = LoadImage(imageData["BACKGROUND"].data());
@@ -238,8 +237,6 @@ void LoadLevel (char* filePath)
                catch(ImageNotLoadedException)
                {
                   background = LoadImage("background.bmp");
-                  draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
-                  drawBackground = false;
                }
                draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
                try
