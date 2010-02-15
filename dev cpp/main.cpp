@@ -84,7 +84,7 @@ void Draw()
     release_screen();
 }
 
-void StringAdd(char* string1, char* string2, char* newString)
+void StringAdd(const char* string1,const char* string2, char* newString)
 {
      // (first string, string to add to end of first string, string to copy result to)
      // fixme: check for newString length
@@ -95,8 +95,59 @@ void StringAdd(char* string1, char* string2, char* newString)
     
 }
 
+BITMAP* LoadImage(const char* imageName)
+{
+    // loads a bitmap
+    char tempPath[_MAX_PATH];
+    StringAdd(imagePath,imageName,tempPath);
+    BITMAP* tempBitmap;
+    tempBitmap = load_bitmap(tempPath, NULL);
+    if (!tempBitmap)
+    {
+       throw ImageNotLoadedException();
+    }
+    return tempBitmap;
+}
+
+void TestLevel(double squareSize)
+{
+    for (int x = 0; x < LEVEL_WIDTH; ++x)
+    {
+        for (int y = 0; y < LEVEL_HEIGHT; ++y)
+        {
+            //char testString[20];
+            //sprintf(testString,"%d",wall[x][y]);
+            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
+            
+            if (wall[x][y])
+            {
+               rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((y+(0.5-squareSize/2))*BLOCK_SIZE), int((x+(0.5+squareSize/2))*BLOCK_SIZE), int((y+(0.5+squareSize/2))*BLOCK_SIZE), makecol ( 70, 70, 70));
+            } 
+        }
+    }
+}
+/*
+void TestLevel(double squareSize)
+{
+    for (int x = 0; x < LEVEL_WIDTH; ++x)
+    {
+        for (int y = 0; y < LEVEL_HEIGHT; ++y)
+        {
+            //char testString[20];
+            //sprintf(testString,"%d",wall[x][y]);
+            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
+            
+            if (wall[x][y])
+            {
+               rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((0.5-squareSize/2)*BLOCK_SIZE), int((0.5+squareSize/2)*BLOCK_SIZE), int((0.5-squareSize/2)*BLOCK_SIZE), makecol ( 0, 0, 0));
+            } 
+        }
+    }
+}
+*/
 void LoadLevel (char* filePath)
 {
+     background = LoadImage("background.bmp");
      ifstream inputFile;
      inputFile.open(filePath);
      if (inputFile.is_open())
@@ -154,10 +205,82 @@ void LoadLevel (char* filePath)
                   gotLine = line;
                }
             }
+            else if (gotLine.compare(0,6,"<GUYS>",0,6)==0)
+            {
+               inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+               gotLine = line;
+               while (gotLine.compare(0,8,"</GUYS>",0,8)!= 0)
+               {
+                  if (gotLine.compare(0,5,"<GUY>",0,5)==0)
+                  {
+                     map<string,string> guyData;
+                     inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                     gotLine = line;
+                     while (gotLine.compare(0,6,"</GUY>",0,6)!=0)
+                     {
+                        string::size_type it = gotLine.find("=");
+                        guyData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
+                        inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                        gotLine = line;
+                     }
+                     double xPos = atof(guyData["X_POS"].data());
+                     double yPos = atof(guyData["Y_POS"].data());
+                     //double xSpeed = atof(boxData["X_SPEED"].data());
+                     //double ySpeed = atof(boxData["Y_SPEED"].data());
+                     //bool carryingBox = atoi(boxData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
+                     //int absTime = atoi(boxData["ABS_TIME"].data());
+                     //int relTime = atoi(boxData["REL_TIME"].data());
+                     guy[guyCount].SetStart(xPos,yPos,0,0,false,0,0);
+                     guy[guyCount].SetOrder(guyCount);
+                     guyCount++;
+                  }
+                  inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                  gotLine = line;
+               }
+            }
+            else if (gotLine.compare(0,8,"<IMAGES>",0,8)==0)
+            {
+               map<string,string> imageData;
+               inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+               gotLine = line;
+               while (gotLine.compare(0,9,"</IMAGES>",0,9)!= 0)
+               {
+                  string::size_type it = gotLine.find("=");
+                  imageData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
+                  inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+                  gotLine = line;
+               }
+               bool drawBackground = true;
+               try
+               {
+                  background = LoadImage(imageData["BACKGROUND"].data());
+               }
+               catch(ImageNotLoadedException)
+               {
+                  background = LoadImage("background.bmp");
+                  draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
+                  drawBackground = false;                              
+               }
+               draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
+               bool drawForeground = true;
+               try
+               {
+                  foreground = LoadImage(imageData["FOREGROUND"].data());    
+               }
+               catch (ImageNotLoadedException)
+               {
+                  TestLevel(1);
+                  drawForeground = false;
+               }
+               if (drawForeground)
+               {
+                  draw_sprite( buffer, foreground, 0, 0);
+               }
+            }
         }
         if ((wallFound) == false)
         {
-          throw WallNotFoundException();
+           throw WallNotFoundException();
         }
         inputFile.close();
      }
@@ -189,40 +312,6 @@ void MakeLevelFile(char* outputPath)
     outputFile.close();
 }
 
-BITMAP* LoadImage(char* imageName)
-{
-    // loads a bitmap
-    char tempPath[_MAX_PATH];
-    StringAdd(imagePath,imageName,tempPath);
-    BITMAP* tempBitmap;
-    tempBitmap = load_bitmap(tempPath, NULL);
-    if (!tempBitmap)
-    {
-        char tempString[_MAX_PATH+30];
-        StringAdd("Error Loading image, path: ",tempPath,tempString);
-        allegro_message(tempString, allegro_error);
-    }
-    return tempBitmap;
-}
-
-void TestLevel()
-{
-    for (int x = 0; x < LEVEL_WIDTH; ++x)
-    {
-        for (int y = 0; y < LEVEL_HEIGHT; ++y)
-        {
-            //char testString[20];
-            //sprintf(testString,"%d",wall[x][y]);
-            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
-            
-            if (wall[x][y])
-            {
-               rectfill( buffer, int((x+0.4)*BLOCK_SIZE), int((y+0.4)*BLOCK_SIZE), int((x+0.6)*BLOCK_SIZE), int((y+0.6)*BLOCK_SIZE), makecol ( 70, 70, 70));
-            } 
-        }
-    }
-}
-
 int main()
 {
     allegro_init(); // for all allegro functions
@@ -245,8 +334,6 @@ int main()
     StringAdd(CurrentPath,imagePathName,imagePath);
     
     //load images
-    background = LoadImage("background.bmp");
-    foreground = LoadImage("testlevel.bmp");
     guy_left = LoadImage("rhino_left.bmp");
     guy_right = LoadImage("rhino_right.bmp");
     guy_left_stop = LoadImage("rhino_left_stop.bmp");
@@ -255,10 +342,6 @@ int main()
     
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
-    // Draw foreground and background
-    draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE); 
-    draw_sprite( buffer, foreground, 0, 0); 
-
     // load level 
     char tempPath[_MAX_PATH];
     StringAdd(levelPath,"testlevel.lvl",tempPath);
@@ -278,13 +361,10 @@ int main()
        allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
        return (1); // Could not load level     
     }
+
     // test loaded level
-    // TestLevel();
-    
-    guy[guyCount].SetStart(double(200),double(200),0,0,false,0,0);
-    guy[0].SetOrder(guyCount);
-    guyCount = 1;
-   
+    // TestLevel(0.2);
+
     absoluteTime = 1;
     relativeTime = 1;
     

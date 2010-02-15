@@ -15,3 +15,12 @@ class WallNotFoundException
 		// class destructor
 		~WallNotFoundException(){}
 };
+
+class ImageNotLoadedException
+{
+	public:
+		// class constructor
+		ImageNotLoadedException(){}
+		// class destructor
+		~ImageNotLoadedException(){}
+};
