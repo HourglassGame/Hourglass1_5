@@ -1,5 +1,7 @@
 #include <allegro.h>
 
+
+
 #include <direct.h> // for getcwd
 #include <stdio.h>
 #include <stdlib.h>// for MAX_PATH
@@ -17,6 +19,8 @@
 
 // Relative time: steps that the player has experianced since the start of the game.
 // Absolute time: steps since the start of the game.
+
+bool won = false;
 
 int relativeTime;
 int absoluteTime;
@@ -91,8 +95,7 @@ void StringAdd(const char* string1,const char* string2, char* newString)
     int i;
     for (i=0;string1[i];i++) newString[i] = string1[i]; // copy string1 onto new string
     for (int j=0;string2[j];i++,j++) newString[i] = string2[j]; // copy string2 onto the end of new string
-    newString[i] = 0; // terminate new string or the end will be full of junk
-    
+    newString[i] = 0; // terminate new string or the end will be full of junk  
 }
 
 BITMAP* LoadImage(const char* imageName)
@@ -259,7 +262,7 @@ void LoadLevel (char* filePath)
      }
      else
      {
-     throw FileNotOpenedException(); //could not open file
+        throw FileNotOpenedException(); //could not open file
      }
 }
 
@@ -292,7 +295,10 @@ int main()
     install_mouse();  // for mouse use
     show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     set_color_depth(32);
-    set_gfx_mode( GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0); 
+	if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0) !=0)
+	   {
+          set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024,768, 0, 0);
+       }
     // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
     
@@ -341,7 +347,6 @@ int main()
        allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
        return (1); // Could not load level     
     }
-
     // test loaded level
     // TestLevel(0.2);
 
@@ -351,7 +356,7 @@ int main()
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
     start_timer = clock(); // timers for stable steps/second
-    
+   	//allegro_message(allegro_id); // "Allegro 4.4.0, MinGW" on my system (although I believe I have allegro 4.4.0.1 ...)
     while( !key[KEY_ESC])
     { 
         finish_timer = clock();
@@ -374,6 +379,7 @@ int main()
             sprintf(testString,"%d",(mouse_x*3));
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
             
+            extern char allegro_id[];
             // stop propagation if aim time is reached
             if (propManager.UpdatePropagation())
             {
@@ -461,13 +467,15 @@ int main()
             }
             
             absoluteTime++;
-            
+       //     file_select_ex("y0", imagePath, NULL , 500, 800, 600);
             // draw buffer to screen
+          //  allegro_message(imagePath);
             
         }
     }  
 
     // remember to cleanup all bitmaps
+    destroy_bitmap( background);
     destroy_bitmap( foreground);
     destroy_bitmap( buffer);
     destroy_bitmap( guy_left);
