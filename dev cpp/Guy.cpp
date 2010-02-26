@@ -19,7 +19,7 @@ extern BITMAP* buffer;
 
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
-const int LEVEL_HEIGHT = 21;
+const int LEVEL_HEIGHT = 19;
 const int BLOCK_SIZE = 32;
 
 extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
@@ -456,7 +456,7 @@ void Guy::DrawSprite(int time)
         }
         else
         {
-              if (draw_facing)
+            if (draw_facing)
             {
                 masked_blit(guy_right ,buffer ,36*subimage+8,0,drawX,drawY,23,32);
             }

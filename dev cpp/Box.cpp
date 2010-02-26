@@ -10,7 +10,7 @@ extern BITMAP* buffer;
 
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
-const int LEVEL_HEIGHT = 21;
+const int LEVEL_HEIGHT = 19;
 const int BLOCK_SIZE = 32;
 
 extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];

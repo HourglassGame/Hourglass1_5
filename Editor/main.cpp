@@ -1,23 +1,31 @@
 #include <allegro.h>
 
-#include "cgui.h"
+#include "cgui.h" //for Req(...) - (unused)
 
 #include <stdio.h>
 #include <stdlib.h>// for MAX_PATH
-#include <iostream> // for strcat
+//#include <iostream> // for strcat (unneeded?)
 #include <ctime> // for timing
 #include <fstream> // for file I/O
 #include <string> // for strings
 #include <map> //used in LoadLevel
+#include <math.h> // for floor()
 
 #include "Exceptions.h" //For all my exceptions
-
 
 using namespace std;
 //extern char allegro_id[];
 
+// timing
+double elapsed_time;
+clock_t start_timer,finish_timer;
+
+const double STEP_TIME = 0.0145; // at ~60 fps wall drawing is smother (but mouse flickers more)
+
+
+//Walls
 const int LEVEL_WIDTH = 32;
-const int LEVEL_HEIGHT = 21;
+const int LEVEL_HEIGHT = 19;
 
 const int BLOCK_SIZE = 32;
 
@@ -29,67 +37,195 @@ char currentPath[_MAX_PATH] = {'\0'}; // .exe path
 char levelPath[_MAX_PATH] = {'\0'}; // .lvl path
 char imagePath[_MAX_PATH] = {'\0'}; // .bmp path
 
+//Functions
 void init();
 void deinit();
 
 void StringAdd(const char* string1,const char* string2, char* newString);
 
 void LoadLevel (char* filePath);
+void SaveLevel(char* outputPath);
 void TestLevel(double squareSize);
 
 void Draw();
-BITMAP* buffer;
 
+//Globals TODO DESPERATELY - redo program in OO way to avoid these spaz number of globals );
+
+BITMAP* buffer;
+BITMAP* tempBuffer;
+
+bool drawingWall = false;
+bool pastKeyW = false;
+bool pastKeySpace = false;
+bool doingAddObjectMenu = false;
+bool doingAddGuy = false;
+bool pastKeyMouse1 = false;
+
+const int BUFFER_WIDTH = 1024;
+const int BUFFER_HEIGHT = 768;
+
+const int MENU_WIDTH = 100;
+const int MENU_HEIGHT = 30;
+
+int menuPositionX;
+int menuPositionY;
+
+int noOfMenuItems;
+/*
 DIALOG editDialog[] =
 {
-/* (dialog proc)     (x)   (y)   (w)   (h)   (fg)  (bg)  (key) (flags)  (d1) (d2)  (dp)           (dp2) (dp3) */
+// (dialog proc)     (x)   (y)   (w)   (h)   (fg)  (bg)  (key) (flags)  (d1) (d2)  (dp)           (dp2) (dp3) 
    { d_clear_proc,      0,    0,    0,    0,    255,  0,    0,    0,       0,   0,    NULL,          NULL, NULL  },
    { d_button_proc,     162,  142,  141,  49,   255,  0,    0,    D_EXIT,  0,   0,    path,        NULL, NULL  },
    
    { NULL,              0,    0,    0,    0,    0,    0,    0,    0,       0,   0,    NULL,          NULL, NULL  }
 };
-
+*/
 int main() {
-	init();
-//	allegro_message(allegro_id);
-	while (!key[KEY_ESC])
-    {
-        if(key[KEY_L])
-        {
-           for (int i=0;i<_MAX_PATH;i++)
-           {
-              path[i] = levelPath[i];
-           }
-           file_select_ex("Select the file you would like to Load", path, NULL, 500, 0, 0);
-           try
-           {
-              LoadLevel(path);
-           }
-           catch (FileNotOpenedException)
-           {
-              char message[MAX_PATH+27];
-              sprintf(message,"File:\n%s\ncould not be loaded",path);
-              allegro_message(message,allegro_error);
-              return (1); // Could not load level
-           }
-           catch (WallNotFoundException)
-           {
-              allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
-              return (1); // Could not load level     
-           }
-           TestLevel(1);
-           //do_dialog(editDialog,-1);
-        }
-    //switch (Req("Exit request", "Please make your decision|Continue|Exit|Pause")) 
-   // {
-   //     case 0:
-  //           break;
-   // }
-    //do_dialog(editDialog, -1);             
-    Draw();
-	deinit();
-    }
 
+	init();
+	double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
+//	allegro_message(allegro_id);
+    while (!key[KEY_ESC])
+    {
+        finish_timer = clock();
+        elapsed_time = (double(finish_timer)-double(start_timer));
+        if (elapsed_time >= step_interval) 
+        {
+            start_timer = clock();
+            if(key[KEY_L])
+            {
+               for (int i=0;i<_MAX_PATH;i++)
+               {
+                  path[i] = levelPath[i];
+               }
+               if(file_select_ex("Select the file you would like to Load", path, NULL, 500, 0, 0))
+               {
+                   try
+                   {
+                      LoadLevel(path);
+                   }
+                   catch (FileNotOpenedException)
+                   {
+                      char message[MAX_PATH+27];
+                      sprintf(message,"File:\n%s\ncould not be loaded",path);
+                      allegro_message(message,allegro_error);
+                      return (1); // Could not load level
+                   }
+                   catch (WallNotFoundException)
+                   {
+                      allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
+                      return (1); // Could not load level     
+                   }
+                   TestLevel(1);
+                   //do_dialog(editDialog,-1);
+               }
+            }
+            
+            if (key[KEY_S])
+            {
+                  for (int i=0;i<_MAX_PATH;i++)
+               {
+                  path[i] = levelPath[i];
+               }
+               if(file_select_ex("Please enter the location where you would like this level to be saved", path, NULL, 500, 0, 0)) //Returns zero if closed with "cancel"
+               {
+                  SaveLevel(path);
+               }
+            }
+            
+            if(!pastKeyW && key[KEY_W]) // Switch in and out of wall drawing mode
+            {
+               pastKeyW = true;
+               if (drawingWall)
+               {
+                  drawingWall = false;
+               }
+               else
+               {
+                  drawingWall = true;
+               }
+            }
+            
+            if(pastKeyW && !key[KEY_W])
+            {
+               pastKeyW = false;            
+            }
+            
+            if (drawingWall)
+            {
+               if ((mouse_b & 1) && !(mouse_b & 2))
+               {
+                   //add wall
+                   int x = int(floor(mouse_x/BLOCK_SIZE));
+                   int y = int(floor(mouse_y/BLOCK_SIZE));
+                   if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
+                   {
+                      wall[x][y] = true;
+                   }
+                   TestLevel(1);
+               }
+               else if ((mouse_b & 2))// && !(mouse_b & 1))
+               {
+                   //delete wall
+                   int x = int(floor(mouse_x/BLOCK_SIZE));
+                   int y = int(floor(mouse_y/BLOCK_SIZE));
+                   if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
+                   {
+                      wall[x][y] = false;
+                   }
+                   TestLevel(1);
+               }
+            }
+            if(!pastKeySpace && key[KEY_SPACE]) // Do add object menu
+            {
+               if (!doingAddObjectMenu)
+               {
+                   doingAddObjectMenu = true;
+
+                   pastKeySpace = true;
+                   drawingWall = false;
+                   draw_sprite(tempBuffer, buffer, 0, 0);
+                   menuPositionX = mouse_x;
+                   menuPositionY = mouse_y;
+                   noOfMenuItems = 1;
+                   rectfill(buffer, menuPositionX, menuPositionY, menuPositionX + MENU_WIDTH, menuPositionY + MENU_HEIGHT*noOfMenuItems, makecol(40,40,40));
+               }
+               else
+               {
+                  draw_sprite(buffer, tempBuffer, 0, 0);
+                  doingAddObjectMenu = false;
+                  pastKeySpace = true;
+               }
+            }
+            if(pastKeySpace && !key[KEY_SPACE])
+            {
+               pastKeySpace = false;            
+            }
+            if (doingAddObjectMenu)
+            {
+               if (mouse_b & 1)
+               {
+                  pastKeyMouse1 = true;
+                  draw_sprite(buffer, tempBuffer, 0, 0);
+                  doingAddObjectMenu = false;
+                  if (mouse_x > menuPositionX && mouse_x < (menuPositionX + MENU_WIDTH) && mouse_y > menuPositionY && mouse_x < (menuPositionY + MENU_HEIGHT*noOfMenuItems))
+                  {
+                     doingAddGuy = true;
+                  }
+               }                       
+            }
+            if (doingAddGuy == true)
+            {
+               if (mouse_b & 1 && !pastKeyMouse1)
+               {
+                           
+               }
+            }
+            Draw();
+        }
+    }
+    deinit();
 	return 0;
 }
 END_OF_MAIN()
@@ -120,7 +256,20 @@ void init() {
     StringAdd(currentPath,levelPathName,levelPath);
     StringAdd(currentPath,imagePathName,imagePath);
     
-    buffer = create_bitmap( 1024, 768); // create buffer, all drawing done to buffer
+    buffer = create_bitmap( BUFFER_WIDTH, BUFFER_HEIGHT); // create buffer, all drawing done to buffer
+    tempBuffer = create_bitmap(BUFFER_WIDTH, BUFFER_HEIGHT);
+    
+    select_mouse_cursor(MOUSE_CURSOR_ARROW);
+    
+    show_mouse(screen);
+    
+    TestLevel(1);
+    
+    drawingWall = false;
+    pastKeyW = false;
+    pastKeySpace = false;
+    
+    
 }
 
 void deinit() {
@@ -135,7 +284,7 @@ void StringAdd(const char* string1,const char* string2, char* newString)
     int i;
     for (i=0;string1[i];i++) newString[i] = string1[i]; // copy string1 onto new string
     for (int j=0;string2[j];i++,j++) newString[i] = string2[j]; // copy string2 onto the end of new string
-    newString[i] = 0; // terminate new string or the end will be full of junk  
+    newString[i] = 0; // terminate new string or the end will be full of junk
 }
 
 
@@ -283,8 +432,53 @@ void LoadLevel (char* filePath)
      }
 }
 
+void SaveLevel(char* outputPath)
+{
+    ofstream outputFile;
+    outputFile.open(outputPath);
+    const int LENGTH_OF_WALL_KEYWORD = 6; // "[WALL]" (probably should use a string...) TODO
+    char wallKeyword[LENGTH_OF_WALL_KEYWORD+1] = "[WALL]"; //+1 may not be needed TODO
+    for (int i = 0; i < LENGTH_OF_WALL_KEYWORD; i++)
+    {
+        outputFile.put(wallKeyword[i]); // can only put() one char at a time...
+    }
+    outputFile.put('\n');
+    for (int i=0; i < LEVEL_HEIGHT; i++)
+    {
+        for(int j=0;j < LEVEL_WIDTH; j++)
+        {
+             if (wall[j][i])
+             {
+                 outputFile.put('1');
+             }
+             else
+             {
+                 outputFile.put('0'); 
+             }
+        }
+        outputFile.put('\n');
+    }
+    
+    const int LENGTH_OF_START_IMAGES_KEYWORD = 8;
+    char startImagesKeyword[LENGTH_OF_START_IMAGES_KEYWORD+1] = "<IMAGES>";
+    for (int i = 0; i < LENGTH_OF_START_IMAGES_KEYWORD; i++)
+    {
+        outputFile.put(startImagesKeyword[i]); // can only put() one char at a time...
+    }
+    outputFile.put('\n');
+    const int LENGTH_OF_END_IMAGES_KEYWORD = 9;
+    char endImagesKeyword[LENGTH_OF_END_IMAGES_KEYWORD+1] = "</IMAGES>";
+    for (int i = 0; i < LENGTH_OF_END_IMAGES_KEYWORD; i++)
+    {
+        outputFile.put(endImagesKeyword[i]); // can only put() one char at a time...
+    }
+    
+    outputFile.close();
+}
+
 void TestLevel(double squareSize)
 {
+    rectfill( buffer, 0 , 0 , LEVEL_WIDTH * BLOCK_SIZE, LEVEL_HEIGHT * BLOCK_SIZE, makecol (255,255,255));
     for (int x = 0; x < LEVEL_WIDTH; ++x)
     {
         for (int y = 0; y < LEVEL_HEIGHT; ++y)
@@ -303,7 +497,9 @@ void TestLevel(double squareSize)
 void Draw()
 {
     // draws the buffer to the screen
+    show_mouse(NULL);
     acquire_screen();
     draw_sprite( screen, buffer, 0, 0);
     release_screen();
+    show_mouse(screen);
 }
