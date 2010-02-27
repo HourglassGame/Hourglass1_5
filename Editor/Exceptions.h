@@ -1,4 +1,13 @@
-class FileNotOpenedException
+class HourglassException
+{
+   public:
+		// class constructor
+		HourglassException(){}
+		// class destructor
+		~HourglassException(){}
+};
+
+class FileNotOpenedException : public HourglassException
 {
 	public:
 		// class constructor
@@ -7,7 +16,7 @@ class FileNotOpenedException
 		~FileNotOpenedException(){}
 };
 
-class WallNotFoundException
+class WallNotFoundException : public HourglassException
 {
 	public:
 		// class constructor
@@ -16,7 +25,7 @@ class WallNotFoundException
 		~WallNotFoundException(){}
 };
 
-class ImageNotLoadedException
+class ImageNotLoadedException : public HourglassException
 {
 	public:
 		// class constructor

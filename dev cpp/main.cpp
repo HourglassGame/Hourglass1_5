@@ -1,12 +1,12 @@
 #include <allegro.h>
 
-#include <direct.h> // for getcwd
-#include <stdio.h>
-#include <stdlib.h>// for MAX_PATH
-#include <iostream> // for strcat
-#include <ctime> // for timing
+//#include <direct.h> // for getcwd - unneeded
+//#include <stdio.h>
+//#include <stdlib.h>// for MAX_PATH
+//#include <iostream> // for strcat
+//#include <ctime> // for timing
 #include <fstream> // for file I/O
-#include <string> // for strings
+//#include <string> // for strings
 #include <map> //used in LoadLevel
 
 #include "Guy.h"
@@ -36,7 +36,7 @@ int boxCount = 0; // number of boxes 'created'
 
 Box MintConditionBox; // never taken out of it's packet. For overriding dead box arrays 
 
-bool DeadBox[MAX_BOXES] = {false}; // true for unused box indexes
+bool DeadBox[MAX_BOXES] = {false}; // true for unused box indices
 
 //MetaGuy metaguy; // Stores input in relative time
 
@@ -88,12 +88,16 @@ int main()
     allegro_init(); // for all allegro functions
     install_keyboard(); // for keyboard use
     install_mouse();  // for mouse use
-    show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
+    //show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
+    
+    select_mouse_cursor(MOUSE_CURSOR_ARROW);  //Changeg, show_os_cursor dosen't work fullscreen. Better solution is probably to draw our own bitmap mouse at end of every step.
+    show_mouse(screen);
+    
     set_color_depth(32);
     
-	if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0) !=0)
+	if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024,768, 0, 0) !=0)
     {
-       set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024,768, 0, 0);
+       set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
     }
     
     // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
@@ -289,9 +293,11 @@ END_OF_MAIN();
 void Draw()
 {
     // draws the buffer to the screen
+    show_mouse(NULL);
     acquire_screen();
     draw_sprite( screen, buffer, 0, 0);
     release_screen();
+    show_mouse(screen);
 }
 
 void StringAdd(const char* string1,const char* string2, char* newString)
@@ -417,12 +423,12 @@ void LoadLevel (char* filePath)
                      }
                      double xPos = atof(guyData["X_POS"].data());
                      double yPos = atof(guyData["Y_POS"].data());
-                     //double xSpeed = atof(boxData["X_SPEED"].data());
-                     //double ySpeed = atof(boxData["Y_SPEED"].data());
-                     //bool carryingBox = atoi(boxData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
-                     //int absTime = atoi(boxData["ABS_TIME"].data());
-                     //int relTime = atoi(boxData["REL_TIME"].data());
-                     guy[guyCount].SetStart(xPos,yPos,0,0,false,0,0);
+                     double xSpeed = atof(guyData["X_SPEED"].data()); // TODO If x or ySpeed don't exist, this may cause undefined behaviour ... not sure though. 
+                     double ySpeed = atof(guyData["Y_SPEED"].data());
+                     //bool carryingBox = bool(atoi(guyData["CARRYING_BOX"].data()));
+                     //int absTime = atoi(guyData["ABS_TIME"].data());
+                     //int relTime = atoi(guyData["REL_TIME"].data());
+                     guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0);
                      guy[guyCount].SetOrder(guyCount);
                      guyCount++;
                   }
