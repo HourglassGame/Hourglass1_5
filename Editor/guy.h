@@ -4,10 +4,11 @@
 #define GUY_H
 
 #include <allegro.h>
+#include "object.h"
 /*
  * No description
  */
-class Guy
+class Guy : public Object
 {
 	public:
 		// class constructor
@@ -15,16 +16,16 @@ class Guy
 		// class destructor
 		~Guy();
 		
-		void SetData(int newYPos, int newXPos, double newXSpeed, double newYSpeed);
+		//void SetData(int newYPos, int newXPos, double newXSpeed, double newYSpeed);
 		void DoDraw();
-		void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
+		//void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
 	private:
-        int xPos;
-        int yPos;
-        double xSpeed;
-        double ySpeed;
+        //int xPos;
+        //int yPos;
+        //double xSpeed;
+        //double ySpeed;
         
-        bool drawFacing;
+       // bool drawFacing;
 };
 
 #endif // GUY_H

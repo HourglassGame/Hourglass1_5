@@ -13,8 +13,9 @@
 #include <vector> //for guys, boxes, platforms etc...
 
 #include "Exceptions.h" //For all my exceptions
-#include "guy.h"
-#include "box.h"
+
+#include "object.h"
+//#include "guy.h"
 using namespace std;
 //extern char allegro_id[];
 
@@ -73,6 +74,9 @@ bool doingAddObjectMenu = false;
 bool doingAddGuy = false;
 bool doingAddBox = false;
 bool pastKeyMouse1 = false;
+bool objectSelected = false;
+int selectedObject = -1;
+bool pastMouse2CancellingAddObject = false;
 
 const int BUFFER_WIDTH = 1024;
 const int BUFFER_HEIGHT = 768;
@@ -89,16 +93,11 @@ bool snapToGrid = true;
 
 int gridSize = 16;
 
-vector<Guy> guys;
-vector<Box> boxes;
+vector<Object> objects;
 
-int guyCount = 0;
+//int guyCount = 0;
 
-const int GUY_WIDTH = 24;
-const int GUY_HEIGHT = 32;
 
-const int BOX_WIDTH = 32;
-const int BOX_HEIGHT = 32;
 
 int main() {
 	try
@@ -145,7 +144,7 @@ int main() {
                    }
                 }
                 
-                if(!pastKeyW && key[KEY_W]) // Switch in and out of wall drawing mode
+                if(!pastKeyW && key[KEY_W] && !doingAddBox && !doingAddGuy && !doingAddObjectMenu) // Switch in and out of wall drawing mode
                 {
                    pastKeyW = true;
                    if (drawingWall)
@@ -154,6 +153,11 @@ int main() {
                    }
                    else
                    {
+                      if (objectSelected)
+                      {
+                         objects[selectedObject].SetSelected(false);                   
+                      }
+                      objectSelected = false;
                       drawingWall = true;
                    }
                 }
@@ -238,7 +242,6 @@ int main() {
                       }
                    }                       
                 }
-              //  doingAddGuy = true;
                 if (doingAddGuy)
                 {
                    int guyX = 0;
@@ -254,26 +257,33 @@ int main() {
                       guyX = int(floor(mouse_x));
                       guyY = int(floor(mouse_y));
                    }
-                   if(guyX < LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && guyY < LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT)
+                   if(guyX <= LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && guyY <= LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT)
                    {
                        draw_sprite(buffer,guy_left_stop, guyX, guyY);
                        if ((mouse_b & 1) && !pastKeyMouse1)
                        {
                           pastKeyMouse1 = true;
-                          Guy newGuy;
-                          guys.push_back(newGuy);
-                          guys[guys.size()-1].SetData(guyX,guyY,0,0);
+                          Object newGuy;
+                          objects.push_back(newGuy);
+                          objects[objects.size()-1].SetData(guyX,guyY,0,0,1);
                           draw_sprite(buffer,tempBuffer,0,0);
                           doingAddGuy = false;
+                          for(int i=0; i < objects.size(); i++)
+                          {
+                             objects[i].SetSelected(false);        
+                          }
+                          objects[objects.size()-1].SetSelected(true);
+                          objectSelected = true;
+                          selectedObject = (objects.size()-1);
                        }
                    }
                    if (mouse_b & 2)
                    {
                       doingAddGuy = false;
                       draw_sprite(buffer,tempBuffer,0,0);
+                      pastMouse2CancellingAddObject = true;
                    }
                 }
-                
                 if (doingAddBox)
                 {
                    int boxX = 0;
@@ -290,35 +300,59 @@ int main() {
                       boxX = int(floor(mouse_x));
                       boxY = int(floor(mouse_y));
                    }
-                   if(boxX < LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && boxY < LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)
+                   if(boxX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && boxY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)
                    {
                        draw_sprite(buffer,box_sprite, boxX, boxY);
                        if ((mouse_b & 1) && !pastKeyMouse1)
                        {
                           pastKeyMouse1 = true;
-                          Box newBox;
-                          boxes.push_back(newBox);
-                          boxes[boxes.size()-1].SetData(boxX,boxY,0,0);
+                          Object newBox;
+                          objects.push_back(newBox);
+                          objects[objects.size()-1].SetData(boxX,boxY,0,0,2);
                           draw_sprite(buffer,tempBuffer,0,0);
+                          for(int i=0; i < objects.size(); i++)
+                          {
+                             objects[i].SetSelected(false);        
+                          }
+                          objects[objects.size()-1].SetSelected(true);
+                          selectedObject = (objects.size()-1);
+                          objectSelected = true;
                        }
                    }
                    if (mouse_b & 2)
                    {
                       doingAddBox = false;
                       draw_sprite(buffer,tempBuffer,0,0);
+                      pastMouse2CancellingAddObject = true;
                    }
                 }
-                if(pastKeyMouse1 && !(mouse_b & 1))
+                if (!(mouse_b & 2) && pastMouse2CancellingAddObject)
                 {
-                   pastKeyMouse1 = false;            
+                   pastMouse2CancellingAddObject = false;
                 }
-                for(int i=0;i < boxes.size();i++)
+                if(mouse_b & 1 && !pastKeyMouse1 && !drawingWall)
                 {
-                   boxes[i].DoDraw();
+                    pastKeyMouse1 = true;
+                    for(int i=0;i < objects.size();i++)
+                    {
+                       if(objects[i].DoSelectionCheck())
+                       {
+                          for(int j=0;j < objects.size(); j++)
+                          {
+                             if(j != i)
+                             {
+                                objects[j].SetSelected(false);
+                             }
+                          }
+                          objectSelected = true;
+                          selectedObject = i;
+                          break;
+                       }
+                    }
                 }
-                for(int i=0;i < guys.size();i++)
+                for(int i=0;i < objects.size();i++)
                 {
-                   guys[i].DoDraw();
+                   objects[i].DoDraw();
                 }
                 if(doingAddObjectMenu)
                 {
@@ -328,7 +362,50 @@ int main() {
                    draw_sprite(buffer, menu_box, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
                    noOfMenuItems++;                        
                 }
+                if (objectSelected)
+                {
+                    if (mouse_b & 2 && !pastMouse2CancellingAddObject && !drawingWall && !doingAddObjectMenu && !doingAddGuy && !doingAddBox)
+                    {
+                       int boxX = 0;
+                       int boxY = 0;
+                      // draw_sprite(tempBuffer, buffer,0,0);  
+                       if (snapToGrid)
+                       {
+                          boxX = int(gridSize*floor(double(mouse_x/gridSize)));
+                          boxY = int(gridSize*floor(double(mouse_y/gridSize)));
+                       }
+                       else
+                       {
+                          boxX = int(floor(mouse_x));
+                          boxY = int(floor(mouse_y));
+                       }
+                       
+                       if(boxX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && boxY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)
+                       {
+                           objects[selectedObject].SetPos(boxX,boxY);
+                       }
+                       
+                    }
+                    if(key[KEY_DEL] || key[KEY_BACKSPACE])
+                    {
+                       vector<Object>::iterator it;
+                       it = objects.begin();
+                       for(int i = 0; i < selectedObject; i++)
+                       {
+                          it++;
+                       }
+                       objects.erase(it);
+                       selectedObject = -1;
+                       objectSelected = false;
+                    }
+                }
+                if(pastKeyMouse1 && !(mouse_b & 1))
+                {
+                   pastKeyMouse1 = false;            
+                }
+                
                 Draw();
+                TestLevel(1);
                 if(doingAddGuy)
                 {
                    draw_sprite(buffer, tempBuffer,0,0);
@@ -398,6 +475,17 @@ void init() {
     
     show_mouse(screen);
     
+    for(int i = 0; i<LEVEL_WIDTH; i++)
+    {
+       for(int j = 0; j<LEVEL_HEIGHT; j++)
+       {
+          if(i == 0 || j == 0 || i == LEVEL_WIDTH-1 || j == LEVEL_HEIGHT-1)
+          {
+             wall[i][j] = true;     
+          }        
+       }
+    }
+    
     TestLevel(1);
     
     drawingWall = false;
@@ -436,11 +524,18 @@ BITMAP* LoadImage(const char* imageName)
 
 void LoadLevel (char* filePath)
 {
-     while (guys.size() != 0)
-     {
-        guys.pop_back();
-     }
-     guyCount = 0;
+     objects.clear();
+     selectedObject = -1;
+     drawingWall = false;
+     pastKeyW = false;
+     pastKeySpace = false;
+     doingAddObjectMenu = false;
+     doingAddGuy = false;
+     doingAddBox = false;
+     pastKeyMouse1 = false;
+     objectSelected = false;
+     pastMouse2CancellingAddObject = false;
+     
      ifstream inputFile;
      inputFile.open(filePath);
      if (inputFile.is_open())
@@ -491,9 +586,9 @@ void LoadLevel (char* filePath)
                      double xSpeed = atof(boxData["X_SPEED"].data());
                      double ySpeed = atof(boxData["Y_SPEED"].data());
                      //int absTime = atoi(boxData["ABS_TIME"].data());
-                     Box newBox;
-                     boxes.push_back(newBox);
-                     boxes[boxes.size()-1].SetData(xPos,yPos,xSpeed,ySpeed);
+                     Object newBox;
+                     objects.push_back(newBox);
+                     objects[objects.size()-1].SetData(xPos,yPos,xSpeed,ySpeed,2);
                   }
                   inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                   gotLine = line;
@@ -526,9 +621,9 @@ void LoadLevel (char* filePath)
                      //bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
                      //int absTime = atoi(guyData["ABS_TIME"].data());
                      //int relTime = atoi(guyData["REL_TIME"].data());
-                     Guy newGuy;
-                     guys.push_back(newGuy);
-                     guys[guys.size()-1].SetData(xPos,yPos,xSpeed,ySpeed);
+                     Object newGuy;
+                     objects.push_back(newGuy);
+                     objects[objects.size()-1].SetData(xPos,yPos,xSpeed,ySpeed,1);
                   }
                   inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                   gotLine = line;
@@ -606,42 +701,48 @@ void SaveLevel(char* outputPath)
     outputFile << "<IMAGES>\n";
     outputFile << "</IMAGES>\n";
     outputFile << "<GUYS>\n";
-    for (int i = 0; i < guys.size(); i++)
+    for (int i = 0; i < objects.size(); i++)
     {
-        outputFile << "<GUY>\n";
-        int xPos;
-        int yPos;
-        double xSpeed;
-        double ySpeed;
-        guys[i].GetData(xPos, yPos, xSpeed, ySpeed);
-        //char message[100];
-       // sprintf(message, "%d" , xPos);
-        //allegro_message(message);
-        outputFile << "X_POS=" << xPos << '\n';
-        outputFile << "Y_POS=" << yPos << '\n';
-       // outputFile << "X_SPEED = " << xSpeed << '\n';
-      //  outputFile << "Y_SPEED = " << ySpeed << '\n';
-        outputFile << "</GUY>\n";
+        if (objects[i].GetType() == 1)
+        {
+            outputFile << "<GUY>\n";
+            int xPos;
+            int yPos;
+            double xSpeed;
+            double ySpeed;
+            objects[i].GetData(xPos, yPos, xSpeed, ySpeed);
+            //char message[100];
+           // sprintf(message, "%d" , xPos);
+            //allegro_message(message);
+            outputFile << "X_POS=" << xPos << '\n';
+            outputFile << "Y_POS=" << yPos << '\n';
+           // outputFile << "X_SPEED = " << xSpeed << '\n';
+          //  outputFile << "Y_SPEED = " << ySpeed << '\n';
+            outputFile << "</GUY>\n";
+        }
     }
     outputFile << "</GUYS>\n";
     
     outputFile << "<BOXES>\n";
-    for (int i = 0; i < boxes.size(); i++)
+    for (int i = 0; i < objects.size(); i++)
     {
-        outputFile << "<BOX>\n";
-        int xPos;
-        int yPos;
-        double xSpeed;
-        double ySpeed;
-        boxes[i].GetData(xPos, yPos, xSpeed, ySpeed);
-        //char message[100];
-       // sprintf(message, "%d" , xPos);
-        //allegro_message(message);
-        outputFile << "X_POS=" << xPos << '\n';
-        outputFile << "Y_POS=" << yPos << '\n';
-       // outputFile << "X_SPEED = " << xSpeed << '\n';
-      //  outputFile << "Y_SPEED = " << ySpeed << '\n';
-        outputFile << "</BOX>\n";
+        if (objects[i].GetType() == 2)
+        {
+            outputFile << "<BOX>\n";
+            int xPos;
+            int yPos;
+            double xSpeed;
+            double ySpeed;
+            objects[i].GetData(xPos, yPos, xSpeed, ySpeed);
+            //char message[100];
+           // sprintf(message, "%d" , xPos);
+            //allegro_message(message);
+            outputFile << "X_POS=" << xPos << '\n';
+            outputFile << "Y_POS=" << yPos << '\n';
+           // outputFile << "X_SPEED = " << xSpeed << '\n';
+          //  outputFile << "Y_SPEED = " << ySpeed << '\n';
+            outputFile << "</BOX>\n";
+        }
     }
     outputFile << "</BOXES>";
     

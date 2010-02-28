@@ -6,7 +6,8 @@
 /*
  * No description
  */
-class Box
+ /*
+class Box : public Object
 {
 
     public:
@@ -24,5 +25,5 @@ class Box
         double xSpeed;
         double ySpeed;
 };
-
+*/
 #endif // BOX_H

@@ -131,7 +131,7 @@ int main()
     
     // load level 
     char tempPath[_MAX_PATH];
-    StringAdd(levelPath,"testlevel.lvl",tempPath);
+    StringAdd(levelPath,"lolsuck",tempPath);
     try
     {
         LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");

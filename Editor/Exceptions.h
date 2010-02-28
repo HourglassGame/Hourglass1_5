@@ -1,3 +1,5 @@
+#ifndef HOURGLASS_EXCPETIONS_H
+#define HOURGLASS_EXCPETIONS_H
 class HourglassException
 {
    public:
@@ -33,3 +35,13 @@ class ImageNotLoadedException : public HourglassException
 		// class destructor
 		~ImageNotLoadedException(){}
 };
+
+class UndefinedObjectException : public HourglassException
+{
+	public:
+		// class constructor
+		UndefinedObjectException(){}
+		// class destructor
+		~UndefinedObjectException(){}
+};
+#endif
