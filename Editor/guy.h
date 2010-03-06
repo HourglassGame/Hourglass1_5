@@ -16,7 +16,7 @@ class Guy : public Object
 		// class destructor
 		~Guy();
 		
-		//void SetData(int newYPos, int newXPos, double newXSpeed, double newYSpeed);
+		void SetData(int newXPos, int newYPos, double newXSpeed, double newYSpeed, int newType);
 		void DoDraw();
 		//void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
 	private:
@@ -24,7 +24,7 @@ class Guy : public Object
         //int yPos;
         //double xSpeed;
         //double ySpeed;
-        
+        int type;
        // bool drawFacing;
 };
 

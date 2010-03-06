@@ -30,17 +30,27 @@ Guy::~Guy()
  //    xPos = newXPos;
   //   yPos = newYPos;
 //}
+
+void Guy::SetData(int newXPos, int newYPos, double newXSpeed, double newYSpeed, int newType) //type - 0 = not yet defined, 1 = Guy, 2 = Box
+{
+     xPos = newXPos;
+     yPos = newYPos;
+     xSpeed = newXSpeed;
+     ySpeed = newYSpeed;
+     type = newType;
+}
+
 void Guy::DoDraw()
 {
      
-  //   if(drawFacing)
-    // {
-      //  draw_sprite(buffer, guy_right_stop, xPos, yPos);
-     //}
-     //else
-     //{
-     //   draw_sprite(buffer, guy_left_stop, xPos, yPos);
-     //}
+     if(drawFacing)
+     {
+        draw_sprite(buffer, guy_right_stop, xPos, yPos);
+     }
+     else
+     {
+        draw_sprite(buffer, guy_left_stop, xPos, yPos);
+     }
 }
 //void Guy::GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed)
 //{

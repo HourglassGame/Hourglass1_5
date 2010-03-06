@@ -3,27 +3,18 @@
 #ifndef BOX_H
 #define BOX_H
 
+#include "object.h" // inheriting class's header file
+
 /*
  * No description
  */
- /*
 class Box : public Object
 {
-
-    public:
+	public:
 		// class constructor
 		Box();
 		// class destructor
 		~Box();
-		
-		void SetData(int newYPos, int newXPos, double newXSpeed, double newYSpeed);
-		void DoDraw();
-		void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
-	private:
-        int xPos;
-        int yPos;
-        double xSpeed;
-        double ySpeed;
 };
-*/
+
 #endif // BOX_H

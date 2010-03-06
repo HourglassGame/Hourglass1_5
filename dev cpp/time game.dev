@@ -1,7 +1,7 @@
 [Project]
 FileName=time game.dev
 Name=time game
-UnitCount=10
+UnitCount=8
 Type=0
 Ver=1
 ObjFiles=
@@ -43,7 +43,7 @@ BuildCmd=
 Major=0
 Minor=1
 Release=2
-Build=416
+Build=424
 LanguageID=3081
 CharsetID=1252
 CompanyName=
@@ -77,26 +77,6 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit6]
-FileName=guymanager.h
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit7]
-FileName=guymanager.cpp
-CompileCpp=1
-Folder=
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit4]
 FileName=Box.h
 CompileCpp=1
@@ -118,7 +98,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit8]
-FileName=PropManager.h
+FileName=Exceptions.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -139,6 +119,26 @@ BuildCmd=
 
 [Unit10]
 FileName=Exceptions.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit6]
+FileName=PropManager.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit7]
+FileName=PropManager.cpp
 CompileCpp=1
 Folder=
 Compile=1

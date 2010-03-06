@@ -44,4 +44,13 @@ class UndefinedObjectException : public HourglassException
 		// class destructor
 		~UndefinedObjectException(){}
 };
+
+class GFXModeNotSetException : public HourglassException
+{
+	public:
+		// class constructor
+		GFXModeNotSetException(){}
+		// class destructor
+		~GFXModeNotSetException(){}
+};
 #endif

@@ -15,10 +15,11 @@
 #include "Exceptions.h" //For all my exceptions
 
 #include "object.h"
+//#include "menu.h"
 //#include "guy.h"
 using namespace std;
 //extern char allegro_id[];
-
+extern char allegro_error[ALLEGRO_ERROR_SIZE];
 // timing
 double elapsed_time;
 clock_t start_timer,finish_timer;
@@ -35,25 +36,44 @@ const int BLOCK_SIZE = 32;
 bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 
 // file paths
-char path[_MAX_PATH]; // temporary, used in load and save dialogues
 char currentPath[_MAX_PATH] = {'\0'}; // .exe path
 char levelPath[_MAX_PATH] = {'\0'}; // .lvl path
 char imagePath[_MAX_PATH] = {'\0'}; // .bmp path
 
 //Functions
-void init();
-void deinit();
+void CloseButtonHandler();
 
-void StringAdd(const char* string1,const char* string2, char* newString);
+void Init();
+void EngineInit();
+void StateInit();
+void DeInit();
+
+void WallInit();
+
 
 BITMAP* LoadImage(const char* imageName);
 
 void LoadLevel (char* filePath);
 void SaveLevel(char* outputPath);
 void TestLevel(double squareSize);
-void doLoadLevel();
+void DoLoadLevel();
+void DoSaveLevel();
 
+void DoToggleDrawingWall();
+void DoDrawWall();
+void DoAddObjectMenu();
+void DoNewSelection();
+void AddObject(int objectX, int objectY);
+void DrawMenu();
+void DeleteSelectedObject();
+void DoMoveSelected();
 void Draw();
+
+void DoAddingObject();
+
+void DoStep();
+
+void DrawToScreen();
 
 //Globals TODO DESPERATELY - redo program in OO way to avoid these spaz number of globals );
 
@@ -67,6 +87,7 @@ BITMAP* box_sprite;
 BITMAP* menu_box;
 BITMAP* menu_guy;
 
+bool closeButtonPressed = false;
 bool drawingWall = false;
 bool pastKeyW = false;
 bool pastKeySpace = false;
@@ -84,6 +105,8 @@ const int BUFFER_HEIGHT = 768;
 const int MENU_WIDTH = 125;
 const int MENU_HEIGHT = 50;
 
+const int MILLISECONDS_PER_SEC = 1000;
+
 int menuPositionX;
 int menuPositionY;
 
@@ -94,365 +117,126 @@ bool snapToGrid = true;
 int gridSize = 16;
 
 vector<Object> objects;
+//vector<Menu> menus;
 
-//int guyCount = 0;
-
-
-
-int main() {
-	try
-	{
+int main() 
+{
+    try
+    {
         try
         {
-        init();
+           Init();
         }
         catch (ImageNotLoadedException)
         {
-        return(2);
+           return(2);
         }
-    	double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
-    //	allegro_message(allegro_id);
+    	
+        double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
+        //allegro_message(allegro_id);
         
-        while (!key[KEY_ESC]) //Game Loop
+        while (!(key[KEY_ESC] || closeButtonPressed)) //Game Loop
         {
             finish_timer = clock();
             elapsed_time = (double(finish_timer)-double(start_timer));
-            if (elapsed_time >= step_interval) 
+            if (elapsed_time >= step_interval)
             {
                 start_timer = clock();
-                if(key[KEY_L] && !doingAddObjectMenu && !doingAddGuy && !doingAddBox)
-                {
-                   try
-                   {
-                      doLoadLevel();
-                   }
-                   catch(HourglassException)
-                   {
-                      return(1);
-                   }
-                }
-                
-                if (key[KEY_S])
-                {
-                   for (int i=0;i<_MAX_PATH;i++)
-                   {
-                      path[i] = levelPath[i];
-                   }
-                   if(file_select_ex("Please enter the location where you would like this level to be saved", path, NULL, 500, 0, 0)) //Returns zero if closed with "cancel"
-                   {
-                      SaveLevel(path);
-                   }
-                }
-                
-                if(!pastKeyW && key[KEY_W] && !doingAddBox && !doingAddGuy && !doingAddObjectMenu) // Switch in and out of wall drawing mode
-                {
-                   pastKeyW = true;
-                   if (drawingWall)
-                   {
-                      drawingWall = false;
-                   }
-                   else
-                   {
-                      if (objectSelected)
-                      {
-                         objects[selectedObject].SetSelected(false);                   
-                      }
-                      objectSelected = false;
-                      drawingWall = true;
-                   }
-                }
-                
-                if(pastKeyW && !key[KEY_W])
-                {
-                   pastKeyW = false;
-                }
-                
-                if (drawingWall)
-                {
-                   if ((mouse_b & 1) && !(mouse_b & 2))
-                   {
-                       //add wall
-                       int x = int(floor(mouse_x/BLOCK_SIZE));
-                       int y = int(floor(mouse_y/BLOCK_SIZE));
-                       if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
-                       {
-                          wall[x][y] = true;
-                       }
-                       TestLevel(1);
-                   }
-                   else if ((mouse_b & 2) && !(mouse_b & 1))
-                   {
-                       //delete wall
-                       int x = int(floor(mouse_x/BLOCK_SIZE));
-                       int y = int(floor(mouse_y/BLOCK_SIZE));
-                       if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
-                       {
-                          wall[x][y] = false;
-                       }
-                       TestLevel(1);
-                   }
-                }
-                if(!pastKeySpace && key[KEY_SPACE] && !doingAddGuy && !doingAddBox) // Do add object menu
-                {
-                   if (!doingAddObjectMenu)
-                   {
-                       doingAddObjectMenu = true;
-                       pastKeySpace = true;
-                       drawingWall = false;
-                       draw_sprite(tempBuffer, buffer, 0, 0);
-                       menuPositionX = mouse_x;
-                       menuPositionY = mouse_y;
-                       noOfMenuItems = 0;
-                       draw_sprite(buffer, menu_guy, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
-                       noOfMenuItems++;
-                       draw_sprite(buffer, menu_box, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
-                       noOfMenuItems++;
-                   }
-                   else
-                   {
-                      draw_sprite(buffer, tempBuffer, 0, 0);
-                      doingAddObjectMenu = false;
-                      pastKeySpace = true;
-                   }
-                }
-                if(pastKeySpace && !key[KEY_SPACE])
-                {
-                   pastKeySpace = false;            
-                }
-                if (doingAddObjectMenu)
-                {
-                   if (mouse_b & 1)
-                   {
-                      pastKeyMouse1 = true;
-                      draw_sprite(buffer, tempBuffer, 0, 0);
-                      doingAddObjectMenu = false;
-                      if (mouse_x > menuPositionX && 
-                          mouse_x < (menuPositionX + MENU_WIDTH) && 
-                          mouse_y > menuPositionY && 
-                          mouse_y < (menuPositionY + MENU_HEIGHT))
-                      {
-                         doingAddGuy = true;
-                      }
-                      else if (mouse_x > menuPositionX &&
-                               mouse_x < (menuPositionX + MENU_WIDTH) &&
-                               mouse_y > (menuPositionY + MENU_HEIGHT) &&
-                               mouse_y < (menuPositionY + MENU_HEIGHT*2))
-                      {
-                         doingAddBox = true;
-                      }
-                   }                       
-                }
-                if (doingAddGuy)
-                {
-                   int guyX = 0;
-                   int guyY = 0;
-                   draw_sprite(tempBuffer, buffer,0,0);
-                   if (snapToGrid)
-                   {
-                      guyX = int(gridSize*floor(double(mouse_x/gridSize)));
-                      guyY = int(gridSize*floor(double(mouse_y/gridSize)));
-                   }
-                   else
-                   {
-                      guyX = int(floor(mouse_x));
-                      guyY = int(floor(mouse_y));
-                   }
-                   if(guyX <= LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && guyY <= LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT)
-                   {
-                       draw_sprite(buffer,guy_left_stop, guyX, guyY);
-                       if ((mouse_b & 1) && !pastKeyMouse1)
-                       {
-                          pastKeyMouse1 = true;
-                          Object newGuy;
-                          objects.push_back(newGuy);
-                          objects[objects.size()-1].SetData(guyX,guyY,0,0,1);
-                          draw_sprite(buffer,tempBuffer,0,0);
-                          doingAddGuy = false;
-                          for(int i=0; i < objects.size(); i++)
-                          {
-                             objects[i].SetSelected(false);        
-                          }
-                          objects[objects.size()-1].SetSelected(true);
-                          objectSelected = true;
-                          selectedObject = (objects.size()-1);
-                       }
-                   }
-                   if (mouse_b & 2)
-                   {
-                      doingAddGuy = false;
-                      draw_sprite(buffer,tempBuffer,0,0);
-                      pastMouse2CancellingAddObject = true;
-                   }
-                }
-                if (doingAddBox)
-                {
-                   int boxX = 0;
-                   int boxY = 0;
-                   draw_sprite(tempBuffer, buffer,0,0);                     
-                   
-                   if (snapToGrid)
-                   {
-                      boxX = int(gridSize*floor(double(mouse_x/gridSize)));
-                      boxY = int(gridSize*floor(double(mouse_y/gridSize)));
-                   }
-                   else
-                   {
-                      boxX = int(floor(mouse_x));
-                      boxY = int(floor(mouse_y));
-                   }
-                   if(boxX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && boxY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)
-                   {
-                       draw_sprite(buffer,box_sprite, boxX, boxY);
-                       if ((mouse_b & 1) && !pastKeyMouse1)
-                       {
-                          pastKeyMouse1 = true;
-                          Object newBox;
-                          objects.push_back(newBox);
-                          objects[objects.size()-1].SetData(boxX,boxY,0,0,2);
-                          draw_sprite(buffer,tempBuffer,0,0);
-                          for(int i=0; i < objects.size(); i++)
-                          {
-                             objects[i].SetSelected(false);        
-                          }
-                          objects[objects.size()-1].SetSelected(true);
-                          selectedObject = (objects.size()-1);
-                          objectSelected = true;
-                       }
-                   }
-                   if (mouse_b & 2)
-                   {
-                      doingAddBox = false;
-                      draw_sprite(buffer,tempBuffer,0,0);
-                      pastMouse2CancellingAddObject = true;
-                   }
-                }
-                if (!(mouse_b & 2) && pastMouse2CancellingAddObject)
-                {
-                   pastMouse2CancellingAddObject = false;
-                }
-                if(mouse_b & 1 && !pastKeyMouse1 && !drawingWall)
-                {
-                    pastKeyMouse1 = true;
-                    for(int i=0;i < objects.size();i++)
-                    {
-                       if(objects[i].DoSelectionCheck())
-                       {
-                          for(int j=0;j < objects.size(); j++)
-                          {
-                             if(j != i)
-                             {
-                                objects[j].SetSelected(false);
-                             }
-                          }
-                          objectSelected = true;
-                          selectedObject = i;
-                          break;
-                       }
-                    }
-                }
-                for(int i=0;i < objects.size();i++)
-                {
-                   objects[i].DoDraw();
-                }
-                if(doingAddObjectMenu)
-                {
-                   noOfMenuItems = 0;
-                   draw_sprite(buffer, menu_guy, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
-                   noOfMenuItems++;
-                   draw_sprite(buffer, menu_box, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
-                   noOfMenuItems++;                        
-                }
-                if (objectSelected)
-                {
-                    if (mouse_b & 2 && !pastMouse2CancellingAddObject && !drawingWall && !doingAddObjectMenu && !doingAddGuy && !doingAddBox)
-                    {
-                       int boxX = 0;
-                       int boxY = 0;
-                      // draw_sprite(tempBuffer, buffer,0,0);  
-                       if (snapToGrid)
-                       {
-                          boxX = int(gridSize*floor(double(mouse_x/gridSize)));
-                          boxY = int(gridSize*floor(double(mouse_y/gridSize)));
-                       }
-                       else
-                       {
-                          boxX = int(floor(mouse_x));
-                          boxY = int(floor(mouse_y));
-                       }
-                       
-                       if(boxX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && boxY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)
-                       {
-                           objects[selectedObject].SetPos(boxX,boxY);
-                       }
-                       
-                    }
-                    if(key[KEY_DEL] || key[KEY_BACKSPACE])
-                    {
-                       vector<Object>::iterator it;
-                       it = objects.begin();
-                       for(int i = 0; i < selectedObject; i++)
-                       {
-                          it++;
-                       }
-                       objects.erase(it);
-                       selectedObject = -1;
-                       objectSelected = false;
-                    }
-                }
-                if(pastKeyMouse1 && !(mouse_b & 1))
-                {
-                   pastKeyMouse1 = false;            
-                }
-                
-                Draw();
-                TestLevel(1);
-                if(doingAddGuy)
-                {
-                   draw_sprite(buffer, tempBuffer,0,0);
-                }
-                if(doingAddBox)
-                {
-                   draw_sprite(buffer, tempBuffer,0,0);
-                }
+                poll_mouse();
+                poll_keyboard();// inputs are now definately taken -here-
+                DoStep();
+            }
+            else
+            {
+                //rest(1); //Also works, if you think there is a problem with the below,
+                //such as the below being too slow (althought it should be faster);
+                //or bad form, with finish and elapsed timer being defined many times per loop etc...
+                finish_timer = clock();
+                elapsed_time = (double(finish_timer)-double(start_timer));
+                rest(int(step_interval-elapsed_time)/MILLISECONDS_PER_SEC);
             }
         }
-        deinit();
+        DeInit();
+    }
+    catch(HourglassException)
+    {
+       allegro_message("An incompletely handled hourglass exception occurred in\n""main(), Exiting");
+       return(1);
     }
     catch(std::exception& e)
     {
-       allegro_message("A standard library exception occurred in\n""main(), Exiting",allegro_error);
-       allegro_message(e.what(),allegro_error);
-       return(1);
+       allegro_message("A standard library exception occurred in\n""main(), Exiting");
+       allegro_message(e.what());
+       return(2);
     }
     catch (...)
     {
-       allegro_message("An unknown exception occurred in\n""main(), Exiting",allegro_error);
-       return(1);
+       allegro_message("An unknown exception occurred in\n""main(), Exiting");
+       return(3);
     }
    	return 0;
 }
 END_OF_MAIN()
 
-void init() {
-	int depth, res;
-	allegro_init();
-	depth = desktop_color_depth();
-	if (depth == 0) depth = 32;
-	set_color_depth(depth);
-	if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0) !=0)
-    {
-       set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 748, 0, 0);
+void Init()
+{
+    EngineInit();
+    StateInit(); 
+}
+
+void DeInit()
+{
+	clear_keybuf();
+}
+
+void CloseButtonHandler()
+{
+   closeButtonPressed = true;
+}
+//    END_OF_FUNCTION(close_button_handler) // in manual, unneeded? - used in DOS or something
+      
+void EngineInit()
+{
+    int depth = 32;
+	if (allegro_init() != 0)
+	{
+       printf("\"allegro_init()\" failed, Allegro could not initialised");
+       exit(-1); //-1 allegro init failed
     }
     
-	install_keyboard();
-	install_mouse();
+	//depth = desktop_color_depth(); // consider doing this at some stage, it may be useful on certain systems.
+	//if (depth == 0) depth = 32;
+	set_window_title("Hourglass - Editor");
+	set_color_depth(depth);
+    if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0) !=0)
+    {
+       if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 748, 0, 0) != 0)
+       {
+          allegro_message("Hourglass could not set any graphics mode.\nThis can happen if:\nYour screen is smaller than 1024/768.\nYour screen does not have a 4:3 aspect ratio.\nOther problems?\n\nallegro_error is:\n%s",allegro_error);
+	      throw GFXModeNotSetException();
+       }
+    }
+    
+	if (install_keyboard() < 0)
+    {
+        allegro_message("\"install_keyboard()\" failed, allegro_error is:\n%s",allegro_error);
+    }
+    if (install_mouse() == -1)
+    {
+        allegro_message("\"install_mouse()\" failed, allegro_error is:\n%s",allegro_error);
+    }
+    
+ //   LOCK_FUNCTION(CloseButtonHandler); // in manual, unneeded? - used in DOS or something
+	set_close_button_callback(CloseButtonHandler);
 	
     getcwd(currentPath, _MAX_PATH);
     char *levelPathName = "/../dev cpp/resources/levels/";
     char *imagePathName = "/../dev cpp/resources/images/";
     
-    StringAdd(currentPath,levelPathName,levelPath);
-    StringAdd(currentPath,imagePathName,imagePath);
+    sprintf(imagePath,"%s%s",currentPath,imagePathName);
+    sprintf(levelPath,"%s%s",currentPath,levelPathName);
+    //StringAdd(currentPath,levelPathName,levelPath);
+  //  StringAdd(currentPath,imagePathName,imagePath);
     
     buffer = create_bitmap( BUFFER_WIDTH, BUFFER_HEIGHT); // create buffer, all drawing done to buffer
     tempBuffer = create_bitmap(BUFFER_WIDTH, BUFFER_HEIGHT);
@@ -467,17 +251,37 @@ void init() {
     }
     catch (ImageNotLoadedException)
     {
-          allegro_message("Unable to load some image, exiting",allegro_error); // should add "Which Image" functionallity to ImageNotLoadedException
-          throw; // Failed to load images
+        allegro_message("Unable to load some image, exiting"); // should add "Which Image" functionallity to ImageNotLoadedException
+        throw; // Failed to load images
     }
-    
+}
+
+void StateInit()
+{
     select_mouse_cursor(MOUSE_CURSOR_ARROW);
-    
     show_mouse(screen);
     
-    for(int i = 0; i<LEVEL_WIDTH; i++)
+    WallInit();
+    
+    objects.clear();
+    
+    drawingWall = false;
+    pastKeyW = false;
+    pastKeySpace = false;
+    doingAddObjectMenu = false;
+    doingAddGuy = false;
+    doingAddBox = false;
+    pastKeyMouse1 = false;
+    objectSelected = false;
+    selectedObject = -1;
+    pastMouse2CancellingAddObject = false;
+}
+
+void WallInit()
+{
+    for(int i = 0; i<LEVEL_WIDTH; ++i)
     {
-       for(int j = 0; j<LEVEL_HEIGHT; j++)
+       for(int j = 0; j<LEVEL_HEIGHT; ++j)
        {
           if(i == 0 || j == 0 || i == LEVEL_WIDTH-1 || j == LEVEL_HEIGHT-1)
           {
@@ -485,34 +289,15 @@ void init() {
           }        
        }
     }
-    
     TestLevel(1);
-    
-    drawingWall = false;
-    pastKeyW = false;
-    pastKeySpace = false; 
-}
-
-void deinit() {
-	clear_keybuf();
-	/* add other deinitializations here */
-}
-
-void StringAdd(const char* string1,const char* string2, char* newString)
-{
-     // (first string, string to add to end of first string, string to copy result to)
-     // fixme: check for newString length
-    int i;
-    for (i=0;string1[i];i++) newString[i] = string1[i]; // copy string1 onto new string
-    for (int j=0;string2[j];i++,j++) newString[i] = string2[j]; // copy string2 onto the end of new string
-    newString[i] = 0; // terminate new string or the end will be full of junk
 }
 
 BITMAP* LoadImage(const char* imageName)
 {
     // loads a bitmap
-    char tempPath[_MAX_PATH];
-    StringAdd(imagePath,imageName,tempPath);
+    char tempPath[_MAX_PATH] = {'\0'};
+    sprintf(tempPath,"%s%s",imagePath,imageName);
+    //StringAdd(imagePath,imageName,tempPath);
     BITMAP* tempBitmap;
     tempBitmap = load_bitmap(tempPath, NULL);
     if (!tempBitmap)
@@ -524,18 +309,7 @@ BITMAP* LoadImage(const char* imageName)
 
 void LoadLevel (char* filePath)
 {
-     objects.clear();
-     selectedObject = -1;
-     drawingWall = false;
-     pastKeyW = false;
-     pastKeySpace = false;
-     doingAddObjectMenu = false;
-     doingAddGuy = false;
-     doingAddBox = false;
-     pastKeyMouse1 = false;
-     objectSelected = false;
-     pastMouse2CancellingAddObject = false;
-     
+     StateInit();
      ifstream inputFile;
      inputFile.open(filePath);
      if (inputFile.is_open())
@@ -551,11 +325,11 @@ void LoadLevel (char* filePath)
             {
                wallFound = true;
                char wallString[LEVEL_WIDTH];
-               for (int i=0; i < LEVEL_HEIGHT; i++)
+               for (int i=0; i < LEVEL_HEIGHT; ++i)
                {
                   //getline extracts - for getline(char* s,int n,char delim) - at most n-1 characters
                   inputFile.getline(wallString,(LEVEL_WIDTH+1),'\n');
-                  for (int j=0; j < LEVEL_WIDTH; j++)
+                  for (int j=0; j < LEVEL_WIDTH; ++j)
                   {
                      char temp = wallString[j];
                      wall[j][i] = atoi(&temp);
@@ -683,9 +457,9 @@ void SaveLevel(char* outputPath)
     ofstream outputFile;
     outputFile.open(outputPath);
     outputFile << "[WALL]\n";
-    for (int i=0; i < LEVEL_HEIGHT; i++)
+    for (int i=0; i < LEVEL_HEIGHT; ++i)
     {
-        for(int j=0;j < LEVEL_WIDTH; j++)
+        for(int j=0;j < LEVEL_WIDTH; ++j)
         {
              if (wall[j][i])
              {
@@ -701,7 +475,7 @@ void SaveLevel(char* outputPath)
     outputFile << "<IMAGES>\n";
     outputFile << "</IMAGES>\n";
     outputFile << "<GUYS>\n";
-    for (int i = 0; i < objects.size(); i++)
+    for (int i = 0; i < objects.size(); ++i)
     {
         if (objects[i].GetType() == 1)
         {
@@ -724,7 +498,7 @@ void SaveLevel(char* outputPath)
     outputFile << "</GUYS>\n";
     
     outputFile << "<BOXES>\n";
-    for (int i = 0; i < objects.size(); i++)
+    for (int i = 0; i < objects.size(); ++i)
     {
         if (objects[i].GetType() == 2)
         {
@@ -756,20 +530,18 @@ void TestLevel(double squareSize)
     {
         for (int y = 0; y < LEVEL_HEIGHT; ++y)
         {
-            //char testString[20];
-            //sprintf(testString,"%d",wall[x][y]);
-            //textout_ex( buffer, font, testString, x*block_size, y*block_size, makecol( 255, 0, 0), makecol( 0, 0, 0) );
             if (wall[x][y])
             {
-               rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((y+(0.5-squareSize/2))*BLOCK_SIZE), int((x+(0.5+squareSize/2))*BLOCK_SIZE), int((y+(0.5+squareSize/2))*BLOCK_SIZE), makecol ( 70, 70, 70));
-            } 
+                rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((y+(0.5-squareSize/2))*BLOCK_SIZE), int((x+(0.5+squareSize/2))*BLOCK_SIZE), int((y+(0.5+squareSize/2))*BLOCK_SIZE), makecol ( 70, 70, 70));
+            }
         }
     }
 }
 
-void doLoadLevel()
+void DoLoadLevel()
 {
-    for (int i=0;i<_MAX_PATH;i++)
+    char path[_MAX_PATH] = {'\0'};
+    for (int i=0;i<_MAX_PATH;++i)
     {
        path[i] = levelPath[i];
     }
@@ -781,21 +553,240 @@ void doLoadLevel()
        }
        catch (FileNotOpenedException)
        {
-          char message[MAX_PATH+27];
-          sprintf(message,"File:\n%s\ncould not be loaded",path);
-          allegro_message(message,allegro_error);
-          throw; // Could not load level
+          allegro_message("File:\n%s\ncould not be loaded.",path);
+          DoLoadLevel();
+          //throw; // Could not load level
        }
        catch (WallNotFoundException)
        {
-          allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
-          throw; // Could not load level
+          allegro_message("\"[WALL]\" could not be found in the level file:\n%s\nthe file may be corrupt or incorrect",path);
+          DoLoadLevel();
+          //throw; // Could not load level
        }
        TestLevel(1);
     }
 }
 
+void DoSaveLevel()
+{
+   char path[_MAX_PATH] = {'\0'};
+   for (int i=0;i<_MAX_PATH;++i)
+   {
+      path[i] = levelPath[i];
+   }
+   if(file_select_ex("Please enter the location where you would like this level to be saved", path, NULL, 500, 0, 0)) //Returns zero if closed with "cancel"
+   {
+      SaveLevel(path);
+   }
+}
+
+void DoToggleDrawingWall()
+{
+   if (drawingWall)
+   {
+      drawingWall = false;
+   }
+   else
+   {
+      if (objectSelected)
+      {
+         objects[selectedObject].SetSelected(false);                   
+      }
+      objectSelected = false;
+      drawingWall = true;
+   }
+}
+
+void DoDrawWall()
+{
+    if ((mouse_b & 1) && !(mouse_b & 2))
+    {
+        //add wall
+        int x = int(floor(mouse_x/BLOCK_SIZE));
+        int y = int(floor(mouse_y/BLOCK_SIZE));
+        if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
+        {
+            wall[x][y] = true;
+        }
+    }
+    else if ((mouse_b & 2) && !(mouse_b & 1))
+    {
+        //delete wall
+        int x = int(floor(mouse_x/BLOCK_SIZE));
+        int y = int(floor(mouse_y/BLOCK_SIZE));
+        if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
+        {
+            wall[x][y] = false;
+        }
+    }
+}
+
+void DoAddObjectMenu()
+{
+    doingAddObjectMenu = true;
+    drawingWall = false;
+    draw_sprite(tempBuffer, buffer, 0, 0);
+    menuPositionX = mouse_x;
+    menuPositionY = mouse_y;
+    noOfMenuItems = 0;
+    draw_sprite(buffer, menu_guy, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
+    noOfMenuItems++;
+    draw_sprite(buffer, menu_box, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
+    noOfMenuItems++;    
+}
+
+void DoNewSelection()
+{
+    for(int i=0;i < objects.size();++i)
+    {
+        if(objects[i].DoSelectionCheck())
+        {
+            for(int j=0;j < objects.size(); ++j)
+            {
+                if(j != i)
+                {
+                    objects[j].SetSelected(false);
+                }
+            }
+            objectSelected = true;
+            selectedObject = i;
+            break;
+        }
+    }
+}
+
+void DoMoveSelected()
+{
+    int objectX = 0;
+    int objectY = 0;
+    if (snapToGrid)
+    {
+        objectX = int(gridSize*floor(double(mouse_x/gridSize)));
+        objectY = int(gridSize*floor(double(mouse_y/gridSize)));
+    }
+                               
+    else
+    {
+        objectX = int(floor(mouse_x));
+        objectY = int(floor(mouse_y));
+    }
+                              
+    if((objects[selectedObject].GetType() == 1 && 
+       (objectX <= LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && 
+        objectY <= LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT)) || 
+       (objects[selectedObject].GetType() == 2 &&
+       (objectX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH &&
+       objectY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)))
+    {
+        objects[selectedObject].SetPos(objectX,objectY);
+    }
+}
+
+void DoAddingObject()
+{
+    int objectX = 0;
+    int objectY = 0;
+    draw_sprite(tempBuffer, buffer,0,0);
+    if (snapToGrid)
+    {
+        objectX = int(gridSize*floor(double(mouse_x/gridSize)));
+        objectY = int(gridSize*floor(double(mouse_y/gridSize)));
+    }
+    else
+    {
+        objectX = int(floor(mouse_x));
+        objectY = int(floor(mouse_y));
+    }
+    if((doingAddGuy && objectX <= LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT) || (doingAddBox && (objectX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)))
+    {
+        if (doingAddGuy)
+        {
+            draw_sprite(buffer,guy_left_stop, objectX, objectY);
+        }
+        else if (doingAddBox)
+        {
+            draw_sprite(buffer,box_sprite, objectX, objectY);
+        }
+        if ((mouse_b & 1) && !pastKeyMouse1)
+        {
+            pastKeyMouse1 = true;
+            AddObject(objectX, objectY);
+            doingAddGuy = false;
+        }
+    }
+    if (mouse_b & 2)
+    {
+        doingAddGuy = false;
+        doingAddBox = false;
+        draw_sprite(buffer,tempBuffer,0,0);
+        pastMouse2CancellingAddObject = true;
+    }
+}
+
+void AddObject(int objectX,int objectY)
+{
+    Object newObject;
+    objects.push_back(newObject);
+    if(doingAddGuy)
+    {
+        objects[objects.size()-1].SetData(objectX,objectY,0,0,1);
+    }
+    else if(doingAddBox)
+    {
+        objects[objects.size()-1].SetData(objectX,objectY,0,0,2);
+    }
+    draw_sprite(buffer,tempBuffer,0,0);
+    
+    for(int i=0; i < objects.size(); ++i)
+    {
+        objects[i].SetSelected(false);        
+    }
+    objects[objects.size()-1].SetSelected(true);
+    objectSelected = true;
+    selectedObject = (objects.size()-1);
+}
+
+void DrawMenu()
+{
+    noOfMenuItems = 0;
+    draw_sprite(buffer, menu_guy, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
+    noOfMenuItems++;
+    draw_sprite(buffer, menu_box, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
+    noOfMenuItems++;   
+}
+
+void DeleteSelectedObject()
+{
+    // Maybe add checking whether an object is selected before deleting,
+    //(although that can't happen eith the current code)
+    vector<Object>::iterator it;
+    it = objects.begin();
+    it += selectedObject;
+    objects.erase(it);
+    selectedObject = -1;
+    objectSelected = false;
+}
+
 void Draw()
+{
+    for(int i=0; i < objects.size(); ++i)
+    {
+        objects[i].DoDraw();
+    }
+    
+    if(doingAddObjectMenu)
+    {
+        DrawMenu();
+    }
+    DrawToScreen();
+    TestLevel(1);
+    if(doingAddGuy || doingAddBox)
+    {
+        draw_sprite(buffer, tempBuffer,0,0);
+    }    
+}
+
+void DrawToScreen()
 {
     // draws the buffer to the screen
     show_mouse(NULL);
@@ -803,4 +794,105 @@ void Draw()
     draw_sprite( screen, buffer, 0, 0);
     release_screen();
     show_mouse(screen);
+}
+
+void DoStep()
+{
+    if(key[KEY_L] && !doingAddObjectMenu && !doingAddGuy && !doingAddBox)
+    {
+          DoLoadLevel();    
+    }
+    if(key[KEY_S])
+    {
+          DoSaveLevel();
+    }
+    if(!pastKeyW && key[KEY_W] && !doingAddBox && !doingAddGuy && !doingAddObjectMenu) // Switch in and out of wall drawing mode
+    {
+        pastKeyW = true;
+        DoToggleDrawingWall();  
+    }
+    if(pastKeyW && !key[KEY_W])
+    {
+       pastKeyW = false;
+    }         
+    if (drawingWall)
+    {
+        DoDrawWall();
+        textout_ex( buffer, font, "W: Wall Drawing Mode - On", 800, 16, makecol( 255, 0, 0), makecol( 0, 0, 0) );
+    }
+    else
+    {
+        textout_ex( buffer, font, "W: Wall Drawing Mode - Off", 800, 16, makecol( 255, 0, 0), makecol( 0, 0, 0) );
+    }
+    if(!pastKeySpace && key[KEY_SPACE] && !doingAddGuy && !doingAddBox) // Do add object menu
+    {
+       pastKeySpace = true;
+       if (!doingAddObjectMenu)
+       {
+          //Menu newMenu;
+          //menus.push_back(newMenu);
+          DoAddObjectMenu();
+       }
+       else // remove AddObjectMenu
+       {
+           draw_sprite(buffer, tempBuffer, 0, 0);
+           doingAddObjectMenu = false;
+       }
+    }                      
+    if(pastKeySpace && !key[KEY_SPACE])
+    {
+        pastKeySpace = false;
+    }
+    if (doingAddObjectMenu)
+    {
+       if (mouse_b & 1)
+       {
+            pastKeyMouse1 = true;
+            draw_sprite(buffer, tempBuffer, 0, 0);
+            doingAddObjectMenu = false;
+            if (mouse_x > menuPositionX && 
+                mouse_x < (menuPositionX + MENU_WIDTH) && 
+                mouse_y > menuPositionY && 
+                mouse_y < (menuPositionY + MENU_HEIGHT))
+            {
+                doingAddGuy = true;
+            }
+            else if (mouse_x > menuPositionX &&
+                mouse_x < (menuPositionX + MENU_WIDTH) &&
+                mouse_y > (menuPositionY + MENU_HEIGHT) &&
+                mouse_y < (menuPositionY + MENU_HEIGHT*2))
+            {
+                doingAddBox = true;
+            }
+        }                       
+    }
+    if (doingAddGuy || doingAddBox)
+    {
+        DoAddingObject();
+    }
+    if (!(mouse_b & 2) && pastMouse2CancellingAddObject)
+    {
+        pastMouse2CancellingAddObject = false;
+    }
+    if(mouse_b & 1 && !pastKeyMouse1 && !drawingWall)
+    {
+        pastKeyMouse1 = true;
+        DoNewSelection();
+    }
+    if (objectSelected)
+    {
+        if (mouse_b & 2 && !pastMouse2CancellingAddObject && !drawingWall && !doingAddObjectMenu && !doingAddGuy && !doingAddBox)
+        {
+            DoMoveSelected();
+        }                
+        if(key[KEY_DEL] || key[KEY_BACKSPACE])
+        {
+           DeleteSelectedObject();   
+        }
+    }       
+    if(pastKeyMouse1 && !(mouse_b & 1))
+    {
+        pastKeyMouse1 = false;            
+    }
+    Draw();
 }

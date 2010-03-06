@@ -12,7 +12,7 @@ ResourceIncludes=
 MakeIncludes=
 Compiler=
 CppCompiler=
-Linker=_@@_../../lib/liballeg44.dll.a_@@_../../../cgui203/cgui/lib/mingw32/libcgui.a_@@_
+Linker=../../lib/liballeg44.dll.a_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -68,7 +68,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit7]
-FileName=guy.cpp
+FileName=box.h
 CompileCpp=1
 Folder=Editor
 Compile=1
@@ -78,7 +78,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit8]
-FileName=guy.h
+FileName=guy.cpp
 CompileCpp=1
 Folder=Editor
 Compile=1
@@ -107,10 +107,20 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit6]
-FileName=box.h
+[Unit9]
+FileName=menu.h
 CompileCpp=1
-Folder=Editor
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit10]
+FileName=menu.cpp
+CompileCpp=1
+Folder=
 Compile=1
 Link=1
 Priority=1000

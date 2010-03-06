@@ -90,7 +90,7 @@ int main()
     install_mouse();  // for mouse use
     //show_os_cursor(MOUSE_CURSOR_ARROW); // display mouse, it is disabled by default with allegro
     
-    select_mouse_cursor(MOUSE_CURSOR_ARROW);  //Changeg, show_os_cursor dosen't work fullscreen. Better solution is probably to draw our own bitmap mouse at end of every step.
+    select_mouse_cursor(MOUSE_CURSOR_ARROW);  //Changed, show_os_cursor dosen't work fullscreen. Better solution is probably to draw our own bitmap mouse at end of every step.
     show_mouse(screen);
     
     set_color_depth(32);
@@ -131,7 +131,7 @@ int main()
     
     // load level 
     char tempPath[_MAX_PATH];
-    StringAdd(levelPath,"lolsuck",tempPath);
+    StringAdd(levelPath,"testlevel.lvl",tempPath);
     try
     {
         LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
@@ -157,7 +157,7 @@ int main()
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
     start_timer = clock(); // timers for stable steps/second
-   	//allegro_message(allegro_id); // "Allegro 4.4.0, MinGW" on my system (although I believe I have allegro 4.4.0.1 ...)
+   	//allegro_message(allegro_id); // "Allegro 4.4.1, MinGW" on my system (although I believe I have allegro 4.4.1.1 ...)
     while( !key[KEY_ESC])
     { 
         finish_timer = clock();
@@ -274,6 +274,8 @@ int main()
     }  
 
     // remember to cleanup all bitmaps
+    // pointless step (I think) as they get destroyed anyway when the programme closes
+    // if you have any evidence to the contrary please tell me
     destroy_bitmap( background);
     destroy_bitmap( foreground);
     destroy_bitmap( buffer);
@@ -281,8 +283,7 @@ int main()
     destroy_bitmap( guy_right);
     destroy_bitmap( guy_left_stop);
     destroy_bitmap( guy_right_stop);
-    
-    //readkey();
+
     return 0;
     
 }   
