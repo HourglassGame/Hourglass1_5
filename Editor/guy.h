@@ -3,8 +3,8 @@
 #ifndef GUY_H
 #define GUY_H
 
-#include <allegro.h>
-#include "object.h"
+#include "object.h" // inheriting class's header file
+
 /*
  * No description
  */
@@ -15,17 +15,7 @@ class Guy : public Object
 		Guy();
 		// class destructor
 		~Guy();
-		
-		void SetData(int newXPos, int newYPos, double newXSpeed, double newYSpeed, int newType);
 		void DoDraw();
-		//void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
-	private:
-        //int xPos;
-        //int yPos;
-        //double xSpeed;
-        //double ySpeed;
-        int type;
-       // bool drawFacing;
 };
 
 #endif // GUY_H

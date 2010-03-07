@@ -2,7 +2,7 @@
 
 #ifndef OBJECT_H
 #define OBJECT_H
-
+#include <allegro.h>
  // inheriting class's header file
 
 /*
@@ -19,11 +19,11 @@ class Object
 		// class constructor
 		Object();
 		// class destructor
-		~Object();
+		virtual ~Object();
 		
 	    void SetData(int newXPos, int newYPos, double newXSpeed, double newYSpeed, int newType);
 		void SetPos(int newXPos, int newYPos);
-        void DoDraw();
+        virtual void DoDraw() = 0;
 		void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
 	    int GetType();
 	    void SetSelected(bool newSelected);

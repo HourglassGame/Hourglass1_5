@@ -15,6 +15,7 @@ class Box : public Object
 		Box();
 		// class destructor
 		~Box();
+		void DoDraw();
 };
 
 #endif // BOX_H

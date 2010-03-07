@@ -1,7 +1,7 @@
 [Project]
 FileName=Editor.dev
 Name=Editor
-UnitCount=4
+UnitCount=10
 Type=0
 Ver=1
 ObjFiles=
@@ -68,9 +68,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit7]
-FileName=box.h
+FileName=Box.h
 CompileCpp=1
-Folder=Editor
+Folder=
 Compile=1
 Link=1
 Priority=1000
@@ -78,9 +78,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit8]
-FileName=guy.cpp
+FileName=Box.cpp
 CompileCpp=1
-Folder=Editor
+Folder=
 Compile=1
 Link=1
 Priority=1000
@@ -108,7 +108,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit9]
-FileName=menu.h
+FileName=Guy.h
 CompileCpp=1
 Folder=
 Compile=1
@@ -118,7 +118,27 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit10]
-FileName=menu.cpp
+FileName=Guy.cpp
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit5]
+FileName=Menu.h
+CompileCpp=1
+Folder=
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit6]
+FileName=Menu.cpp
 CompileCpp=1
 Folder=
 Compile=1
