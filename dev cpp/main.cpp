@@ -85,6 +85,7 @@ void MakeLevelFile(char* outputPath);
 
 int main()
 {
+    
     allegro_init(); // for all allegro functions
     install_keyboard(); // for keyboard use
     install_mouse();  // for mouse use
@@ -270,6 +271,10 @@ int main()
             // draw buffer to screen
           //  allegro_message(imagePath);
             
+        }
+        else
+        {
+            rest(1);
         }
     }  
 
