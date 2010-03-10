@@ -4,7 +4,7 @@
 //#include "MetaGuy.h"
 #include <math.h>
 #include <iostream> 
-
+#include <vector>
 // bitmaps used to draw
 extern BITMAP* guy_left;
 extern BITMAP* guy_right;
@@ -29,10 +29,11 @@ extern PropManager propManager;
 // external objects for collision ect..
 
 extern int guyCount;
-extern Guy guy[];
-
+//extern Guy guy[];
+extern std::vector<Guy> guys;
 extern int boxCount;
-extern Box box[];
+//extern Box box[];
+extern std::vector<Box> boxes;
 
 extern Box MintConditionBox;
 
@@ -59,24 +60,58 @@ const int GUY_COLLISION_HEIGHT = 32;
 // Input Storing
 static bool leftMousePressed;
     
-static bool inputLeft[9000];
-static bool inputRight[9000];
-static bool inputUp[9000];
-static bool inputDown[9000];
-    
+static std::vector<bool> inputLeft;
+static std::vector<bool> inputRight;
+static std::vector<bool> inputUp;
+static std::vector<bool> inputDown;
+static std::vector<int> inputSpecial;
+static std::vector<int> inputSpecialArg1;
+//static bool inputLeft[9000];
+//static bool inputRight[9000];
+//static bool inputUp[9000];
+//static bool inputDown[9000];
+
 // store attempted events, eg: jump to X, or jump X back in time.
 // 0 = no action
 // 1 = free chronoport with time arg1
-static int inputSpecial[9000];
-static int inputSpecialArg1[9000];
+//static int inputSpecial[9000];
+//static int inputSpecialArg1[9000];
 
 Guy::Guy()
 {
-    
+    departureX = -1;
+    departureY = -1;
+    departureXspeed = -1;
+    departureYspeed = -1;
+    departureCarrying = false;
 }
 
 void Guy::StoreInput(int time)
 {
+    if (time >= inputLeft.size())
+    {
+        inputLeft.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= inputRight.size())
+    {
+        inputRight.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= inputUp.size())
+    {
+        inputUp.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= inputDown.size())
+    {
+        inputDown.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= inputSpecial.size())
+    {
+        inputSpecial.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= inputSpecialArg1.size())
+    {
+        inputSpecialArg1.resize((time+1)*RESIZE_FACTOR);
+    }
     inputLeft[time] = key[KEY_A];
     inputRight[time] = key[KEY_D];
     inputUp[time] = key[KEY_W];
@@ -131,13 +166,29 @@ void Guy::SetId(int newId)
 
 void Guy::ForwardTimeStep(int time)
 {
+    if (time >= x.size())
+    {
+        x.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= y.size())
+    {
+        y.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= xSpeed.size())
+    {
+        xSpeed.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= ySpeed.size())
+    {
+        ySpeed.resize((time+1)*RESIZE_FACTOR);
+    }
     // input is in relative time
     int personalTime = time-timeOffset;
-    
+
     bool jump = false; // is it allowed to jump?
     double oldX = x[time-1];
     double oldY = y[time-1];
-        
+
     // set xspeed from input
     if (inputLeft[personalTime])
     {
@@ -206,13 +257,13 @@ void Guy::ForwardTimeStep(int time)
     {
         for (int i = 0; i < boxCount; ++i)
         {
-            if (box[i].GetActive(time))
+            if (boxes[i].GetActive(time))
             {
-                    double boxX = box[i].GetX(time);
-                    double boxY = box[i].GetY(time);
+                    double boxX = boxes[i].GetX(time);
+                    double boxY = boxes[i].GetY(time);
                     if (( newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= boxY) )     
                     {
-                        ySpeed[time] = box[i].GetYspeed(time);
+                        ySpeed[time] = boxes[i].GetYspeed(time);
                         newY = boxY-GUY_COLLISION_HEIGHT;
                         jump = true;
                     }
@@ -235,6 +286,14 @@ void Guy::ForwardTimeStep(int time)
 
 void Guy::UpdateBoxCarrying(int time)
 {
+    if (time >= carryingBox.size())
+    {
+        carryingBox.resize((time+1)*RESIZE_FACTOR);
+    }
+    if (time >= carryBoxId.size())
+    {
+        carryBoxId.resize((time+1)*RESIZE_FACTOR);
+    }
      // input is in relative time
     int personalTime = time-timeOffset;
     
@@ -243,7 +302,7 @@ void Guy::UpdateBoxCarrying(int time)
     {
         if (carryingBox[time-1])
         {
-            if (box[carryBoxId[time-1]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
+            if (boxes[carryBoxId[time-1]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
             {
                 carryingBox[time] = false;
             }
@@ -259,13 +318,13 @@ void Guy::UpdateBoxCarrying(int time)
             carryingBox[time] = false;
             for (int i = 0; i < boxCount; ++i)
             {
-                if (box[i].GetActive(time))
+                if (boxes[i].GetActive(time))
                 {
-                    double boxX = box[i].GetX(time-1);
-                    double boxY = box[i].GetY(time-1);
+                    double boxX = boxes[i].GetX(time-1);
+                    double boxY = boxes[i].GetY(time-1);
                     if (( x[time-1] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
                     {
-                        box[i].SetExist(time,false);
+                        boxes[i].SetExist(time,false);
                         carryingBox[time] = true;
                         carryBoxId[time] = i;
                         break;
@@ -299,9 +358,27 @@ void Guy::UpdateTimeTravel(int time)
     {
         if (order+1 == guyCount)
         {
+            //allegro_message("d2p");
             int portTime = inputSpecialArg1[personalTime];
-            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime);
-            guy[guyCount].SetOrder(guyCount);
+            //Guy newGuy;// = Guy();
+          //  newGuy.SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime);
+            //guys.push_back(Guy());
+            //allegro_message("guyCount = %d",guyCount);
+            //allegro_message("guys.size() = %d",guys.size());
+            //allegro_message("guys.capacity() = %d",guys.capacity());
+            guys[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime);
+            //try
+              //  {
+                //guys.at(guyCount).SetStart(double(50),double(50),double(0),double(0),false,int(5),int(50));
+                //}
+                //catch(...)
+                //{
+                  //  allegro_message("An Exception Occured");
+                  //  allegro_message("%s",e.what());
+                //}
+            //allegro_message("grrrr");
+            guys[guyCount].SetOrder(guyCount);
+            //allegro_message("grrrr");
             if (absoluteTime < portTime)
             {
                 propManager.CreatePropagation(absoluteTime,portTime);
@@ -310,21 +387,28 @@ void Guy::UpdateTimeTravel(int time)
             {
                 absoluteTime = portTime;
             }
-            
+            //allegro_message("grrrr2");
+            //allegro_message("%f",x[time]);
+            //allegro_message("%d",int(x[time]));
+            //allegro_message("%d",departureX);
             departureX = int(x[time]);
+            //allegro_message("grrrr2.1");
             departureY = int(y[time]);
+            //allegro_message("grrrr3");
             departureXspeed = int(xSpeed[time]);
             departureYspeed = int(ySpeed[time]);
+            //allegro_message("grrrr4.5");
             departureCarrying = carryingBox[time];
             depatureTimeDestination = portTime;
-             
+            //allegro_message("grrrr5");
             guyCount++;
             
             endAbsTime = time;
             endRelTime = relativeTime;
         }
-        else
+        else if (order + 1 < guys.size())
         {
+            //allegro_message("d1p");
             endAbsTime = time;
             
             if (departureX != int(x[time]) or departureY != int(y[time]) or departureXspeed != int(xSpeed[time]) or departureYspeed != int(ySpeed[time]) or departureCarrying != carryingBox[time])
@@ -339,7 +423,16 @@ void Guy::UpdateTimeTravel(int time)
                     }
                 }
                 
-                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
+                //guys[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
+                try
+                {
+                guys.at(order+1).SetStart(double(50),double(50),double(0),double(0),false,int(5),int(50));
+                }
+                catch(...)
+                {
+                    allegro_message("An Exception Occured");
+                  //  allegro_message("%s",e.what());
+                }
                 if (absoluteTime > depatureTimeDestination)
                 {
                     propManager.CreatePropagation(depatureTimeDestination,absoluteTime);
@@ -361,6 +454,10 @@ void Guy::UpdateTimeTravel(int time)
             
             
         }
+        else
+        {
+            allegro_message("dop");
+        }
     }    
 }
 
@@ -376,6 +473,31 @@ void Guy::ResetParadoxChecking()
 
 void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,bool newCarryingBox,int rel_time,int abs_time)
 {
+    if (abs_time >= x.size())
+    {
+        x.resize((abs_time+1)*RESIZE_FACTOR);
+    }
+    if (abs_time >= y.size())
+    {
+        y.resize((abs_time+1)*RESIZE_FACTOR);
+    }
+    if (abs_time >= xSpeed.size())
+    {
+        xSpeed.resize((abs_time+1)*RESIZE_FACTOR);
+    }
+    if (abs_time >= ySpeed.size())
+    {
+        ySpeed.resize((abs_time+1)*RESIZE_FACTOR);
+    }
+    if (abs_time >= carryBoxId.size())
+    {
+        carryBoxId.resize((abs_time+1)*RESIZE_FACTOR);
+    }
+    if (abs_time >= carryingBox.size())
+    {
+        carryingBox.resize((abs_time+1)*RESIZE_FACTOR);
+    }
+    //allegro_message("grrrr1");
     startRelTime = rel_time;
     startAbsTime = abs_time;
     x[abs_time] = newX;
@@ -389,10 +511,10 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
         {
             if (DeadBox[i])
             {
-                box[i] = MintConditionBox;
+                boxes[i] = MintConditionBox;
                 carryBoxId[abs_time] = i;
                 //box[i].SetStart(0,0,0,0,abs_time);
-                box[i].SetId(i);
+                boxes[i].SetId(i);
                 //box[i].SetExist(abs_time,false);
                 carryingBox[abs_time] = true;
                 DeadBox[i] = false;
@@ -403,7 +525,7 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
         {
             carryBoxId[abs_time] = boxCount;
             //box[boxCount].SetStart(0,0,0,0,abs_time);
-            box[boxCount].SetId(boxCount);
+            boxes[boxCount].SetId(boxCount);
             //box[boxCount].SetExist(abs_time,false);
             carryingBox[abs_time] = true;
             boxCount++;

@@ -6,7 +6,7 @@ class HourglassException
 		// class constructor
 		HourglassException(){}
 		// class destructor
-		~HourglassException(){}
+		virtual ~HourglassException(){}
 };
 
 class FileNotOpenedException : public HourglassException
@@ -53,4 +53,23 @@ class GFXModeNotSetException : public HourglassException
 		// class destructor
 		~GFXModeNotSetException(){}
 };
+
+class InvalidPathException: public HourglassException
+{
+      public:
+		// class constructor
+		InvalidPathException(){}
+		// class destructor
+		virtual ~InvalidPathException(){}    
+};
+class MaxPathLengthExceededException : public InvalidPathException
+{
+	public:
+		// class constructor
+		MaxPathLengthExceededException(){}
+		// class destructor
+		~MaxPathLengthExceededException(){}
+};
+
+
 #endif

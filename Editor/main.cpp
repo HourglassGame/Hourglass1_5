@@ -1,3 +1,4 @@
+//TODO improve error handling in general, atm it mostly just does exit();, which kind of fails.
 #include <allegro.h>
 
 //#include "cgui.h" //for Req(...) - (unused)
@@ -9,24 +10,31 @@
 #include <fstream> // for file I/O
 //#include <string> // for strings
 #include <map> //used in LoadLevel
-#include <math.h> // for floor()
+#include <cmath> // for floor()
 #include <vector> //for guys, boxes, platforms etc...
-
+#include "ImagePathEnum.h"
 #include "Exceptions.h" //For all my exceptions
 
-#include "object.h"
+#include "Object.h"
 #include "Menu.h"
 #include "Guy.h"
 #include "Box.h"
-using namespace std;
-//extern char allegro_id[];
-extern char allegro_error[ALLEGRO_ERROR_SIZE];
+#include "ImagePathEnum.h"
+#include "ImageLoader.h"
+#include "FileString.h"
+#include "SwitchingInput.h"
+#include "HourglassInputsEnum.h"
+using namespace std; //TODO - remove at some stage.
+extern char allegro_id[];
+//extern char allegro_error[ALLEGRO_ERROR_SIZE];
 // timing
 double elapsed_time;
 clock_t start_timer,finish_timer;
 
 const double STEP_TIME = 0.0145; // at ~60 fps wall drawing is smother (but mouse flickers more)
 
+//Paths
+char levelPath[MAX_PATH]; // .lvl path
 
 //Walls
 const int LEVEL_WIDTH = 32;
@@ -34,12 +42,7 @@ const int LEVEL_HEIGHT = 19;
 
 const int BLOCK_SIZE = 32;
 
-bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
-
-// file paths
-char currentPath[_MAX_PATH] = {'\0'}; // .exe path
-char levelPath[_MAX_PATH] = {'\0'}; // .lvl path
-char imagePath[_MAX_PATH] = {'\0'}; // .bmp path
+bool wall[LEVEL_WIDTH][LEVEL_HEIGHT] = {0};
 
 //Functions
 void CloseButtonHandler();
@@ -48,26 +51,26 @@ void Init();
 void EngineInit();
 void StateInit();
 void DeInit();
+void InputInit();
+void TranslateInputs();
 
 void WallInit();
 
-
-BITMAP* LoadImage(const char* imageName);
-
-void LoadLevel (char* filePath);
-void SaveLevel(char* outputPath);
-void TestLevel(double squareSize);
+void LoadLevel (const char* filePath);
+void SaveLevel(const char* outputPath);
+void TestLevel(const double squareSize);
 void DoLoadLevel();
 void DoSaveLevel();
 
-void DoToggleDrawingWall();
+void UpdateDrawingWall();
 void DoDrawWall();
 void DoAddObjectMenu();
 void DoNewSelection();
-void AddObject(int objectX, int objectY);
+void AddObject(const int objectX, const int objectY);
 void DrawMenu();
 void DeleteSelectedObject();
 void DoMoveSelected();
+void ClearBuffer();
 void Draw();
 
 void DoAddingObject();
@@ -76,7 +79,7 @@ void DoStep();
 
 void DrawToScreen();
 
-//Globals TODO DESPERATELY - redo program in OO way to avoid these spaz number of globals );
+//Globals TODO DESPERATELY - redo program in OO way to avoid these spaz number of globals ); Getting there (:
 
 BITMAP* buffer;
 BITMAP* tempBuffer;
@@ -85,13 +88,9 @@ BITMAP* guy_left_stop;
 BITMAP* guy_right_stop;
 BITMAP* box_sprite;
 
-BITMAP* menu_box;
-BITMAP* menu_guy;
 
 bool closeButtonPressed = false;
 bool drawingWall = false;
-bool pastKeyW = false;
-bool pastKeySpace = false;
 bool doingAddGuy = false;
 bool doingAddBox = false;
 bool pastKeyMouse1 = false;
@@ -102,15 +101,7 @@ bool pastMouse2CancellingAddObject = false;
 const int BUFFER_WIDTH = 1024;
 const int BUFFER_HEIGHT = 768;
 
-const int MENU_WIDTH = 125;
-const int MENU_HEIGHT = 50;
-
 const int MILLISECONDS_PER_SEC = 1000;
-
-int menuPositionX;
-int menuPositionY;
-
-int noOfMenuItems = 0;
 
 bool snapToGrid = true;
 
@@ -118,25 +109,25 @@ int gridSize = 16;
 
 vector<Object*> objects;
 map<string,Menu> menus;
+map<HourglassInput,SwitchingInput> inputs;
 
 int main()
 {
-    //allegro_message("%d",menus.size());
     try
     {
         try
         {
            Init();
         }
-        catch (ImageNotLoadedException)
+        catch (ImageNotLoadedException) //pretty fail, already caught by global catch which also just exits.
         {
-           return(2);
+           return(4);
         }
     	
         double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
         //allegro_message(allegro_id);
         
-        while (!(key[KEY_ESC] || closeButtonPressed)) //Game Loop
+        while (!(inputs[EXIT_EDITOR].GetCurrentValue() || closeButtonPressed)) //Game Loop
         {
             finish_timer = clock();
             elapsed_time = (double(finish_timer)-double(start_timer));
@@ -145,6 +136,8 @@ int main()
                 start_timer = clock();
                 poll_mouse();
                 poll_keyboard();// inputs are now definately taken -here-
+                TranslateInputs(); //inputs converted from keypresses to generic (i.e. not associated with any key within the rest of the program) key downs, which last only for 1 step
+                //readkey();
                 DoStep();
             }
             else
@@ -175,7 +168,7 @@ int main()
        allegro_message("An unknown exception occurred in\n""main(), Exiting");
        return(3);
     }
-   	return 0;
+   	return(0);
 }
 END_OF_MAIN()
 
@@ -209,9 +202,9 @@ void EngineInit()
 	//if (depth == 0) depth = 32;
 	set_window_title("Hourglass - Editor");
 	set_color_depth(depth);
-    if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024, 768, 0, 0) !=0)
+    if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024, 7668, 0, 0) !=0)
     {
-       if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 748, 0, 0) != 0)
+       if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0) != 0)
        {
           allegro_message("Hourglass could not set any graphics mode.\nThis can happen if:\nYour screen is smaller than 1024/768.\nYour screen does not have a 4:3 aspect ratio.\nOther problems?\n\nallegro_error is:\n%s",allegro_error);
 	      throw GFXModeNotSetException();
@@ -230,25 +223,23 @@ void EngineInit()
  //   LOCK_FUNCTION(CloseButtonHandler); // in manual, unneeded? - used in DOS or something
 	set_close_button_callback(CloseButtonHandler);
 	
-    getcwd(currentPath, _MAX_PATH);
+	// file paths
+    char exePath[MAX_PATH]; // .exe path
+
+    getcwd(exePath, MAX_PATH);
     char *levelPathName = "/../dev cpp/resources/levels/";
-    char *imagePathName = "/../dev cpp/resources/images/";
     
-    sprintf(imagePath,"%s%s",currentPath,imagePathName);
-    sprintf(levelPath,"%s%s",currentPath,levelPathName);
-    //StringAdd(currentPath,levelPathName,levelPath);
-  //  StringAdd(currentPath,imagePathName,imagePath);
+    sprintf(levelPath,"%s%s",exePath,levelPathName);
     
     buffer = create_bitmap( BUFFER_WIDTH, BUFFER_HEIGHT); // create buffer, all drawing done to buffer
     tempBuffer = create_bitmap(BUFFER_WIDTH, BUFFER_HEIGHT);
     
     try
     {
-        guy_left_stop = LoadImage("rhino_left_stop.bmp");
-        guy_right_stop = LoadImage("rhino_right_stop.bmp");
-        box_sprite = LoadImage("box.bmp");
-        menu_box = LoadImage("add_box.bmp");
-        menu_guy = LoadImage("add_guy.bmp");
+        ImageLoader imageLoader(GAME);
+        guy_left_stop = imageLoader.LoadImage("rhino_left_stop.bmp");
+        guy_right_stop = imageLoader.LoadImage("rhino_right_stop.bmp");
+        box_sprite = imageLoader.LoadImage("box.bmp");
     }
     catch (ImageNotLoadedException)
     {
@@ -264,20 +255,48 @@ void StateInit()
     
     WallInit();
     
-    objects.clear();
+    while (objects.size() != 0)
+    {
+       delete objects.back();
+       objects.pop_back();
+    }
     menus.clear();
     
     drawingWall = false;
-    pastKeyW = false;
-    pastKeySpace = false;
     doingAddGuy = false;
     doingAddBox = false;
     pastKeyMouse1 = false;
     objectSelected = false;
     selectedObject = -1;
+    
     pastMouse2CancellingAddObject = false;
+    InputInit();
 }
 
+void InputInit() //when we port to Linux, KEY_* must be replaced with _allegro_KEY_*
+{
+    for (map<HourglassInput,SwitchingInput>::iterator it = inputs.begin(); inputs.size() !=0;)
+    {
+        it->second.Reset(); //calls KeyCombination destructors, stops memory leak.
+        inputs.erase(it);
+        it = inputs.begin();
+    }
+    inputs[ADD_ADD_OBJECT_MENU].Add(KEY_SPACE,PRESS);
+    inputs[DO_LOAD_LEVEL_DIALOG].Add(KEY_L,PRESS);
+    inputs[DO_SAVE_LEVEL_DIALOG].Add(KEY_S,PRESS);
+    inputs[DRAW_WALL].Add(KEY_W,TOGGLE_ON_PRESS);
+    inputs[DELETE_OBJECT].Add(KEY_BACKSPACE,PRESS);
+    inputs[DELETE_OBJECT].Add(KEY_DEL,PRESS);
+    inputs[EXIT_EDITOR].Add(KEY_ESC,HOLD);
+}
+
+void TranslateInputs() 
+{
+    for(std::map<HourglassInput,SwitchingInput>::iterator it = inputs.begin(); it != inputs.end(); it++)
+    {
+        it->second.Update();
+    }
+}
 void WallInit()
 {
     for(int i = 0; i<LEVEL_WIDTH; ++i)
@@ -293,22 +312,7 @@ void WallInit()
     TestLevel(1);
 }
 
-BITMAP* LoadImage(const char* imageName)
-{
-    // loads a bitmap
-    char tempPath[_MAX_PATH] = {'\0'};
-    sprintf(tempPath,"%s%s",imagePath,imageName);
-    //StringAdd(imagePath,imageName,tempPath);
-    BITMAP* tempBitmap;
-    tempBitmap = load_bitmap(tempPath, NULL);
-    if (!tempBitmap)
-    {
-       throw ImageNotLoadedException();
-    }
-    return tempBitmap;
-}
-
-void LoadLevel (char* filePath)
+void LoadLevel (const char* filePath)
 {
      StateInit();
      ifstream inputFile;
@@ -342,14 +346,14 @@ void LoadLevel (char* filePath)
             {
                inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                gotLine = line;
-               while (gotLine.compare(0,8,"</BOXES>")!= 0)
+               while (gotLine.compare(0,8,"</BOXES>") != 0 && !inputFile.eof()) //TODO add *better* error handling if eof reached without end symbol.
                {
                   if (gotLine.compare(0,5,"<BOX>")==0)
                   {
                      map<string,string> boxData;
                      inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                      gotLine = line;
-                     while (gotLine.compare(0,6,"</BOX>")!=0)
+                     while (gotLine.compare(0,6,"</BOX>")!=0 && !inputFile.eof())
                      {
                         string::size_type it = gotLine.find("=");
                         boxData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
@@ -361,9 +365,8 @@ void LoadLevel (char* filePath)
                      double xSpeed = atof(boxData["X_SPEED"].data());
                      double ySpeed = atof(boxData["Y_SPEED"].data());
                      //int absTime = atoi(boxData["ABS_TIME"].data());
-                     Box* newBox = new Box();
-                     objects.push_back(newBox);
-                     objects[objects.size()-1]->SetData(xPos,yPos,xSpeed,ySpeed,2);
+                     objects.push_back(new Box());
+                     objects.back()->SetData(xPos,yPos,xSpeed,ySpeed);
                   }
                   inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                   gotLine = line;
@@ -375,14 +378,14 @@ void LoadLevel (char* filePath)
             {
                inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                gotLine = line;
-               while (gotLine.compare(0,8,"</GUYS>")!= 0)
+               while (gotLine.compare(0,8,"</GUYS>")!= 0 && !inputFile.eof())
                {
                   if (gotLine.compare(0,5,"<GUY>")==0)
                   {
                      map<string,string> guyData;
                      inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                      gotLine = line;
-                     while (gotLine.compare(0,6,"</GUY>")!=0)
+                     while (gotLine.compare(0,6,"</GUY>")!=0 && !inputFile.eof())
                      {
                         string::size_type it = gotLine.find("=");
                         guyData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
@@ -396,9 +399,7 @@ void LoadLevel (char* filePath)
                      //bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
                      //int absTime = atoi(guyData["ABS_TIME"].data());
                      //int relTime = atoi(guyData["REL_TIME"].data());
-                     Guy* newGuy = new Guy();
-                     objects.push_back(newGuy);
-                     objects[objects.size()-1]->SetData(xPos,yPos,xSpeed,ySpeed,1);
+                     objects.push_back(new Guy(xPos,yPos,xSpeed,ySpeed));
                   }
                   inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                   gotLine = line;
@@ -411,7 +412,7 @@ void LoadLevel (char* filePath)
                map<string,string> imageData;
                inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
                gotLine = line;
-               while (gotLine.compare(0,9,"</IMAGES>")!= 0)
+               while (gotLine.compare(0,9,"</IMAGES>")!= 0 && !inputFile.eof())
                {
                   string::size_type it = gotLine.find("=");
                   imageData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
@@ -453,7 +454,7 @@ void LoadLevel (char* filePath)
      }
 }
 
-void SaveLevel(char* outputPath)
+void SaveLevel(const char* outputPath)
 {
     ofstream outputFile;
     outputFile.open(outputPath);
@@ -509,9 +510,6 @@ void SaveLevel(char* outputPath)
             double xSpeed;
             double ySpeed;
             objects[i]->GetData(xPos, yPos, xSpeed, ySpeed);
-            //char message[100];
-           // sprintf(message, "%d" , xPos);
-            //allegro_message(message);
             outputFile << "X_POS=" << xPos << '\n';
             outputFile << "Y_POS=" << yPos << '\n';
            // outputFile << "X_SPEED = " << xSpeed << '\n';
@@ -523,7 +521,7 @@ void SaveLevel(char* outputPath)
     outputFile.close();
 }
 
-void TestLevel(double squareSize)
+void TestLevel(const double squareSize)
 {
     rectfill( buffer, 0 , 0 , LEVEL_WIDTH * BLOCK_SIZE, LEVEL_HEIGHT * BLOCK_SIZE, makecol (255,255,255));
     for (int x = 0; x < LEVEL_WIDTH; ++x)
@@ -580,21 +578,17 @@ void DoSaveLevel()
    }
 }
 
-void DoToggleDrawingWall()
+void UpdateDrawingWall()
 {
-   if (drawingWall)
-   {
-      drawingWall = false;
-   }
-   else
-   {
-      if (objectSelected)
-      {
-         objects[selectedObject]->SetSelected(false);                   
-      }
-      objectSelected = false;
-      drawingWall = true;
-   }
+    if (!drawingWall && inputs[DRAW_WALL].GetCurrentValue())
+    {
+        if (objectSelected)
+        {
+            objects[selectedObject]->SetSelected(false);               
+        }
+        objectSelected = false;
+    }
+    drawingWall = inputs[DRAW_WALL].GetCurrentValue();
 }
 
 void DoDrawWall()
@@ -625,13 +619,8 @@ void DoAddObjectMenu()
 {
     drawingWall = false;
     draw_sprite(tempBuffer, buffer, 0, 0);
-    //allegro_message("menus.size() before:%d",menus.size());
     Menu newMenu;
     menus["addObjectMenu"] = newMenu;
-    //menus.push_back(Menu());
-    //allegro_message("menus.size() after:%d",menus.size());
-   // menus["addObjectMenu"].SetStart(mouse_x,mouse_y);
-    //allegro_message("y3");
 }
 
 void DoNewSelection()
@@ -662,20 +651,15 @@ void DoMoveSelected()
     {
         objectX = int(gridSize*floor(double(mouse_x/gridSize)));
         objectY = int(gridSize*floor(double(mouse_y/gridSize)));
-    }
-                               
+    }             
     else
     {
         objectX = int(floor(mouse_x));
         objectY = int(floor(mouse_y));
     }
-                              
-    if((objects[selectedObject]->GetType() == 1 && 
-       (objectX <= LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && 
-        objectY <= LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT)) || 
-       (objects[selectedObject]->GetType() == 2 &&
-       (objectX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH &&
-       objectY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)))
+    
+    if(objectX <= LEVEL_WIDTH*BLOCK_SIZE-objects[selectedObject]->GetXSize() && 
+        objectY <= LEVEL_HEIGHT*BLOCK_SIZE-objects[selectedObject]->GetYSize())
     {
         objects[selectedObject]->SetPos(objectX,objectY);
     }
@@ -696,7 +680,8 @@ void DoAddingObject()
         objectX = int(floor(mouse_x));
         objectY = int(floor(mouse_y));
     }
-    if((doingAddGuy && objectX <= LEVEL_WIDTH*BLOCK_SIZE-GUY_WIDTH && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-GUY_HEIGHT) || (doingAddBox && (objectX <= LEVEL_WIDTH*BLOCK_SIZE-BOX_WIDTH && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-BOX_HEIGHT)))
+    
+    if((doingAddGuy && objectX <= LEVEL_WIDTH*BLOCK_SIZE-Guy().GetXSize() && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Guy().GetYSize()) || (doingAddBox && (objectX <= LEVEL_WIDTH*BLOCK_SIZE-Box().GetXSize() && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Box().GetYSize())))
     {
         if (doingAddGuy)
         {
@@ -706,6 +691,7 @@ void DoAddingObject()
         {
             draw_sprite(buffer,box_sprite, objectX, objectY);
         }
+        
         if ((mouse_b & 1) && !pastKeyMouse1)
         {
             pastKeyMouse1 = true;
@@ -713,6 +699,7 @@ void DoAddingObject()
             doingAddGuy = false;
         }
     }
+    
     if (mouse_b & 2)
     {
         doingAddGuy = false;
@@ -722,31 +709,16 @@ void DoAddingObject()
     }
 }
 
-void AddObject(int objectX,int objectY)
+void AddObject(const int objectX,const int objectY)
 {
-    /*
-    Object newObject;
-    objects.push_back(newObject);
     if(doingAddGuy)
     {
-        objects[objects.size()-1].SetData(objectX,objectY,0,0,1);
+        objects.push_back(new Guy(objectX,objectY));
     }
     else if(doingAddBox)
     {
-        objects[objects.size()-1].SetData(objectX,objectY,0,0,2);
-    }
-    */
-    if(doingAddGuy)
-    {
-        Guy* newGuy = new Guy();
-        objects.push_back(newGuy);
-        objects[objects.size()-1]->SetData(objectX,objectY,0,0,1);
-    }
-    else if(doingAddBox)
-    {
-        Box* newBox = new Box();
-        objects.push_back(newBox);
-        objects[objects.size()-1]->SetData(objectX,objectY,0,0,2);
+        objects.push_back(new Box());
+        objects.back()->SetData(objectX,objectY,0,0);
     }
     draw_sprite(buffer,tempBuffer,0,0);
     
@@ -759,27 +731,21 @@ void AddObject(int objectX,int objectY)
     selectedObject = (objects.size()-1);
 }
 
-void DrawMenu()
-{
-    noOfMenuItems = 0;
-    draw_sprite(buffer, menu_guy, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
-    noOfMenuItems++;
-    draw_sprite(buffer, menu_box, menuPositionX, menuPositionY + noOfMenuItems*MENU_HEIGHT);
-    noOfMenuItems++;
-}
-
 void DeleteSelectedObject()
 {
     // Maybe add checking whether an object is selected before deleting,
-    //(although that can't happen eith the current code)
-    vector<Object*>::iterator it;
-    it = objects.begin();
+    //(although that can't happen with the current code)
+    vector<Object*>::iterator it = objects.begin();
     it += selectedObject;
+    delete objects[selectedObject];
     objects.erase(it);
     selectedObject = -1;
     objectSelected = false;
 }
-
+void ClearBuffer()
+{
+    rectfill(buffer,0,0,BUFFER_WIDTH,BUFFER_HEIGHT,makecol(0,0,0));        
+}
 void Draw()
 {
     for(int i=0; i < objects.size(); ++i)
@@ -787,12 +753,13 @@ void Draw()
         objects[i]->DoDraw();
     }
     //allegro_message("%d",menus.size());
-    if(menus.size()>0)//doingAddObjectMenu)
+    if(menus.find("addObjectMenu") != menus.end())//doingAddObjectMenu)
     {
         //allegro_message("%d",menus.size());
         menus["addObjectMenu"].Draw();
     }
     DrawToScreen();
+    ClearBuffer();
     TestLevel(1);
     if(doingAddGuy || doingAddBox)
     {
@@ -803,32 +770,27 @@ void Draw()
 void DrawToScreen()
 {
     // draws the buffer to the screen
-    show_mouse(NULL);
+    scare_mouse();
     acquire_screen();
     draw_sprite( screen, buffer, 0, 0);
     release_screen();
-    show_mouse(screen);
+    unscare_mouse();
 }
 
 void DoStep()
 {
-    if(key[KEY_L] && !(menus.size()>0) && !doingAddGuy && !doingAddBox)
+    if(inputs[DO_LOAD_LEVEL_DIALOG].GetCurrentValue() && !(menus.find("addObjectMenu") != menus.end()) && !doingAddGuy && !doingAddBox)
     {
-          DoLoadLevel();    
+          DoLoadLevel();
     }
-    if(key[KEY_S])
+    if(inputs[DO_SAVE_LEVEL_DIALOG].GetCurrentValue())
     {
           DoSaveLevel();
     }
-    if(!pastKeyW && key[KEY_W] && !doingAddBox && !doingAddGuy && !(menus.size()>0)) // Switch in and out of wall drawing mode
+    if(!doingAddBox && !doingAddGuy && menus.find("addObjectMenu") == menus.end()) // Switch in and out of wall drawing mode
     {
-        pastKeyW = true;
-        DoToggleDrawingWall();  
-    }
-    if (pastKeyW && !key[KEY_W])
-    {
-       pastKeyW = false;
-    }         
+        UpdateDrawingWall();  
+    }     
     if (drawingWall)
     {
         DoDrawWall();
@@ -838,27 +800,21 @@ void DoStep()
     {
         textout_ex( buffer, font, "W: Wall Drawing Mode - Off", 800, 16, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     }
-    if(!pastKeySpace && key[KEY_SPACE] && !doingAddGuy && !doingAddBox) // Do add object menu
+    // Do add object menu
+    if(inputs[ADD_ADD_OBJECT_MENU].GetCurrentValue() && !(doingAddGuy || doingAddBox))
     {
-       pastKeySpace = true;
-       if (!(menus.size()>0))
+       if (menus.find("addObjectMenu") == menus.end())
        {
           DoAddObjectMenu();
        }
        else
        {
-           menus.erase(menus.find("addObjectMenu"));
+           menus.erase(menus.find("addObjectMenu")); //TODO Remove, put in Menu.Step();
        }
     }
-    if(pastKeySpace && !key[KEY_SPACE])
+    
+    if (menus.find("addObjectMenu") != menus.end())
     {
-        pastKeySpace = false;
-    }
-    //allegro_message("a%d",menus.size());
-    if (menus.size()>0)//doingAddObjectMenu)
-    {
-       //allegro_message("b%d",menus.size());
-       //allegro_message("y0");
         switch(menus["addObjectMenu"].Step())
         {
            case -1:
@@ -892,11 +848,11 @@ void DoStep()
     }
     if (objectSelected)
     {
-        if (mouse_b & 2 && !pastMouse2CancellingAddObject && !drawingWall && !(menus.size()>0) && !doingAddGuy && !doingAddBox)
+        if (mouse_b & 2 && !pastMouse2CancellingAddObject && !drawingWall && !(menus.find("addObjectMenu") != menus.end()) && !doingAddGuy && !doingAddBox)
         {
             DoMoveSelected();
         }
-        if(key[KEY_DEL] || key[KEY_BACKSPACE])
+        if(inputs[DELETE_OBJECT].GetCurrentValue())
         {
            DeleteSelectedObject();
         }
