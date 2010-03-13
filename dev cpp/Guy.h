@@ -1,7 +1,5 @@
-#ifndef HOURGLASS_GUY_H
-#define HOURGLASS_GUY_H
 #include <allegro.h>
-#include <vector>
+
 class Guy{
 
 public:
@@ -34,7 +32,6 @@ public:
 
 private:
 
-    static const int RESIZE_FACTOR = 2;
     int id; // array number in guy array
     
     // where drawing occured last time
@@ -45,15 +42,10 @@ private:
     //Then I guess I'd better erase 'else it will clutter up the next frame.
     
     // position in absolute time
-    //double x[5400];
-    //double y[5400];
-    //double xSpeed[5400];
-    //double ySpeed[5400];
-    
-    std::vector<double> x;
-    std::vector<double> y;
-    std::vector<double> xSpeed;
-    std::vector<double> ySpeed;
+    double x[5400];
+    double y[5400];
+    double xSpeed[5400];
+    double ySpeed[5400];
     
     // departure variables
     int departureX;
@@ -75,10 +67,8 @@ private:
     int startAbsTime;
     int startRelTime;
     
-    //bool carryingBox[5400]; // Am I carrying a box? Well, am I?
-    //int carryBoxId[5400]; // ID of box
-    std::vector<bool> carryingBox;
-    std::vector<int> carryBoxId;
+    bool carryingBox[5400]; // Am I carrying a box? Well, am I?
+    int carryBoxId[5400]; // ID of box
     
     int timeOffset; // difference between start rel and abs time
     
@@ -98,5 +88,9 @@ private:
     // animation variables
     bool draw_moving;
     bool draw_facing; // left = false, right = true
+        
+        
+
+
+     
 };
-#endif

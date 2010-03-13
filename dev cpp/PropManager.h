@@ -1,5 +1,3 @@
-#ifndef HOURGLASS_PROPMANAGER_H
-#define HOURGLASS_PROPMANAGER_H
 #include <allegro.h>
 
 class PropManager{
@@ -19,4 +17,5 @@ private:
     
     
 };
-#endif
+
+    

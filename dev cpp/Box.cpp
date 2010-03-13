@@ -1,7 +1,6 @@
 #include "Box.h"
 #include <math.h>
 #include <iostream> 
-#include <vector>
 
 extern BITMAP* box_sprite;
 
@@ -18,17 +17,10 @@ extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 extern int boxCount;
 extern Box box[];
 
-extern std::vector<Box> boxes;
-
 extern bool DeadBox[];
 
 
 Box::Box()
-{
-
-}
-
-Box::~Box()
 {
 
 }
@@ -92,11 +84,11 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     //check box collision
     for (int i = 0; i < boxCount; ++i)
     {
-        if (!DeadBox[i] and boxes[i].GetExist(abs_time))
+        if (!DeadBox[i] and box[i].GetExist(abs_time))
         {
         // boxes are stepped through in height order so getting current position is all good!
-            double boxX = boxes[i].GetX(abs_time);
-            double boxY = boxes[i].GetY(abs_time);
+            double boxX = box[i].GetX(abs_time);
+            double boxY = box[i].GetY(abs_time);
             if (( newX < boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH > boxX) and ( newY+BOX_COLLISION_HEIGHT > boxY) and (newY < boxY+BOX_COLLISION_HEIGHT) ) 
             {
                 dropped = false;
@@ -139,33 +131,12 @@ void Box::ForwardTimeStep(int time)
 {
     
     
-    if (time >= x.size())
-    {
-        x.resize((time+1)*RESIZE_FACTOR);
-    }
-    if (time >= y.size())
-    {
-        y.resize((time+1)*RESIZE_FACTOR);
-    }
-    if (time >= xSpeed.size())
-    {
-        xSpeed.resize((time+1)*RESIZE_FACTOR);
-    }
-    if (time >= ySpeed.size())
-    {
-        ySpeed.resize((time+1)*RESIZE_FACTOR);
-    }
-    if (time >= exist.size())
-    {
-        exist.resize((time+1)*RESIZE_FACTOR);
-    }
     
-    supported = false;
-    exist[time] = true; 
-    exist[time+1] = true;
     // only move if past start time
     if (GetActive(time))
     {
+        
+        supported = false;
         
         double oldX = x[time-1];
         double oldY = y[time-1];
@@ -221,11 +192,11 @@ void Box::ForwardTimeStep(int time)
         {
             for (int i = 0; i < boxCount; ++i)
             {
-                if (i != id and boxes[i].GetActive(time))
+                if (i != id and box[i].GetActive(time))
                 {
                     // boxes are stepped through in height order so getting current position is all good!
-                    double boxX = boxes[i].GetX(time);
-                    double boxY = boxes[i].GetY(time);
+                    double boxX = box[i].GetX(time);
+                    double boxY = box[i].GetY(time);
                     if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
                     {
                         xSpeed[time] = 0;
@@ -238,9 +209,9 @@ void Box::ForwardTimeStep(int time)
         }
         
         // set new locations
-        
         x[time] = newX;
-        y[time] = newY;
+        y[time] = newY; 
+       
     }
     
 }
@@ -253,26 +224,6 @@ bool Box::GetActive(int time)
 
 void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
-    if (abs_time >= x.size())
-    {
-        x.resize((abs_time+1)*RESIZE_FACTOR);
-    }
-    if (abs_time >= y.size())
-    {
-        y.resize((abs_time+1)*RESIZE_FACTOR);
-    }
-    if (abs_time >= xSpeed.size())
-    {
-        xSpeed.resize((abs_time+1)*RESIZE_FACTOR);
-    }
-    if (abs_time >= ySpeed.size())
-    {
-        ySpeed.resize((abs_time+1)*RESIZE_FACTOR);
-    }
-    if (abs_time >= exist.size())
-    {
-        exist.resize((abs_time+1)*RESIZE_FACTOR);
-    }
     exist[abs_time] = true;
     startAbsTime = abs_time;
     x[abs_time] = newX;
