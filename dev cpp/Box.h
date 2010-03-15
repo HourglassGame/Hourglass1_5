@@ -32,6 +32,9 @@ public:
     void SetExist(int abs_time,bool state);
     bool GetExist(int abs_time);
     
+    void SetCollideable(bool state);
+    bool GetCollideable();
+    
     bool DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
     
     void UpdateExist(int time);
@@ -51,6 +54,8 @@ private:
     double y[5400];
     double xSpeed[5400];
     double ySpeed[5400];
+    
+    bool collideable; // has the box steped so that it can now be hit
     
     bool exist[5400];
     

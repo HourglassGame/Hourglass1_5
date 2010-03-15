@@ -57,6 +57,15 @@ bool Box::GetExist(int abs_time)
     return exist[abs_time];
 }
 
+void Box::SetCollideable(bool state)
+{
+    collideable = state;
+}
+bool Box::GetCollideable()
+{
+    return collideable;
+}
+
 bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
     bool dropped = true;
@@ -130,9 +139,7 @@ void Box::UpdateExist(int time)
 void Box::ForwardTimeStep(int time)
 {
     
-    
-    
-    // only move if past start time
+    // only move if existing
     if (GetActive(time))
     {
         
@@ -192,21 +199,23 @@ void Box::ForwardTimeStep(int time)
         {
             for (int i = 0; i < boxCount; ++i)
             {
-                if (i != id and box[i].GetActive(time))
+                if (i != id and box[i].GetActive(time) and box[i].GetCollideable())
                 {
                     // boxes are stepped through in height order so getting current position is all good!
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
                     if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
                     {
-                        xSpeed[time] = 0;
-                        ySpeed[time] = 0;
+                        xSpeed[time] = box[i].GetXspeed(time);
+                        ySpeed[time] = box[i].GetYspeed(time);
                         newY = boxY-BOX_COLLISION_HEIGHT;
                         supported = true;
                     }
                 }
             }
         }
+        
+        collideable = true;
         
         // set new locations
         x[time] = newX;

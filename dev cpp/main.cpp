@@ -96,10 +96,10 @@ int main()
     
     set_color_depth(32);
     
-	if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024,768, 0, 0) !=0)
-    {
+	//if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 1024,768, 0, 0) !=0)
+    //{
        set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0);
-    }
+    //}
     
     // GFX_AUTODETECT_FULLSCREEN as first param for fullscreen
     // GFX_AUTODETECT_WINDOWED as first param for windowed
@@ -207,6 +207,7 @@ int main()
             for (int i = 0; i < boxCount; ++i)
             {
                 box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
                 
                 if (box[i].GetActive(absoluteTime))
                 {
