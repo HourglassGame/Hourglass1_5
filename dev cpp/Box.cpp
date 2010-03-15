@@ -75,14 +75,22 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
     {
         //right
-        if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and  wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)])
         {
             newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
+            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE <= BLOCK_SIZE-BOX_COLLISION_WIDTH) or wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+            {
+                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+            }
         }
         //left
-        else if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        else if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)])
         {
             newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE <= BLOCK_SIZE-BOX_COLLISION_WIDTH) or wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+            {
+                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+            }
         }
         else
         {
