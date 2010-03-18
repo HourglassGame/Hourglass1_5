@@ -20,12 +20,17 @@
 
 int relativeTime;
 int absoluteTime;
+int relativeTimeDirection; // -1 = backward, 0 = pause, 1 = forward
 
 // the time which propagation will stop at
 int propagating;
 
 const int MAX_GUYS = 100;
 const int MAX_BOXES = 100;
+
+const int MAX_TIME = 5399;
+
+const bool VIEW_PROPAGATION = true;
 
 PropManager propManager;
 
@@ -154,6 +159,7 @@ int main()
 
     absoluteTime = 1;
     relativeTime = 1;
+    relativeTimeDirection = 1;
     
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
@@ -164,7 +170,7 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval or propagating) 
+        if (elapsed_time >= step_interval or (propagating and VIEW_PROPAGATION)) 
         {
             start_timer = clock();
             // float to string:
@@ -181,15 +187,9 @@ int main()
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
             
             extern char allegro_id[];
-            // stop propagation if aim time is reached
-            if (propManager.UpdatePropagation())
-            {
-                for (int i = 0; i < guyCount; ++i)
-                {
-                    guy[i].ResetParadoxChecking();
-                }
-            }
-            
+            // returns true if propagation has just ended
+            bool resetParadox = propManager.UpdatePropagation();
+
             // get input if not propagating
             if (!propagating)
             {
@@ -228,7 +228,7 @@ int main()
                     activeBoxes++;
                 }
                 
-                if (!propagating)
+                if (!propagating or VIEW_PROPAGATION)
                 {
                     box[i].unDrawSprite();
                 }
@@ -248,15 +248,25 @@ int main()
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
                 }
-                if (!propagating)
+                if (!propagating or VIEW_PROPAGATION)
                 {
                     guy[i].unDrawSprite();
                 }
             }
             
-            if (!propagating)
+            // paradox tests have to be reset after the time step as a propagation may occur at this step
+            if (resetParadox and !propagating)
             {
-                 for (int i = 0; i < boxCount; ++i)
+                for (int i = 0; i < guyCount; ++i)
+                {
+                    guy[i].ResetParadoxChecking();
+                }
+            }
+            
+            // Most of drawing
+            if (!propagating or VIEW_PROPAGATION)
+            {
+                for (int i = 0; i < boxCount; ++i)
                 {
                     box[i].DrawSprite(absoluteTime);
                 }
@@ -264,10 +274,17 @@ int main()
                 {
                     guy[i].DrawSprite(absoluteTime);
                 }
-                relativeTime++;
+                if (!propagating)
+                {
+                    relativeTime++;
+                }
                 Draw();
             }
             absoluteTime++;
+            if (absoluteTime > MAX_TIME)
+            {
+                absoluteTime = MAX_TIME;
+            }
        //     file_select_ex("y0", imagePath, NULL , 500, 800, 600);
             // draw buffer to screen
           //  allegro_message(imagePath);
@@ -435,7 +452,7 @@ void LoadLevel (char* filePath)
                      //bool carryingBox = bool(atoi(guyData["CARRYING_BOX"].data()));
                      //int absTime = atoi(guyData["ABS_TIME"].data());
                      //int relTime = atoi(guyData["REL_TIME"].data());
-                     guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0);
+                     guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0,1);
                      guy[guyCount].SetOrder(guyCount);
                      guyCount++;
                   }

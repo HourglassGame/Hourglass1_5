@@ -300,16 +300,11 @@ void Guy::UpdateTimeTravel(int time)
         if (order+1 == guyCount)
         {
             int portTime = inputSpecialArg1[personalTime];
-            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime);
+            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime,1);
             guy[guyCount].SetOrder(guyCount);
-            if (absoluteTime < portTime)
-            {
-                propManager.CreatePropagation(absoluteTime,portTime);
-            }
-            else
-            {
-                absoluteTime = portTime;
-            }
+
+            absoluteTime = portTime;
+            propManager.AddPropagation(time,timeDirection);
             
             departureX = int(x[time]);
             departureY = int(y[time]);
@@ -339,11 +334,9 @@ void Guy::UpdateTimeTravel(int time)
                     }
                 }
                 
-                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination);
-                if (absoluteTime > depatureTimeDestination)
-                {
-                    propManager.CreatePropagation(depatureTimeDestination,absoluteTime);
-                }
+                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination,1);
+ 
+                propManager.AddPropagation(depatureTimeDestination,timeDirection);
                 
                 paradoxCheckX[paradoxChecks] = departureX;
                 paradoxCheckY[paradoxChecks] = departureY;
@@ -374,7 +367,7 @@ void Guy::ResetParadoxChecking()
     paradoxChecks = 0;
 }
 
-void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,bool newCarryingBox,int rel_time,int abs_time)
+void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,bool newCarryingBox,int rel_time,int abs_time, int direction)
 {
     startRelTime = rel_time;
     startAbsTime = abs_time;
@@ -382,6 +375,8 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
     y[abs_time] = newY;
     xSpeed[abs_time] = newXspeed;
     ySpeed[abs_time] = newYspeed;
+    
+    timeDirection = direction;
     
     if (newCarryingBox and !carryingBox[abs_time]) // create box
     {

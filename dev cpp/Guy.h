@@ -22,7 +22,7 @@ public:
     void DrawSprite(int time); 
     void unDrawSprite();
     
-    void SetStart(double newX,double newY,double newXspeed,double newYspeed, bool newCarryingBox, int rel_time,int abs_time); 
+    void SetStart(double newX,double newY,double newXspeed,double newYspeed, bool newCarryingBox, int rel_time,int abs_time, int direction); 
     
     void ForwardTimeStep(int time);
     void UpdateBoxCarrying(int time);
@@ -76,7 +76,7 @@ private:
     int endAbsTime;
     int endRelTime;
     
-    // 1 = backward, 2 = pause, 3 = forward
+    // -1 = backward, 0 = pause, 1 = forward
     int timeDirection;
     
     bool playerCharacter; // ie the oldest instance
