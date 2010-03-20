@@ -1,4 +1,4 @@
-#include <allegro.h>
+#include "Hourglass_Allegro.h"
 
 class Box{
 
@@ -75,5 +75,6 @@ private:
     static const int BOX_COLLISION_WIDTH = BOX_WIDTH;
     static const int BOX_COLLISION_HEIGHT = BOX_HEIGHT;
     
-    static const double GRAVITY = 0.17;
+    //static const 
+	double GRAVITY;// = 0.17;
 };

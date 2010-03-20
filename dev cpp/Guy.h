@@ -1,4 +1,4 @@
-#include <allegro.h>
+#include "Hourglass_Allegro.h"
 
 class Guy{
 

@@ -1,4 +1,4 @@
-#include <allegro.h>
+#include "Hourglass_Allegro.h"
 
 //#include <direct.h> // for getcwd - unneeded
 //#include <stdio.h>
@@ -7,6 +7,7 @@
 //#include <ctime> // for timing
 #include <fstream> // for file I/O
 //#include <string> // for strings
+#include <vector>
 #include <map> //used in LoadLevel
 
 #include "Guy.h"
@@ -65,9 +66,14 @@ BITMAP* background;
 BITMAP* buffer;
 
 // file paths
-char CurrentPath[_MAX_PATH] = {'\0'}; // .exe path
-char levelPath[_MAX_PATH] = {'\0'}; // .lvl path
-char imagePath[_MAX_PATH] = {'\0'}; // .bmp path
+#ifdef ALLEGRO_MACOSX
+const int MAX_PATH = 2600;
+#endif
+char CurrentPath[MAX_PATH] = "./"; // .exe path
+char levelPath[MAX_PATH] = "./"; // .lvl path
+char imagePath[MAX_PATH] = "./"; // .bmp path
+
+
 
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
@@ -112,13 +118,19 @@ int main()
     buffer = create_bitmap( 1024, 768); // create buffer, all drawing done to buffer
     
     // Get working directory and setup paths
-    getcwd(CurrentPath, _MAX_PATH);
-    char *levelPathName = "/resources/levels/";
-    char *imagePathName = "/resources/images/";
-    
-    StringAdd(CurrentPath,levelPathName,levelPath);
-    StringAdd(CurrentPath,imagePathName,imagePath);
-    
+	
+    //getcwd(CurrentPath, _MAX_PATH);
+#ifdef ALLEGRO_MINGW32
+    char *levelPathName = "./resources/levels/";
+    char *imagePathName = "./resources/images/";
+#endif
+#ifdef ALLEGRO_MACOSX
+ //   char *levelPath = "./";
+//    char *imagePath = "./";
+#endif
+    //StringAdd(CurrentPath,levelPathName,levelPath);
+    //StringAdd(CurrentPath,imagePathName,imagePath);
+    //allegro_message("y0");
     //load images
     try
     {
@@ -135,8 +147,9 @@ int main()
     }
     // how to do text: textout_ex( screen, font, "@", 50, 50, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     
-    // load level 
-    char tempPath[_MAX_PATH];
+    // load level
+	//allegro_message("y1");
+    char tempPath[MAX_PATH];
     StringAdd(levelPath,"testlevel.lvl",tempPath);
     try
     {
@@ -154,6 +167,7 @@ int main()
        allegro_message("\"[WALL]\" could not be found in the level file,\nthe file may be corrupt or incorrect",allegro_error);
        return (1); // Could not load level     
     }
+
     // test loaded level
     // TestLevel(0.2);
 
@@ -185,8 +199,8 @@ int main()
             
             sprintf(testString,"%d",(mouse_x*3));
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
-            
-            extern char allegro_id[];
+         
+          //  extern char allegro_id[];
             // returns true if propagation has just ended
             bool resetParadox = propManager.UpdatePropagation();
 
@@ -199,7 +213,7 @@ int main()
             // order boxes from highest to lowest for easy collision checking, find a faster method that does not include many nested loops.
             
             int activeBoxes = 0;
-            int activeBoxOrder[boxCount];
+			int activeBoxOrder[MAX_BOXES];
            
             sprintf(testString,"%d",activeBoxes);
             //allegro_message(testString, allegro_error);
@@ -235,7 +249,8 @@ int main()
             }
             
             // step through boxes in height order
-            for (int i = 0; i < activeBoxes; ++i)
+
+		for (int i = 0; i < activeBoxes; ++i)
             {
                 box[activeBoxOrder[i]].ForwardTimeStep(absoluteTime);
             }
@@ -285,15 +300,11 @@ int main()
             {
                 absoluteTime = MAX_TIME;
             }
-       //     file_select_ex("y0", imagePath, NULL , 500, 800, 600);
-            // draw buffer to screen
-          //  allegro_message(imagePath);
-            
         }
-        else
-        {
-            rest(1);
-        }
+        //else
+        //{
+        //    rest(1); //dosent seem to work properly on macos...
+        //}
     }  
 
     // remember to cleanup all bitmaps
@@ -310,7 +321,7 @@ int main()
     return 0;
     
 }   
-END_OF_MAIN();
+END_OF_MAIN()
 
 
 
@@ -337,7 +348,7 @@ void StringAdd(const char* string1,const char* string2, char* newString)
 BITMAP* LoadImage(const char* imageName)
 {
     // loads a bitmap
-    char tempPath[_MAX_PATH];
+    char tempPath[MAX_PATH];
     StringAdd(imagePath,imageName,tempPath);
     BITMAP* tempBitmap;
     tempBitmap = load_bitmap(tempPath, NULL);
@@ -368,161 +379,150 @@ void TestLevel(double squareSize)
 void LoadLevel (char* filePath)
 {
      //TODO fix "&& !inputFile.eof()" so that it also throws an exception
-     ifstream inputFile;
-     inputFile.open(filePath);
-     if (inputFile.is_open())
-     {
-        bool wallFound = false; //was "[WALL]" found in the file?
-        bool backgroundLoaded = false;
-        bool foregroundLoaded = false;
-        const int MAX_LINE_LENGTH = 300; //MAX_LINE_LENGTH, Blasphomy! This is Madness! THIS IS SPARTAA!!!!!
-        char line[MAX_LINE_LENGTH];
-        while (!inputFile.eof())
-        {          
-            inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-            string gotLine(line);
-            if (gotLine.compare(0,6,"[WALL]")==0) //Did I get "[WALL]"? Compare is actually designed for ordering strings alphabetically
+	std::ifstream inputFile;
+	inputFile.open(filePath);
+	
+	if (inputFile.is_open())
+	{
+		//Level* newLevel = new Level();
+		bool wallFound = false; //was "[WALL]" found in the file?
+		const int MAX_LINE_LENGTH = 300; //MAX_LINE_LENGTH, Blasphomy! This is Madness! THIS IS SPARTAA!!!!!
+		char line[MAX_LINE_LENGTH];
+		std::string* gotLine = new std::string();
+		while (!inputFile.eof())
+		{   
+			inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+			gotLine->assign(line);
+			if (gotLine->compare(0,6,"[WALL]")==0) //Did I get "[WALL]"? Compare is actually designed for ordering strings alphabetically
+			{
+				wallFound = true;
+				for (int i=0; i < LEVEL_HEIGHT; ++i)
+				{
+					//		//getline extracts - for getline(char* s,int n,char delim) - at most n-1 characters
+					inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+					gotLine->assign(line);
+					for (int j=0; j < LEVEL_WIDTH; ++j)
+					{
+						char temp[1] = {line[j]};
+						wall[j][i] = atoi(temp);
+					}
+					
+				}
+			}
+			else if (gotLine->compare(0,6,"<GUYS>")==0)
+			{
+				inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+				gotLine->assign(line);
+				while (gotLine->compare(0,7,"</GUYS>")!= 0 && !inputFile.eof())
+				{
+					if (gotLine->compare(0,5,"<GUY>")==0)
+					{
+						std::map<std::string,std::string> guyData;
+						inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+						gotLine->assign(line);
+						while (gotLine->compare(0,6,"</GUY>")!=0 && !inputFile.eof())
+						{
+							std::string::size_type it = gotLine->find("=");
+							guyData[gotLine->substr(0,it)] = gotLine->substr(it+1,gotLine->length()-(it+1));
+							inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+							gotLine->assign(line);
+						}
+						int xPos = atoi(guyData["X_POS"].data());
+						int yPos = atoi(guyData["Y_POS"].data());
+						double xSpeed = atof(guyData["X_SPEED"].data());
+						double ySpeed = atof(guyData["Y_SPEED"].data());
+						//bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
+						//int absTime = atoi(guyData["ABS_TIME"].data());
+						//int relTime = atoi(guyData["REL_TIME"].data());
+						guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0,1);
+						guy[guyCount].SetOrder(guyCount);
+						guyCount++;
+					}
+					inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+					gotLine->assign(line);
+				}
+			}
+			else if (gotLine->compare(0,7,"<BOXES>")==0) // Did I get "<BOXES>"
+			{
+				inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+				gotLine->assign(line);
+				while (gotLine->compare(0,8,"</BOXES>") != 0 && !inputFile.eof()) //TODO add *better* error handling if eof reached without end symbol.
+				{
+					if (gotLine->compare(0,5,"<BOX>")==0)
+					{
+						std::map<std::string,std::string> boxData;
+						inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+						gotLine->assign(line);
+						while (gotLine->compare(0,6,"</BOX>")!=0 && !inputFile.eof())
+						{
+							std::string::size_type it = gotLine->find("=");
+							boxData[gotLine->substr(0,it)] = gotLine->substr(it+1,gotLine->length()-(it+1));
+							inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+							gotLine->assign(line);
+						}
+						int xPos = atoi(boxData["X_POS"].data());
+						int yPos = atoi(boxData["Y_POS"].data());
+						double xSpeed = atof(boxData["X_SPEED"].data());
+						double ySpeed = atof(boxData["Y_SPEED"].data());
+						//int absTime = atoi(boxData["ABS_TIME"].data());
+						box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,0);
+						box[boxCount].SetId(boxCount);
+						boxCount++;
+					}
+					inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+					gotLine->assign(line);
+				}
+			}
+			else if (gotLine->compare(0,8,"<IMAGES>")==0)
             {
-               wallFound = true;
-               char wallString[LEVEL_WIDTH];
-               for (int i=0; i < LEVEL_HEIGHT; i++)
-               {
-                  //getline extracts - for getline(char* s,int n,char delim) - at most n-1 characters
-                  inputFile.getline(wallString,(LEVEL_WIDTH+1),'\n');
-                  for (int j=0; j < LEVEL_WIDTH; j++)
-                  {
-                     char temp = wallString[j];
-                     wall[j][i] = atoi(&temp);
-                  }
-               }
+				map<string,string> imageData;
+				inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+				gotLine->assign(line);
+				while (gotLine->compare(0,9,"</IMAGES>")!= 0 && !inputFile.eof())
+				{
+					string::size_type it = gotLine->find("=");
+					imageData[gotLine->substr(0,it)] = gotLine->substr(it+1,gotLine->length()-(it+1));
+					inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
+					gotLine->assign(line);
+				}
+				try
+				{
+					background = LoadImage(imageData["BACKGROUND"].data());
+					//backgroundLoaded = true;
+				}
+				catch(ImageNotLoadedException)
+				{
+					//backgroundLoaded = false;
+					background = LoadImage("background.bmp");
+				}
+				draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
+				try
+				{
+					//leik wtf gaise, but it's needed (on mac at least)
+					foreground = LoadImage(imageData["FOREGROUND"].substr(0,strlen(imageData["FOREGROUND"].data())-1).c_str());
+				}
+				catch (ImageNotLoadedException)
+				{
+					foreground = create_bitmap(LEVEL_WIDTH*BLOCK_SIZE,LEVEL_HEIGHT*BLOCK_SIZE);
+					rectfill(foreground,0,0,LEVEL_WIDTH*BLOCK_SIZE,LEVEL_HEIGHT*BLOCK_SIZE,makecol(255,0,255));
+					TestLevel(1);
+				}
+				draw_sprite( buffer, foreground, 0, 0);
             }
-            else if (gotLine.compare(0,7,"<BOXES>")==0) // Did I get "<BOXES>"
-            {
-               inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-               gotLine = line;
-               while (gotLine.compare(0,8,"</BOXES>")!= 0 && !inputFile.eof())
-               {
-                  if (gotLine.compare(0,5,"<BOX>")==0)
-                  {
-                     map<string,string> boxData;
-                     inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                     gotLine = line;
-                     while (gotLine.compare(0,6,"</BOX>")!=0 && !inputFile.eof())
-                     {
-                        string::size_type it = gotLine.find("=");
-                        boxData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
-                        inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                        gotLine = line;
-                     }
-                     double xPos = atof(boxData["X_POS"].data());
-                     double yPos = atof(boxData["Y_POS"].data());
-                     double xSpeed = atof(boxData["X_SPEED"].data());
-                     double ySpeed = atof(boxData["Y_SPEED"].data());
-                     //int absTime = atoi(boxData["ABS_TIME"].data());
-                     box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,0);
-                     box[boxCount].SetId(boxCount);
-                     boxCount++;
-                  }
-                  inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                  gotLine = line;
-               }
-            }
-            else if (gotLine.compare(0,6,"<GUYS>")==0)
-            {
-               inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-               gotLine = line;
-               while (gotLine.compare(0,8,"</GUYS>")!= 0 && !inputFile.eof())
-               {
-                  if (gotLine.compare(0,5,"<GUY>")==0)
-                  {
-                     map<string,string> guyData;
-                     inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                     gotLine = line;
-                     while (gotLine.compare(0,6,"</GUY>")!=0 && !inputFile.eof())
-                     {
-                        string::size_type it = gotLine.find("=");
-                        guyData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
-                        inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                        gotLine = line;
-                     }
-                     double xPos = atof(guyData["X_POS"].data());
-                     double yPos = atof(guyData["Y_POS"].data());
-                     double xSpeed = atof(guyData["X_SPEED"].data()); // TODO If x or ySpeed don't exist, this may cause undefined behaviour ... not sure though. 
-                     double ySpeed = atof(guyData["Y_SPEED"].data());
-                     //bool carryingBox = bool(atoi(guyData["CARRYING_BOX"].data()));
-                     //int absTime = atoi(guyData["ABS_TIME"].data());
-                     //int relTime = atoi(guyData["REL_TIME"].data());
-                     guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0,1);
-                     guy[guyCount].SetOrder(guyCount);
-                     guyCount++;
-                  }
-                  inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                  gotLine = line;
-               }
-            }
-            else if (gotLine.compare(0,8,"<IMAGES>")==0)
-            {
-               map<string,string> imageData;
-               inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-               gotLine = line;
-               while (gotLine.compare(0,9,"</IMAGES>")!= 0 && !inputFile.eof())
-               {
-                  string::size_type it = gotLine.find("=");
-                  imageData[gotLine.substr(0,it)] = gotLine.substr(it+1,gotLine.length()-(it+1));
-                  inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
-                  gotLine = line;
-               }
-               try
-               {
-                  background = LoadImage(imageData["BACKGROUND"].data());
-                  //backgroundLoaded = true;
-               }
-               catch(ImageNotLoadedException)
-               {
-                  //backgroundLoaded = false;
-                  background = LoadImage("background.bmp");
-               }
-               draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
-               try
-               {
-                  foreground = LoadImage(imageData["FOREGROUND"].data());
-               //   foregroundLoaded = true;
-               }
-               catch (ImageNotLoadedException)
-               {
-                   //foregroundLoaded = false;
-                   //foreground = LoadImage("foreground.bmp");
-                   foreground = create_bitmap(LEVEL_WIDTH*BLOCK_SIZE,LEVEL_HEIGHT*BLOCK_SIZE);
-                   rectfill(foreground,0,0,LEVEL_WIDTH*BLOCK_SIZE,LEVEL_HEIGHT*BLOCK_SIZE,makecol(255,0,255));
-                   TestLevel(1);
-               }
-               draw_sprite( buffer, foreground, 0, 0);
-            }
-        }
-        /*
-        if (foregroundLoaded == false)
-        {
-           foreground = LoadImage("foreground.bmp");
-           //foreground = create_bitmap(LEVEL_WIDTH*BLOCK_SIZE,LEVEL_HEIGHT*BLOCK_SIZE);
-           TestLevel(1);
-        }
-        draw_sprite( buffer, foreground, 0, 0);
-        if (backgroundLoaded == false)
-        {
-           background = LoadImage("background.bmp");
-        }
-        draw_sprite( buffer, background, BLOCK_SIZE, BLOCK_SIZE);
-        */
-        if ((wallFound) == false)
-        {
-           throw WallNotFoundException();
-        }
-        inputFile.close();
-     }
-     else
-     {
-        throw FileNotOpenedException(); //could not open file
-     }
+			
+		}
+		if ((wallFound) == false)
+		{
+			throw WallNotFoundException();
+		}
+		delete gotLine;
+		inputFile.close();
+		//return newLevel;
+	}
+	else
+	{
+		throw FileNotOpenedException(); //could not open file
+	}
 }
 
 void MakeLevelFile(char* outputPath)

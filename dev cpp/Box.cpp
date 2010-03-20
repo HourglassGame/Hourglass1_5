@@ -20,7 +20,8 @@ extern Box box[];
 extern bool DeadBox[];
 
 
-Box::Box()
+Box::Box() :
+GRAVITY(0.17)
 {
 
 }
