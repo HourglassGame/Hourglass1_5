@@ -19,7 +19,9 @@ std::map<std::string,BITMAP*> ImageLoader::loadedImages;
 ImageLoader::ImageLoader(const ResourcePathType rpt) :
 Loader(rpt)
 {
+#ifdef ALLEGRO_MINGW32
     pathToResourceDirectory = pathToResourceDirectory + "images/";
+#endif
 }
 
 ImageLoader::ImageLoader(const std::string str) :

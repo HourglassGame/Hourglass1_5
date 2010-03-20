@@ -168,7 +168,7 @@ void DeInit()
 	clear_keybuf();
 
 #ifdef ALLEGRO_MACOSX
-	remove_int(ticker);
+	remove_int(Ticker);
 	sem_close(sem_rest_ptr);
 	sem_unlink("sem_rest");
 #endif //ALLEGRO_MACOSX

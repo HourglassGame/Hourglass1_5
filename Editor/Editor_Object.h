@@ -1,7 +1,6 @@
 #ifndef HOURGLASS_OBJECT_H
 #define HOURGLASS_OBJECT_H
 #include "Hourglass_Allegro.h"
-#include <allegro.h>
 #include "Editor_IntField.h"
 #include "Editor_DoubleField.h"
 /*

@@ -1,7 +1,6 @@
 #ifndef HOURGLASS_MENU_H
 #define HOURGLASS_MENU_H
 #include "Hourglass_Allegro.h"
-#include <allegro.h>
 #include "Editor_ImageLoader.h"
 #include <map>
 #include "Editor_SwitchingInput.h"
