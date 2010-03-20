@@ -1,7 +1,7 @@
 [Project]
 FileName=time game.dev
 Name=time game
-UnitCount=8
+UnitCount=9
 Type=0
 Ver=1
 ObjFiles=
@@ -43,7 +43,7 @@ BuildCmd=
 Major=0
 Minor=1
 Release=2
-Build=488
+Build=604
 LanguageID=3081
 CharsetID=1252
 CompanyName=
@@ -108,9 +108,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit9]
-FileName=PropManager.cpp
+FileName=Hourglass_Allegro.h
 CompileCpp=1
-Folder=
+Folder=time game
 Compile=1
 Link=1
 Priority=1000

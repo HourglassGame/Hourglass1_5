@@ -69,10 +69,16 @@ BITMAP* buffer;
 #ifdef ALLEGRO_MACOSX
 const int MAX_PATH = 2600;
 #endif
+#ifdef ALLEGRO_MACOSX
 char CurrentPath[MAX_PATH] = "./"; // .exe path
 char levelPath[MAX_PATH] = "./"; // .lvl path
 char imagePath[MAX_PATH] = "./"; // .bmp path
-
+#endif
+#ifdef ALLEGRO_MINGW32
+char CurrentPath[MAX_PATH] = "./"; // .exe path
+char levelPath[MAX_PATH] = "./resources/levels/"; // .lvl path
+char imagePath[MAX_PATH] = "./resources/images/"; // .bmp path
+#endif
 
 
 // wall segment count within level
@@ -123,13 +129,14 @@ int main()
 #ifdef ALLEGRO_MINGW32
     char *levelPathName = "./resources/levels/";
     char *imagePathName = "./resources/images/";
+    StringAdd(CurrentPath,levelPathName,levelPath);
+    StringAdd(CurrentPath,imagePathName,imagePath);
 #endif
 #ifdef ALLEGRO_MACOSX
  //   char *levelPath = "./";
 //    char *imagePath = "./";
 #endif
-    //StringAdd(CurrentPath,levelPathName,levelPath);
-    //StringAdd(CurrentPath,imagePathName,imagePath);
+
     //allegro_message("y0");
     //load images
     try
@@ -499,7 +506,12 @@ void LoadLevel (char* filePath)
 				try
 				{
 					//leik wtf gaise, but it's needed (on mac at least)
+#ifdef ALLEGRO_MACOSX
 					foreground = LoadImage(imageData["FOREGROUND"].substr(0,strlen(imageData["FOREGROUND"].data())-1).c_str());
+#endif
+#ifdef ALLEGRO_MINGW32
+                    foreground = LoadImage(imageData["FOREGROUND"].c_str());
+#endif
 				}
 				catch (ImageNotLoadedException)
 				{
