@@ -8,23 +8,22 @@
  */
 #ifndef HOURGLASS_LOADER_H
 #define HOURGLASS_LOADER_H
-#include <Allegro/Allegro.h>
-#include "Editor_ImagePathEnum.h"
+#include "Hourglass_Allegro.h"
+#include "Editor_ResourcePathEnum.h"
 #include <string>
 //#include "FileString.hpp"
 class Loader {
 public:
 	// class constructor
-	Loader(ImagePathType ipt = GAME);
+	Loader(ResourcePathType rpt = GAME);
 	Loader(const std::string relativePath);
 	// class destructor
 	virtual ~Loader();
 	
 protected:
 	std::string pathToResourceDirectory;
-	//void SetPath(const std::string relativePath);
-	std::string GAME_RELATIVE_IMAGE_PATH;
-	std::string EDITOR_RELATIVE_IMAGE_PATH;
+	std::string gameRelativeResourcePath;
+	std::string editorRelativeResourcePath;
 };
 
 #endif //HOURGLASS_LOADER_H

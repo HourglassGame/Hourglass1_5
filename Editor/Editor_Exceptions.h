@@ -9,7 +9,7 @@
 
 #ifndef HOURGLASS_EXCPETIONS_H
 #define HOURGLASS_EXCPETIONS_H
-#include <allegro/allegro.h>
+#include "Hourglass_Allegro.h"
 #include <string>
 //#include "FileString.hpp"
 class HourglassException

@@ -35,43 +35,55 @@ int IntField::Update()//const int& initialValue)
 			poll_mouse();
 			poll_keyboard();
 			TranslateInputs();
-			while (keypressed()) {
+			while (keypressed())
+            {
 				int val = readkey();
-				if ((val >> 8) == KEY_LEFT) {
-					if (cursorPosition > 0) {
+				if ((val >> 8) == KEY_LEFT)
+                {
+					if (cursorPosition > 0)
+                    {
 						--cursorPosition;
 					}
 				}
-				else if ((val >> 8) == KEY_RIGHT) {
-					if (cursorPosition < currentValue.size()) {
+				else if ((val >> 8) == KEY_RIGHT)
+                {
+					if (cursorPosition < currentValue.size())
+                    {
 						++cursorPosition;
 					}
 				}
-				else if ((val >> 8) == KEY_BACKSPACE) {
-					if (cursorPosition > 0) {
+				else if ((val >> 8) == KEY_BACKSPACE)
+                {
+					if (cursorPosition > 0)
+                    {
 						currentValue.erase(cursorPosition-1,1);
 						--cursorPosition;
 					}
 				}
-				else if ((val >> 8) == KEY_DEL) {
-					if (cursorPosition < currentValue.size()) {
+				else if ((val >> 8) == KEY_DEL)
+                {
+					if (cursorPosition < currentValue.size())
+                    {
 						currentValue.erase(cursorPosition,1);
 					}
 				}
-				else {
+				else 
+                {
 					std::string newChar(readVal(val));
-					if (newChar != "") {
+					if (newChar != "")
+                    {
 						currentValue.insert(cursorPosition, newChar);
 						++cursorPosition;
 					}
-					
 				}
 				rectfill(buffer, x0, y0, x0+characterWidth*width, y0+height*text_height(font), makecol(0, 0, 0));
 				textout_ex(buffer, font, currentValue.c_str(), x0, y0, makecol(255, 0, 0), makecol(255, 255, 255));
 				rectfill(buffer, x0+cursorPosition*characterWidth, y0,x0+cursorPosition*characterWidth + (cursorWidth - 1), y0 + height*(text_height(font)-1), makecol(255, 255, 0));
-				acquire_screen();
+				scare_mouse();
+                acquire_screen();
 				draw_sprite(screen, buffer, 0, 0);
 				release_screen();
+				unscare_mouse();
 			}
 			rest(1);
 		}

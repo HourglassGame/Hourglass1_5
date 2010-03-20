@@ -1,10 +1,10 @@
 #ifndef HOURGLASS_IMAGELOADER_H
 #define HOURGLASS_IMAGELOADER_H
-#include <allegro/allegro.h>
+#include "Hourglass_Allegro.h"
 #include <fstream>
 #include <map>
 //#include "FileString.hpp"
-#include "Editor_ImagePathEnum.h"
+#include "Editor_ResourcePathEnum.h"
 #include "Editor_Exceptions.h"
 
 
@@ -32,7 +32,7 @@ class ImageLoader : public Loader
 {
 public:
 	// class constructor
-	ImageLoader(ImagePathType ipt = GAME);
+	ImageLoader(ResourcePathType rpt = GAME);
 	ImageLoader(const std::string);
 	BITMAP* LoadImage(const std::string);
 	// class destructor

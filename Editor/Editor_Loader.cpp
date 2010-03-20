@@ -24,26 +24,26 @@
  C:\.../resources/images/             - absolutePath
  C:\.../resources/images/box.bmp      - filePath
  */
-extern int MAX_PATH;
 
-Loader::Loader(const ImagePathType ipt) :
+
+Loader::Loader(const ResourcePathType rpt) :
 pathToResourceDirectory(""),
 #ifdef ALLEGRO_MACOSX
-GAME_RELATIVE_IMAGE_PATH("./"),
-EDITOR_RELATIVE_IMAGE_PATH("./")
+gameRelativeResourcePath("./"),
+editorRelativeResourcePath("./")
 #endif //ALLEGRO_MACOSX
 #ifdef ALLEGRO_MINGW32
-GAME_RELATIVE_IMAGE_PATH("../dev cpp/resources/images/"),
-EDITOR_RELATIVE_IMAGE_PATH("./resources/images/")
+gameRelativeResourcePath("../dev cpp/resources/"),
+editorRelativeResourcePath("./resources/")
 #endif //ALLEGRO_MINGW32
 {
-    switch(ipt)
+    switch(rpt)
     {
         case GAME:
-            pathToResourceDirectory = GAME_RELATIVE_IMAGE_PATH;
+            pathToResourceDirectory = gameRelativeResourcePath;
             break;
         case EDITOR:
-            pathToResourceDirectory = EDITOR_RELATIVE_IMAGE_PATH;
+            pathToResourceDirectory = editorRelativeResourcePath;
             break;
         default:
             allegro_message("Shouldn't ever get here -\nImageLoader constructor switch got to default.");
@@ -54,12 +54,12 @@ EDITOR_RELATIVE_IMAGE_PATH("./resources/images/")
 Loader::Loader(const std::string relativePath) :
 pathToResourceDirectory(""),
 #ifdef ALLEGRO_MACOSX
-GAME_RELATIVE_IMAGE_PATH("./"),
-EDITOR_RELATIVE_IMAGE_PATH("./")
+gameRelativeResourcePath("./"),
+editorRelativeResourcePath("./")
 #endif //ALLEGRO_MACOSX
 #ifdef ALLEGRO_MINGW32
-GAME_RELATIVE_IMAGE_PATH("../dev cpp/resources/images/"),
-EDITOR_RELATIVE_IMAGE_PATH("./resources/images/")
+gameRelativeResourcePath("../dev cpp/resources/images/"),
+editorRelativeResourcePath("./resources/images/")
 #endif //ALLEGRO_MINGW32
 {
 	pathToResourceDirectory = relativePath;
@@ -69,9 +69,3 @@ EDITOR_RELATIVE_IMAGE_PATH("./resources/images/")
 Loader::~Loader()
 {
 }
-
-//void Loader::SetPath(const std::string relativePath)
-//{
-	
-//}
-

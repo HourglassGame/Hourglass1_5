@@ -13,9 +13,16 @@ menuPositionY(mouse_y),
 noOfMenuItems(0),
 firstStep(true)
 {
-    ImageLoader imageLoader = ImageLoader(EDITOR);
-    menu_box = imageLoader.LoadImage("add_box.bmp");
-    menu_guy = imageLoader.LoadImage("add_guy.bmp");
+    try {
+        ImageLoader imageLoader = ImageLoader(EDITOR);
+        menu_box = imageLoader.LoadImage("add_box.bmp");
+        menu_guy = imageLoader.LoadImage("add_guy.bmp");
+    }
+    catch (ImageNotLoadedException& e)
+    {
+        allegro_message("Unable to load %s",e.whichImage().data());
+        throw; // Failed to load images
+    }
     Draw();
 }
 

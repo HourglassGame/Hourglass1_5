@@ -86,9 +86,11 @@ double DoubleField::Update()
 				rectfill(buffer, x0, y0, x0+characterWidth*width, y0+height*text_height(font), makecol(0, 0, 0));
 				textout_ex(buffer, font, currentValue.c_str(), x0, y0, makecol(255, 0, 0), makecol(255, 255, 255));
 				rectfill(buffer, x0+cursorPosition*characterWidth, y0,x0+cursorPosition*characterWidth + (cursorWidth - 1), y0 + height*(text_height(font)-1), makecol(255, 255, 0));
-				acquire_screen();
+				scare_mouse();
+                acquire_screen();
 				draw_sprite(screen, buffer, 0, 0);
 				release_screen();
+				unscare_mouse();
 			}
 			rest(1);
 		}

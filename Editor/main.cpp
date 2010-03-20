@@ -1,18 +1,13 @@
-//
-//  main.m
-//  HourglassIIMac
-//
-//  Created by Evan Wallace on 15/03/10.
-//  Copyright 2010 __MyCompanyName__. All rights reserved.
-//
-
-#include <Allegro/Allegro.h>
-#include <semaphore.h>
+#include "Hourglass_Allegro.h"
+#include <semaphore.h> //To get this to work you will need to download 
+                       //http://mirrors.kernel.org/sources.redhat.com/pthreads-win32/pthreads-w32-2-8-0-release.exe
+                       //And copy the headers into somewhere in your include path.
+                       //It's not that hard, but ask me if you need more details.
 #include <vector>
 #include <map>
 #include <string>
 #include "Editor_Exceptions.h"
-#include "Editor_ImagePathEnum.h"
+#include "Editor_ResourcePathEnum.h"
 #include "Editor_HourglassInputsEnum.h"
 #include "Editor_SwitchingInput.h"
 #include "Editor_Object.h"
@@ -28,7 +23,7 @@ using namespace std;
 //Functions
 int main();
 void CloseButtonHandler();
-void ticker();
+void Ticker();
 
 void Init();
 void EngineInit();
@@ -37,11 +32,10 @@ void DeInit();
 void InputInit();
 void TranslateInputs();
 
-//void WallInit();
-
 void LoadLevel (const char* filePath);
 void SaveLevel(const char* outputPath);
 void DoLoadLevel();
+void DoLoadLevelDialog();
 void DoSaveLevel();
 
 void UpdateDrawingWall();
@@ -71,8 +65,8 @@ BITMAP* guy_left_stop;
 BITMAP* guy_right_stop;
 BITMAP* box_sprite;
 #ifdef ALLEGRO_MACOSX
-const int MAX_PATH = 260;
-#endif
+const int MAX_PATH = 2600;
+#endif //ALLEGRO_MACOSX
 bool closeButtonPressed = false;
 bool drawingWall = false;
 bool doingAddGuy = false;
@@ -89,15 +83,12 @@ int gridSize = 16;
 IntField gridSizeField = IntField(980,650,10,1);
 
 extern char allegro_id[];
+Level existingLevel;
 
-// timing
-//double elapsed_time;
-//clock_t start_timer,finish_timer;
-
-//const double STEP_TIME = 0.0145; // at ~60 fps wall drawing is smother (but mouse flickers more)
+const int updates_per_second = 60;
 
 //Paths
-//char levelPath[MAX_PATH]; // .lvl path
+string levelPath; // .lvl path
 
 //Walls
 const int LEVEL_WIDTH = 32;
@@ -111,37 +102,36 @@ map<HourglassInput,SwitchingInput> inputs;
 
 #ifdef ALLEGRO_MINGW32
 sem_t sem_rest;
-#endif
+#endif //ALLEGRO_MINGW32
 #ifdef ALLEGRO_MACOSX
 sem_t* sem_rest_ptr;
-#endif
+#endif //ALLEGRO_MACOSX
 volatile int ticks = 0;
-void ticker()
+void Ticker()
 {
 #ifdef ALLEGRO_MACOSX
 	sem_post(sem_rest_ptr);//unlock the semaphore, and allow the game loop to continue
-#endif
-#ifdef ALLEGRO_MINGW
-	sem_post(&rest_ptr);
-#endif
+#endif //ALLEGRO_MACOSX
+#ifdef ALLEGRO_MINGW32
+	sem_post(&sem_rest);
+#endif //ALLEGRO_MINGW32
 	ticks++;
 }
 END_OF_FUNCTION(ticker)
-
-const int updates_per_second = 60;
 
 int main()
 {
 	try {
 		Init();
-		while (!(inputs[EXIT_EDITOR].GetCurrentValue() || closeButtonPressed)) //Game Loop
+        // Game Loop
+		while (!(inputs[EXIT_EDITOR].GetCurrentValue() || closeButtonPressed))
 		{
 #ifdef ALLEGRO_MACOSX
 			sem_wait(sem_rest_ptr);//wait until a full tick has passed using the semaphore
-#endif
+#endif //ALLEGRO_MACOSX
 #ifdef ALLEGRO_MINGW32
 			sem_wait(&sem_rest);//wait until a full tick has passed using the semaphore
-#endif
+#endif //ALLEGRO_MINGW32
 			poll_mouse();
 			poll_keyboard();// inputs are now definately taken -here-
 			TranslateInputs(); //inputs converted from keypresses to generic (i.e. not associated with any key within the rest of the program) key downs, which last only for 1 step
@@ -152,16 +142,16 @@ int main()
 	catch (HourglassException& e) {
 		allegro_message("An incompletely handled hourglass exception occurred in main(); exiting.\n"
 						"The exception was %s.",e.what().data());
-		exit(-3);
+		exit(-4);
 	}
 	catch (exception& e) {
 		allegro_message("A standard library exception occurred in main(); exiting.\n"
 						"The exception was %s.",e.what());
-		return(-2);
+		return(-3);
 	}
 	catch (...) {
 		allegro_message("An unknown exception occurred in main(); exiting.");
-		return(-1);
+		return(-2);
 	}
    	return(0);
 }
@@ -176,14 +166,15 @@ void Init()
 void DeInit()
 {
 	clear_keybuf();
-	remove_int(ticker);
+
 #ifdef ALLEGRO_MACOSX
+	remove_int(ticker);
 	sem_close(sem_rest_ptr);
 	sem_unlink("sem_rest");
-#endif
+#endif //ALLEGRO_MACOSX
 #ifdef ALLEGRO_MINGW32
 	sem_destroy(&sem_rest);
-#endif
+#endif //ALLEGRO_MINGW32
 }
 
 void CloseButtonHandler()
@@ -192,26 +183,24 @@ void CloseButtonHandler()
 }
 //    END_OF_FUNCTION(close_button_handler) // in manual, unneeded? - used in DOS or something
 
-
 void EngineInit()
 {
 #ifdef ALLEGRO_MINGW32
 	sem_init(&sem_rest, 0, 1);
-#endif
+#endif //ALLEGRO_MINGW32
 #ifdef ALLEGRO_MACOSX
 	sem_rest_ptr = sem_open("sem_rest", O_CREAT, (S_IRUSR | S_IWUSR), 1);
-#endif
+#endif //ALLEGRO_MACOSX
 	if (allegro_init() != 0)
 	{
 		printf("\"allegro_init()\" failed, Allegro could not initialised");
 		exit(-1); //-1 allegro init failed
     }
-    
-	int depth = desktop_color_depth(); // consider doing this at some stage, it may be useful on certain systems.
+	int depth = desktop_color_depth();
 	if (depth == 0) depth = 32;
 	set_window_title("Hourglass - Editor");
 	set_color_depth(depth);
-    if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 10824, 768, 0, 0) !=0)
+    if (set_gfx_mode(GFX_AUTODETECT_FULLSCREEN, 12024, 768, 0, 0) !=0)
     {
 		if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 1024, 768, 0, 0) != 0)
 		{
@@ -234,11 +223,11 @@ void EngineInit()
     {
         allegro_message("\"install_mouse()\" failed, allegro_error is:\n%s",allegro_error);
     }
-    
-	LOCK_VARIABLE(ticks);
-	LOCK_FUNCTION(ticker);
-	install_int_ex(ticker, BPS_TO_TIMER(updates_per_second));
-	
+
+	LOCK_VARIABLE(ticks)
+	LOCK_FUNCTION(Ticker)
+	install_int_ex(Ticker, BPS_TO_TIMER(updates_per_second));
+
 	//   LOCK_FUNCTION(CloseButtonHandler); // in manual, unneeded? - used in DOS or something
 	set_close_button_callback(CloseButtonHandler);
     
@@ -254,20 +243,23 @@ void EngineInit()
     }
     catch (ImageNotLoadedException& e)
     {
-        allegro_message("Unable to load %s",e.whichImage().data()); // should add "Which Image" functionality to ImageNotLoadedException
+        allegro_message("Unable to load %s",e.whichImage().data());
         throw; // Failed to load images
     }
 }
 
 void StateInit()
 {
+#ifdef ALLEGRO_MINGW32
+    levelPath = "../dev cpp/resources/levels/";
+#endif //ALLEGRO_MINGW32
+#ifdef ALLEGRO_MACOSX
+    levelPath = "./";
+#endif //ALLEGRO_MACOSX
     select_mouse_cursor(MOUSE_CURSOR_ARROW);
     show_mouse(screen);
-    
 	LevelLoader loadLevel;
-	delete currentLevel;
     currentLevel = loadLevel.LoadLevel();
-	
     menus.clear();
     
     drawingWall = false;
@@ -293,12 +285,14 @@ void InputInit() //when we port to Linux, KEY_* must be replaced with _allegro_K
     inputs[DELETE_OBJECT].Add(KEY_DEL,PRESS);
     inputs[EXIT_EDITOR].Add(KEY_ESC,HOLD);
 	inputs[ADD_OBJECT].Add((KEY_MAX +1),PRESS);
+	inputs[CANCEL_ADD_OBJECT].Add((KEY_MAX + 2),PRESS);
 	inputs[REMOVE_ADD_OBJECT_MENU].Add((KEY_MAX + 2),PRESS); //KEY_MAX + x, x is mouse_b to & with.
 	inputs[REMOVE_ADD_OBJECT_MENU].Add(KEY_SPACE,PRESS);
 	inputs[ADD_WALL].Add((KEY_MAX + 1),HOLD);
 	inputs[DELETE_WALL].Add((KEY_MAX + 2), HOLD);
 	inputs[LEAVE_INPUT_FIELD].Add(KEY_ENTER,PRESS);
 	inputs[LEAVE_INPUT_FIELD].Add(KEY_ENTER_PAD,PRESS);
+	inputs[RESET_STATE].Add(KEY_R,PRESS);
 }
 
 void TranslateInputs() 
@@ -312,23 +306,26 @@ void TranslateInputs()
 void LoadLevel (const char* filePath)
 {
 	StateInit();
-	LevelLoader* levelLoader = new LevelLoader;
-	currentLevel = levelLoader->LoadLevel(filePath);
+	LevelLoader levelLoader;
+	levelLoader.LoadLevel(filePath);
+    currentLevel = levelLoader.LoadLevel(filePath);
 }
 
 void SaveLevel(const char* outputPath)
 {
-	LevelSaver* levelSaver = new LevelSaver;
-	levelSaver->SaveLevel(currentLevel, outputPath);	
+	LevelSaver levelSaver;
+	levelSaver.SaveLevel(currentLevel, outputPath);
 }
 
 void DoLoadLevel()
 {
+    existingLevel = *currentLevel; //Save the state of the level as it is, before it gets messed up by an unsuccessful load.
+    DoLoadLevelDialog();
+}
+void DoLoadLevelDialog()
+{
     char path[MAX_PATH];
-   // for (int i=0;i<MAX_PATH;++i)
-    //{
-	//	path[i] = levelPath[i];
-    //}
+    strncpy(path,levelPath.c_str(),MAX_PATH);
     if(file_select_ex("Select the file you would like to Load", path, "lvl", 500, 0, 0))
     {
 		try
@@ -338,24 +335,25 @@ void DoLoadLevel()
 		catch (FileNotOpenedException)
 		{
 			allegro_message("File:\n%s\ncould not be loaded.",path);
-			DoLoadLevel();
+			DoLoadLevelDialog();
 		}
 		catch (WallNotFoundException)
 		{
 			allegro_message("\"[WALL]\" could not be found in the level file:\n%s\nthe file may be corrupt or incorrect",path);
-			DoLoadLevel();
+			DoLoadLevelDialog();
 		}
-		currentLevel->Draw();
+	//	currentLevel->Draw();
+    }
+    else
+    {
+        delete currentLevel;
+        currentLevel = &existingLevel;
     }
 }
-
 void DoSaveLevel()
 {
-	char path[MAX_PATH];
-	//for (int i=0;i<MAX_PATH;++i)
-	//{
-	//	path[i] = levelPath[i];
-	//}
+    char path[MAX_PATH];
+    strncpy(path,levelPath.c_str(),MAX_PATH);
 	if(file_select_ex("Please enter the location where you would like this level to be saved", path, NULL, 500, 0, 0)) //Returns zero if closed with "cancel"
 	{
 		SaveLevel(path);
@@ -365,10 +363,12 @@ void DoSaveLevel()
 void UpdateDrawingWall()
 {
     drawingWall = inputs[DRAW_WALL].GetCurrentValue();
-	if (drawingWall) {
+	if (drawingWall)
+    {
 		currentLevel->SetCanSelect(false);
 	}
-	else {
+	else
+    {
 		currentLevel->SetCanSelect(true);
 	}
 }
@@ -402,8 +402,7 @@ void DoAddObjectMenu()
     inputs[DRAW_WALL].ToggleOff();
 	textout_ex( buffer, font, "W: Wall Drawing Mode - Off", 800, 16, makecol( 255, 0, 0), makecol( 0, 0, 0) );
     draw_sprite(tempBuffer, buffer, 0, 0);
-    Menu newMenu;
-    menus["addObjectMenu"] = newMenu;
+    menus["addObjectMenu"];
 	currentLevel->SetCanSelect(false);
 }
 
@@ -435,17 +434,18 @@ void DoAddingObject()
         }
         if (inputs[ADD_OBJECT].GetCurrentValue())
         {
-			if (doingAddBox) {
+			if (doingAddBox)
+            {
 				currentLevel->AddBox(objectX, objectY, 0, 0);
 			}
-			if (doingAddGuy) {
+			if (doingAddGuy)
+            {
 				currentLevel->AddGuy(objectX, objectY, 0, 0);
 			}
             doingAddGuy = false;
         }
     }
-    
-    if (mouse_b & 2)
+    if (inputs[CANCEL_ADD_OBJECT].GetCurrentValue())
     {
         doingAddGuy = false;
         doingAddBox = false;
@@ -457,6 +457,7 @@ void ClearBuffer()
 {
     rectfill(buffer,0,0,BUFFER_WIDTH,BUFFER_HEIGHT,makecol(0,0,0));        
 }
+
 void Draw()
 {
 	currentLevel->DrawObjects();
@@ -467,6 +468,7 @@ void Draw()
 	gridSizeField.Init(gridSize);
 	currentLevel->UpdateGUI();
 	gridSize = gridSizeField.Update();
+	currentLevel->SetGridSize(gridSize);
 	DrawToScreen();
     ClearBuffer();
     currentLevel->DrawWall();
@@ -484,6 +486,10 @@ void DrawToScreen()
 
 void DoStep()
 {
+    if(inputs[RESET_STATE].GetCurrentValue())
+    {
+         StateInit();      
+    }
 	if(inputs[DO_LOAD_LEVEL_DIALOG].GetCurrentValue() && !(menus.find("addObjectMenu") != menus.end()) && !doingAddGuy && !doingAddBox)
 	{
 		DoLoadLevel();

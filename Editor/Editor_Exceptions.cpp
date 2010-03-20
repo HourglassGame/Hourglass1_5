@@ -8,7 +8,7 @@
  */
 
 #include "Editor_Exceptions.h"
-extern int MAX_PATH;
+
 // class constructor
 HourglassException::HourglassException(){}
 // class destructor

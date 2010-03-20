@@ -8,7 +8,7 @@
  */
 #ifndef HOURGLASS_INT_FIELD_H
 #define HOURGLASS_INT_FIELD_H
-#include <Allegro/Allegro.h>
+#include "Hourglass_Allegro.h"
 #include "Editor_TextFieldTypeEnum.h"
 #include "Editor_SwitchingInput.h"
 #include "Editor_HourglassInputsEnum.h"

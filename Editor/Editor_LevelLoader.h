@@ -11,7 +11,7 @@
 #include "Editor_Loader.h"
 #include "Editor_Level.h"
 //#include "FileString.hpp"
-#include "Editor_ImagePathEnum.h"
+#include "Editor_ResourcePathEnum.h"
 #include "Editor_Exceptions.h"
 #include <fstream>
 #include <map>
@@ -19,7 +19,7 @@
 class LevelLoader : public Loader {
 public:
 	// class constructor
-	LevelLoader(ImagePathType ipt = GAME);
+	LevelLoader(ResourcePathType ipt = GAME);
 	LevelLoader(const std::string);
 	
 	Level* LoadLevel();

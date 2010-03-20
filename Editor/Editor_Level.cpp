@@ -44,6 +44,35 @@ Level::~Level()
 	}
 }
 
+Level& Level::operator=(const Level& l) //TODO This was done in a hurry, check if I missed any data...
+{
+    snapToGrid = l.snapToGrid;
+    gridSize = l.gridSize;
+    objectSelected = l.objectSelected;
+    selectedObject = l.selectedObject;
+    canSelect = l.canSelect;
+    nextObject = l.nextObject;
+    objects = l.objects;
+    for (int i = 0; i < objects.size();++i)
+    {
+        if (dynamic_cast<Box*>(objects.at(i)) != NULL)
+        {
+           objects.at(i) = new Box(*dynamic_cast<Box*>(objects.at(i)));
+        }
+        else if(dynamic_cast<Guy*>(objects.at(i)) != NULL) 
+        {
+          objects.at(i) = new Guy(*dynamic_cast<Guy*>(objects.at(i)));       
+        }
+    }
+    for(int x = 0; x < LEVEL_WIDTH; ++x)
+    {
+		for(int y = 0; y < LEVEL_HEIGHT; ++y)
+		{
+			wall[x][y] = l.wall[x][y];
+		}
+    }
+}
+
 void Level::SetWall(bool value,unsigned int x, unsigned int y) {
 	wall[x][y] = value;
 }
@@ -205,4 +234,8 @@ Object* Level::GetNextObject()
 void Level::Reset()
 {
 	nextObject = 0;
+}
+void Level::SetGridSize(const unsigned int size)
+{
+    gridSize = size;
 }

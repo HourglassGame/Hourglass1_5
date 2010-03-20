@@ -3,7 +3,7 @@
 #ifndef HOURGLASS_KEYCOMBINATION_H
 #define HOURGLASS_KEYCOMBINATION_H
 #include "Editor_HourglassInputsEnum.h"
-#include <Allegro/Allegro.h>
+#include "Hourglass_Allegro.h"
 /**
  * Holds a KEY_* value a key_shifts value and a RepeatType.
  */

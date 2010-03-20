@@ -1,6 +1,6 @@
 #ifndef HOURGLASS_SWITCHINGINPUT_H
 #define HOURGLASS_SWITCHINGINPUT_H
-#include <Allegro/Allegro.h>
+#include "Hourglass_Allegro.h"
 #include <list>
 #include "Editor_KeyCombination.h"
 #include "Editor_HourglassInputsEnum.h"

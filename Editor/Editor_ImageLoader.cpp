@@ -14,13 +14,16 @@
     C:\.../resources/images/box.bmp      - filePath
 */
 #include "Editor_ImageLoader.h" // class's header file
-extern int MAX_PATH;
+
 std::map<std::string,BITMAP*> ImageLoader::loadedImages;
-ImageLoader::ImageLoader(const ImagePathType) 
+ImageLoader::ImageLoader(const ResourcePathType rpt) :
+Loader(rpt)
 {
+    pathToResourceDirectory = pathToResourceDirectory + "images/";
 }
 
-ImageLoader::ImageLoader(const std::string) 
+ImageLoader::ImageLoader(const std::string str) :
+Loader(str)
 {
 }
 

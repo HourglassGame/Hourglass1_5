@@ -8,8 +8,8 @@
  */
 #ifndef HOURGLASS_LEVEL_SAVER_H
 #define HOURGLASS_LEVEL_SAVER_H
-#include <Allegro/Allegro.h>
-#include "Editor_ImagePathEnum.h"
+#include "Hourglass_Allegro.h"
+#include "Editor_ResourcePathEnum.h"
 #include <string>
 #include <fstream>
 #include "Editor_Level.h"

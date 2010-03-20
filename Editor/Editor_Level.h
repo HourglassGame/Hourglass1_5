@@ -8,7 +8,7 @@
  */
 #ifndef HOURGLASS_LEVEL_H
 #define HOURGLASS_LEVEL_H
-#include <Allegro/allegro.h>
+#include "Hourglass_Allegro.h"
 #include "Editor_Guy.h"
 #include "Editor_Box.h"
 #include "Editor_Object.h"
@@ -21,6 +21,7 @@ class Level {
 public:
 	Level();
 	~Level();
+	Level& operator=(const Level& l);
 	void SetWall(bool value,unsigned int x, unsigned int y);
 	bool GetWall(unsigned int x, unsigned int y);
 	void Draw();
@@ -32,6 +33,7 @@ public:
 	void SetCanSelect(bool canSelect);
 	void AddGuy(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed);
 	void AddBox(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed);
+	void SetGridSize(const unsigned int size);
 	Object* GetNextObject();
 	void Reset();
 private:
