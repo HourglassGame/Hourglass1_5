@@ -20,9 +20,8 @@ public:
 
     void DrawSprite(int time); 
     void unDrawSprite();
-    
-    int GetStartAbsTime();
-    int GetEndAbsTime();
+
+    int GetTimeDirection();
     
     bool GetSupported();
     
@@ -39,7 +38,7 @@ public:
     
     void UpdateExist(int time);
     
-    void ForwardTimeStep(int time);
+    void PhysicsStep(int time);
 
 private:
     
@@ -59,17 +58,9 @@ private:
     
     bool exist[5400];
     
-    bool supported; // checked every frame before guys and other boxes land, no large array
+    int timeDirection;
     
-    // start times, for spawning
-    int startAbsTime;
-
-    // end times, for paradox checking
-    int endAbsTime;   
-    int endType;
-    // type of ending. For triggering or not triggering paradox detection.
-    // 1 = taken through time while carried.
-
+    bool supported; // checked every frame before guys and other boxes land, no large array
 
     // collision width and height. it is the same as BOX_WIDTH but it makes pretty code and portable from guy physics ;D.    
     static const int BOX_COLLISION_WIDTH = BOX_WIDTH;

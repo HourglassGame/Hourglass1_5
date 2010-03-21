@@ -130,14 +130,9 @@ bool Box::GetSupported()
 {
     return supported;   
 }
-
-int Box::GetStartAbsTime()
+int Box::GetTimeDirection()
 {
-    return startAbsTime;
-}
-int Box::GetEndAbsTime()
-{
-    return endAbsTime;
+    return timeDirection;
 }
 
 void Box::UpdateExist(int time)
@@ -145,7 +140,7 @@ void Box::UpdateExist(int time)
     exist[time] = exist[time-1];
 }
 
-void Box::ForwardTimeStep(int time)
+void Box::PhysicsStep(int time)
 {
     
     // only move if existing
@@ -243,7 +238,6 @@ bool Box::GetActive(int time)
 void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
     exist[abs_time] = true;
-    startAbsTime = abs_time;
     x[abs_time] = newX;
     y[abs_time] = newY;
     xSpeed[abs_time] = newXspeed;

@@ -124,19 +124,29 @@ void Guy::SetOrder(int newOrder)
     order = newOrder;
 }
 
+int Guy::GetStartTime()
+{
+    return startAbsTime;
+}
+
+int Guy::GetTimeDirection()
+{
+    return timeDirection;
+}
+
 void Guy::SetId(int newId)
 {
     id = newId;
 }
 
-void Guy::ForwardTimeStep(int time)
+void Guy::PhysicsStep(int time)
 {
     // input is in relative time
-    int personalTime = time-timeOffset;
+    int personalTime = time*timeDirection+timeOffset;
     
     bool jump = false; // is it allowed to jump?
-    double oldX = x[time-1];
-    double oldY = y[time-1];
+    double oldX = x[time-timeDirection];
+    double oldY = y[time-timeDirection];
         
     // set xspeed from input
     if (inputLeft[personalTime])
@@ -158,7 +168,7 @@ void Guy::ForwardTimeStep(int time)
     }
         
     // add GRAVITY
-    ySpeed[time] = ySpeed[time-1] + GRAVITY;
+    ySpeed[time] = ySpeed[time-timeDirection] + GRAVITY;
         
     // new positions for collision checking
     double newX = oldX + xSpeed[time];
@@ -236,14 +246,14 @@ void Guy::ForwardTimeStep(int time)
 void Guy::UpdateBoxCarrying(int time)
 {
      // input is in relative time
-    int personalTime = time-timeOffset;
+    int personalTime = time*timeDirection+timeOffset;
     
     //pickup or drop box
     if (inputDown[personalTime] and !inputDown[personalTime-1]) // down
     {
-        if (carryingBox[time-1])
+        if (carryingBox[time-timeDirection])
         {
-            if (box[carryBoxId[time-1]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
+            if (box[carryBoxId[time-timeDirection]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time) )
             {
                 carryingBox[time] = false;
             }
@@ -261,9 +271,9 @@ void Guy::UpdateBoxCarrying(int time)
             {
                 if (box[i].GetActive(time))
                 {
-                    double boxX = box[i].GetX(time-1);
-                    double boxY = box[i].GetY(time-1);
-                    if (( x[time-1] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
+                    double boxX = box[i].GetX(time);
+                    double boxY = box[i].GetY(time);
+                    if (( x[time] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
                     {
                         box[i].SetExist(time,false);
                         carryingBox[time] = true;
@@ -276,11 +286,11 @@ void Guy::UpdateBoxCarrying(int time)
     }
     else
     {
-        if (carryingBox[time-1])
+        if (carryingBox[time-timeDirection])
         {
             //box[carryBoxId[time-1]].SetCarried(time+1);
             carryingBox[time] = true;
-            carryBoxId[time] = carryBoxId[time-1];
+            carryBoxId[time] = carryBoxId[time-timeDirection];
         }
         else
         {
@@ -292,7 +302,7 @@ void Guy::UpdateBoxCarrying(int time)
 
 void Guy::UpdateTimeTravel(int time)
 {
-    int personalTime = time-timeOffset;
+    int personalTime = time*timeDirection+timeOffset;
  // time travel
         
     if (inputSpecial[personalTime] == 1)
@@ -300,7 +310,7 @@ void Guy::UpdateTimeTravel(int time)
         if (order+1 == guyCount)
         {
             int portTime = inputSpecialArg1[personalTime];
-            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime,1);
+            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],relativeTime,portTime,timeDirection);
             guy[guyCount].SetOrder(guyCount);
 
             absoluteTime = portTime;
@@ -334,7 +344,7 @@ void Guy::UpdateTimeTravel(int time)
                     }
                 }
                 
-                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination,1);
+                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],carryingBox[time],endRelTime,depatureTimeDestination,timeDirection);
  
                 propManager.AddPropagation(depatureTimeDestination,timeDirection);
                 
@@ -359,7 +369,7 @@ void Guy::UpdateTimeTravel(int time)
 
 bool Guy::GetActive(int time)
 {
-    return (time > startAbsTime and (!endAbsTime or time <= endAbsTime));
+    return (time*timeDirection > startAbsTime*timeDirection and (!endAbsTime or time*timeDirection <= endAbsTime*timeDirection));
 }
 
 void Guy::ResetParadoxChecking()
@@ -410,7 +420,17 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,boo
         carryingBox[abs_time] = false;
     }
     
-    timeOffset = abs_time - rel_time;
+    // set time offset based on direction, start abs time and start relative time
+    if (direction == 1)
+    {
+        // personal time = current time - start abs time + start relative time
+        timeOffset = -abs_time + rel_time;
+    }
+    else if (direction == -1)
+    {
+        // personal time = -current time + start abs time + start relative time
+        timeOffset = abs_time + rel_time;
+    }
 }
 
 void Guy::unDrawSprite()
@@ -431,33 +451,39 @@ void Guy::unDrawSprite()
 
 void Guy::DrawSprite(int time)
 {
-    if (time > startAbsTime and (!endAbsTime or time <= endAbsTime)) 
+    if (GetActive(time)) 
     {
         int drawX = int(x[time]);
         int drawY = int(y[time]);
+        
+        subimage[time] = subimage[time-timeDirection]+1;
+        if (subimage[time] > 14)
+        {
+            subimage[time] = 0;
+        }
         
         if (!draw_moving)
         {
             if (draw_facing)
             {
                 draw_sprite( buffer, guy_right_stop, drawX,drawY);
-                subimage = 4;
+                subimage[time] = 4;
             }
             else
             {
                 draw_sprite( buffer, guy_left_stop, drawX,drawY);
-                subimage = 4;
+                subimage[time] = 4;
             }
         }
         else
         {
             if (draw_facing)
             {
-                masked_blit(guy_right ,buffer ,36*subimage+8,0,drawX,drawY,23,32);
+                masked_blit(guy_right ,buffer ,36*subimage[time]+8,0,drawX,drawY,23,32);
             }
             else
             {
-                masked_blit(guy_left ,buffer ,36*subimage,0,drawX,drawY,23,32);
+                masked_blit(guy_left ,buffer ,36*subimage[time],0,drawX,drawY,23,32);
             }   
         }
         
@@ -470,11 +496,6 @@ void Guy::DrawSprite(int time)
         prevDrawX = drawX;
         prevDrawY = drawY;
         
-        subimage++;
-        if (subimage > 14)
-        {
-            subimage = 0;
-        }
     }
 }
 

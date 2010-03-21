@@ -11,6 +11,9 @@ public:
     double GetYspeed(int time);
     
     bool GetActive(int time);
+    
+    int GetStartTime();
+    int GetTimeDirection();
  
     int GetOrder();
     void SetOrder(int newOrder);
@@ -24,7 +27,7 @@ public:
     
     void SetStart(double newX,double newY,double newXspeed,double newYspeed, bool newCarryingBox, int rel_time,int abs_time, int direction); 
     
-    void ForwardTimeStep(int time);
+    void PhysicsStep(int time);
     void UpdateBoxCarrying(int time);
     void UpdateTimeTravel(int time);
 
@@ -83,7 +86,7 @@ private:
     
     int order; // order that the guy is in. ie 1 = oldest, 2 = second oldest...
         
-    int subimage;
+    int subimage[5400];
     
     // animation variables
     bool draw_moving;

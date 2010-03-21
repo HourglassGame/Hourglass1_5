@@ -43,7 +43,11 @@ BuildCmd=
 Major=0
 Minor=1
 Release=2
-Build=605
+<<<<<<< .mine
+Build=489
+=======
+Build=660
+>>>>>>> .r53
 LanguageID=3081
 CharsetID=1252
 CompanyName=

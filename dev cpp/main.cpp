@@ -177,11 +177,63 @@ int main()
 
     // test loaded level
     // TestLevel(0.2);
-
+    
     absoluteTime = 1;
-    relativeTime = 1;
     absoluteTimeDirection = 1;
     
+    // Determine Level
+    while (true)
+    {
+        // boxes
+        int activeBoxes = 0;
+		int activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            box[i].UpdateExist(absoluteTime);
+            box[i].SetCollideable(false);
+                
+            if (box[i].GetActive(absoluteTime))
+            {
+                double boxY = box[i].GetY(absoluteTime-1);
+                activeBoxOrder[activeBoxes] = i;
+                for (int j = 0; j < activeBoxes; ++j)
+                {
+                    if (box[activeBoxOrder[j]].GetY(absoluteTime-1) < boxY)
+                    {
+                        for (int k = activeBoxes; k > j; --k)
+                        {
+                               activeBoxOrder[k] = activeBoxOrder[k-1];
+                        }
+                        activeBoxOrder[j] = i;
+                        break;
+                    }
+                }
+                activeBoxes++;
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+        }
+        
+        absoluteTime = absoluteTime + absoluteTimeDirection;
+
+        if (absoluteTime > MAX_TIME)
+        {
+            break;
+        }
+        
+    }
+    
+    // Set player start
+    absoluteTime = guy[0].GetStartTime()+guy[0].GetTimeDirection();
+    relativeTime = 1;
+    absoluteTimeDirection = guy[0].GetTimeDirection();
+
+    //propManager.AddPropagation(1,guy[0].GetTimeDirection());
+ 
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
     start_timer = clock(); // timers for stable steps/second
@@ -207,7 +259,7 @@ int main()
             sprintf(testString,"%d",(mouse_x*3));
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
          
-          //  extern char allegro_id[];
+            // extern char allegro_id[];
             // returns true if propagation has just ended
             bool resetParadox = propManager.UpdatePropagation();
 
@@ -216,7 +268,7 @@ int main()
             {
                 Guy::StoreInput(relativeTime);
             }
-            
+
             // order boxes from highest to lowest for easy collision checking, find a faster method that does not include many nested loops.
             
             int activeBoxes = 0;
@@ -257,16 +309,16 @@ int main()
             
             // step through boxes in height order
 
-		for (int i = 0; i < activeBoxes; ++i)
+		    for (int i = 0; i < activeBoxes; ++i)
             {
-                box[activeBoxOrder[i]].ForwardTimeStep(absoluteTime);
+                box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
             }
             
             for (int i = 0; i < guyCount; ++i)
             {
                 if (guy[i].GetActive(absoluteTime))
                 {
-                    guy[i].ForwardTimeStep(absoluteTime);
+                    guy[i].PhysicsStep(absoluteTime);
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
                 }
@@ -275,7 +327,7 @@ int main()
                     guy[i].unDrawSprite();
                 }
             }
-            
+
             // paradox tests have to be reset after the time step as a propagation may occur at this step
             if (resetParadox and !propagating)
             {
@@ -302,10 +354,15 @@ int main()
                 }
                 Draw();
             }
-            absoluteTime++;
+            absoluteTime = absoluteTime + absoluteTimeDirection;
+
             if (absoluteTime > MAX_TIME)
             {
                 absoluteTime = MAX_TIME;
+            }
+             if (absoluteTime < 1)
+            {
+                absoluteTime = 1;
             }
         }
         //else
@@ -438,10 +495,12 @@ void LoadLevel (char* filePath)
 						int yPos = atoi(guyData["Y_POS"].data());
 						double xSpeed = atof(guyData["X_SPEED"].data());
 						double ySpeed = atof(guyData["Y_SPEED"].data());
+						int start_time = atoi(guyData["START_TIME"].data());
+						int start_direction = atoi(guyData["START_DIRECTION"].data());
 						//bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
 						//int absTime = atoi(guyData["ABS_TIME"].data());
 						//int relTime = atoi(guyData["REL_TIME"].data());
-						guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0,1);
+						guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,start_time,start_direction);
 						guy[guyCount].SetOrder(guyCount);
 						guyCount++;
 					}
