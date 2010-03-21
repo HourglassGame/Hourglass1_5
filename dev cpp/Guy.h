@@ -25,9 +25,12 @@ public:
     void DrawSprite(int time); 
     void unDrawSprite();
     
-    void SetStart(double newX,double newY,double newXspeed,double newYspeed, bool newCarryingBox, int rel_time,int abs_time, int direction); 
+    void SetStart(double newX,double newY,double newXspeed,double newYspeed, int newCarryingBox, int rel_time,int abs_time, int direction); 
     
     void PhysicsStep(int time);
+    void ReversePhysicsStep(int time);
+    
+    
     void UpdateBoxCarrying(int time);
     void UpdateTimeTravel(int time);
 
@@ -66,12 +69,16 @@ private:
     bool paradoxCheckCarrying[50];
     int paradoxChecks;
     
+    // for undetermined reverse time guys. set in ReversePhysicsStep
+    bool requireReverseCheck;
+    
     // start times, for spawning
     int startAbsTime;
     int startRelTime;
     
-    bool carryingBox[5400]; // Am I carrying a box? Well, am I?
-    int carryBoxId[5400]; // ID of box
+    int carryingBox[5400]; // -1 = just dropped, 0 = not carrying, 1 = carrying, 2 = just picked up
+    int carryBoxId[5400]; // ID of box, -1 = carrying reverse box
+    int dropReverseBoxID[5400]; // ID of reverse box that was dropped 
     
     int timeOffset; // difference between start rel and abs time
     
@@ -92,8 +99,5 @@ private:
     bool draw_moving;
     bool draw_facing; // left = false, right = true
         
-        
-
-
      
 };

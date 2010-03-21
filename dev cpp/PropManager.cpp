@@ -1,13 +1,19 @@
 #include "PropManager.h"
 
 extern bool propagating;
+extern bool exitGameStep;
 extern int absoluteTime;
 extern int absoluteTimeDirection;
 
-const int MAX_TIME = 5399; // update from main
+const int MAX_TIME = 1100;//5399; // update from main
 
 PropManager::PropManager()
 {
+}
+
+int PropManager::GetQueuedProps()
+{
+    return queuedProps;   
 }
 
 void PropManager::AddPropagation(int start_time, int direction)
@@ -21,22 +27,22 @@ void PropManager::AddPropagation(int start_time, int direction)
             // if there are no queued propagations record the time and direction as the present time and present direction 
             // then create a propagation in the past
             presentDirection = absoluteTimeDirection;
-            presentTime = absoluteTime;
+            presentTime = absoluteTime+absoluteTimeDirection;
             
             propStartTime[queuedProps] = start_time;
-            propDirection[queuedProps] = absoluteTimeDirection;
+            propDirection[queuedProps] = direction;
             
             absoluteTime = start_time;
             absoluteTimeDirection = direction;
             
             propagating = true;
+            exitGameStep = true;
             queuedProps++;
         }
         else
         {
-            if (propDirection[queuedProps-1] == direction)
+            if (propDirection[queuedProps-1] == direction) // if the new and current propagation is in the same direction
             {
-                // if the new and current propagation is in the same direction
                 if (start_time*direction < absoluteTime*direction)
                 {
                     // push the propagation start time into the past relative to the propagation direction
@@ -55,6 +61,7 @@ void PropManager::AddPropagation(int start_time, int direction)
                 
                 absoluteTime = start_time;
                 absoluteTimeDirection = direction;
+                exitGameStep = true;
                 queuedProps++;
             }
         }

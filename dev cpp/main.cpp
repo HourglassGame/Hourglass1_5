@@ -26,8 +26,11 @@ int absoluteTimeDirection; // -1 = backward, 0 = pause, 1 = forward
 // the time which propagation will stop at
 int propagating;
 
-const int MAX_GUYS = 100;
-const int MAX_BOXES = 100;
+// exits the step if true, used by propmanager
+bool exitGameStep;
+
+const int MAX_GUYS = 200;
+const int MAX_BOXES = 200;
 
 const int MAX_TIME = 5399;
 
@@ -243,7 +246,7 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval or (propagating and VIEW_PROPAGATION)) 
+        if (elapsed_time >= step_interval )//or (propagating and VIEW_PROPAGATION)) 
         {
             start_timer = clock();
             // float to string:
@@ -258,17 +261,20 @@ int main()
             
             sprintf(testString,"%d",(mouse_x*3));
             textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+            
+            sprintf(testString,"%d",propManager.GetQueuedProps());
+            textout_ex( buffer, font, testString, 150, 160, makecol( 255, 255, 0), makecol( 0, 0, 0) );
          
             // extern char allegro_id[];
             // returns true if propagation has just ended
+            
             bool resetParadox = propManager.UpdatePropagation();
-
             // get input if not propagating
             if (!propagating)
             {
                 Guy::StoreInput(relativeTime);
             }
-
+            
             // order boxes from highest to lowest for easy collision checking, find a faster method that does not include many nested loops.
             
             int activeBoxes = 0;
@@ -318,7 +324,14 @@ int main()
             {
                 if (guy[i].GetActive(absoluteTime))
                 {
-                    guy[i].PhysicsStep(absoluteTime);
+                    if (guy[i].GetTimeDirection() == absoluteTimeDirection)
+                    {
+                        guy[i].PhysicsStep(absoluteTime);
+                    }
+                    else
+                    {
+                         guy[i].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+                    }
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
                 }
@@ -327,7 +340,7 @@ int main()
                     guy[i].unDrawSprite();
                 }
             }
-
+            
             // paradox tests have to be reset after the time step as a propagation may occur at this step
             if (resetParadox and !propagating)
             {
@@ -354,6 +367,15 @@ int main()
                 }
                 Draw();
             }
+            
+            
+            if (exitGameStep)
+            {
+                exitGameStep = false;
+                relativeTime++;
+                continue;  
+            }
+            
             absoluteTime = absoluteTime + absoluteTimeDirection;
 
             if (absoluteTime > MAX_TIME)
@@ -531,7 +553,7 @@ void LoadLevel (char* filePath)
 						double xSpeed = atof(boxData["X_SPEED"].data());
 						double ySpeed = atof(boxData["Y_SPEED"].data());
 						//int absTime = atoi(boxData["ABS_TIME"].data());
-						box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,0);
+						box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,0,1);
 						box[boxCount].SetId(boxCount);
 						boxCount++;
 					}

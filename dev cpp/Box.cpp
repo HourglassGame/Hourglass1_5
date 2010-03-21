@@ -67,6 +67,56 @@ bool Box::GetCollideable()
     return collideable;
 }
 
+bool Box::CanDropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
+{
+    bool dropped = true;
+    
+    // check for being dropped into a wall
+    //up
+    if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+    {
+        //right
+        if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)])
+        {
+            newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
+            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE <= BLOCK_SIZE-BOX_COLLISION_WIDTH) or wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+            {
+                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+            }
+        }
+        //left
+        else if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)])
+        {
+            newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] and ((newX - floor(newX/BLOCK_SIZE)*BLOCK_SIZE <= BLOCK_SIZE-BOX_COLLISION_WIDTH) or wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+            {
+                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+            }
+        }
+        else
+        {
+            newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+        }
+    }
+    
+    //check box collision
+    for (int i = 0; i < boxCount; ++i)
+    {
+        if (!DeadBox[i] and box[i].GetExist(abs_time))
+        {
+        // boxes are stepped through in height order so getting current position is all good!
+            double boxX = box[i].GetX(abs_time);
+            double boxY = box[i].GetY(abs_time);
+            if (( newX < boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH > boxX) and ( newY+BOX_COLLISION_HEIGHT > boxY) and (newY < boxY+BOX_COLLISION_HEIGHT) ) 
+            {
+                dropped = false;
+            }
+        }
+    }
+    
+    return dropped;
+}
+
 bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
     bool dropped = true;
@@ -126,9 +176,9 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     return dropped;
 }
 
-bool Box::GetSupported()
+bool Box::GetSupported(int time)
 {
-    return supported;   
+    return supported[time];   
 }
 int Box::GetTimeDirection()
 {
@@ -147,7 +197,7 @@ void Box::PhysicsStep(int time)
     if (GetActive(time))
     {
         
-        supported = false;
+        supported[time] = false;
         
         double oldX = x[time-1];
         double oldY = y[time-1];
@@ -168,7 +218,7 @@ void Box::PhysicsStep(int time)
                 ySpeed[time] = 0;
                 xSpeed[time] = 0;
                 newY = floor((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_HEIGHT;
-                supported = true;
+                supported[time] = true;
             }
         }
         else if (ySpeed[time] < 0) // up
@@ -213,7 +263,7 @@ void Box::PhysicsStep(int time)
                         xSpeed[time] = box[i].GetXspeed(time);
                         ySpeed[time] = box[i].GetYspeed(time);
                         newY = boxY-BOX_COLLISION_HEIGHT;
-                        supported = true;
+                        supported[time] = true;
                     }
                 }
             }
@@ -235,13 +285,14 @@ bool Box::GetActive(int time)
 }
 
 
-void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
+void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time,int direction)
 {
     exist[abs_time] = true;
     x[abs_time] = newX;
     y[abs_time] = newY;
     xSpeed[abs_time] = newXspeed;
     ySpeed[abs_time] = newYspeed;
+    timeDirection = direction;
 }
 
 void Box::unDrawSprite()

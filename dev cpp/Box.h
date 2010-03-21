@@ -22,10 +22,9 @@ public:
     void unDrawSprite();
 
     int GetTimeDirection();
+    bool GetSupported(int time);
     
-    bool GetSupported();
-    
-    void SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time); 
+    void SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time, int direction); 
     void SetEnd(int newEndType, int abs_time);
     
     void SetExist(int abs_time,bool state);
@@ -35,6 +34,7 @@ public:
     bool GetCollideable();
     
     bool DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
+    static bool CanDropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
     
     void UpdateExist(int time);
     
@@ -60,7 +60,7 @@ private:
     
     int timeDirection;
     
-    bool supported; // checked every frame before guys and other boxes land, no large array
+    bool supported[5400]; // checked every frame before guys and other boxes land, no large array
 
     // collision width and height. it is the same as BOX_WIDTH but it makes pretty code and portable from guy physics ;D.    
     static const int BOX_COLLISION_WIDTH = BOX_WIDTH;
