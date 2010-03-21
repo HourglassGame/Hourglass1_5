@@ -234,8 +234,6 @@ int main()
     absoluteTime = guy[0].GetStartTime()+guy[0].GetTimeDirection();
     relativeTime = 1;
     absoluteTimeDirection = guy[0].GetTimeDirection();
-
-    //propManager.AddPropagation(1,guy[0].GetTimeDirection());
  
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
@@ -246,7 +244,7 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval )//or (propagating and VIEW_PROPAGATION)) 
+        if (elapsed_time >= step_interval or (propagating and !VIEW_PROPAGATION )) 
         {
             start_timer = clock();
             // float to string:

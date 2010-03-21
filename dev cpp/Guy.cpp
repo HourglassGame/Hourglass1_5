@@ -203,7 +203,7 @@ void Guy::PhysicsStep(int time)
             {
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
-                double oldBoxY = box[i].GetY(time+1);
+                double oldBoxY = box[i].GetY(time-timeDirection);
                 int boxTimeDirection = box[i].GetTimeDirection();
                 if ( (newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) and (box[i].GetSupported(time) or boxTimeDirection != timeDirection) )     
                 {
@@ -308,7 +308,7 @@ void Guy::ReversePhysicsStep(int time)
             {
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
-                double oldBoxY = box[i].GetY(time+1);
+                double oldBoxY = box[i].GetY(time-timeDirection);
                 int boxTimeDirection = box[i].GetTimeDirection();
                 if ( (newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) and (box[i].GetSupported(time) or boxTimeDirection != timeDirection) )     
                 {
@@ -543,8 +543,11 @@ void Guy::UpdateTimeTravel(int time)
                 {
                     if (departureX == paradoxCheckX[i] and departureY == paradoxCheckY[i] and departureXspeed == paradoxCheckXspeed[i] and departureYspeed == paradoxCheckYspeed[i] and departureCarrying == paradoxCheckCarrying[i])
                     {
-                        paradoxTriggered == true;
-                        allegro_message("PARADOX! (foo)", allegro_error);
+                        if (!paradoxTriggered)
+                        {
+                            allegro_message("PARADOX! (foo)", allegro_error);
+                        }
+                        paradoxTriggered = true;
                         break;
                     }
                 }
