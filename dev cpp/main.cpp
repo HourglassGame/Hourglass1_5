@@ -21,7 +21,7 @@
 
 int relativeTime;
 int absoluteTime;
-int relativeTimeDirection; // -1 = backward, 0 = pause, 1 = forward
+int absoluteTimeDirection; // -1 = backward, 0 = pause, 1 = forward
 
 // the time which propagation will stop at
 int propagating;
@@ -180,7 +180,7 @@ int main()
 
     absoluteTime = 1;
     relativeTime = 1;
-    relativeTimeDirection = 1;
+    absoluteTimeDirection = 1;
     
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps

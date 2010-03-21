@@ -2,7 +2,7 @@
 
 extern bool propagating;
 extern int absoluteTime;
-extern int relativeTimeDirection;
+extern int absoluteTimeDirection;
 
 const int MAX_TIME = 5399; // update from main
 
@@ -14,20 +14,20 @@ void PropManager::AddPropagation(int start_time, int direction)
 {
     
     // if the start time is in the relative past
-    if ((queuedProps and start_time*presentDirection < presentTime*presentDirection) or start_time*relativeTimeDirection < absoluteTime*relativeTimeDirection)
+    if ((queuedProps and start_time*presentDirection < presentTime*presentDirection) or start_time*absoluteTimeDirection < absoluteTime*absoluteTimeDirection)
     {
         if (!queuedProps)
         {
             // if there are no queued propagations record the time and direction as the present time and present direction 
             // then create a propagation in the past
-            presentDirection = relativeTimeDirection;
+            presentDirection = absoluteTimeDirection;
             presentTime = absoluteTime;
             
             propStartTime[queuedProps] = start_time;
-            propDirection[queuedProps] = relativeTimeDirection;
+            propDirection[queuedProps] = absoluteTimeDirection;
             
             absoluteTime = start_time;
-            relativeTimeDirection = direction;
+            absoluteTimeDirection = direction;
             
             propagating = true;
             queuedProps++;
@@ -54,7 +54,7 @@ void PropManager::AddPropagation(int start_time, int direction)
                 propDirection[queuedProps] = direction;
                 
                 absoluteTime = start_time;
-                relativeTimeDirection = direction;
+                absoluteTimeDirection = direction;
                 queuedProps++;
             }
         }
@@ -63,7 +63,7 @@ void PropManager::AddPropagation(int start_time, int direction)
     else
     {
         // if the propagation is in the relative future store it.
-        if (relativeTimeDirection == -direction)
+        if (absoluteTimeDirection == -direction)
         {
             futureReversePropStartTime[futureProps] = start_time;
             futureProps++;
@@ -86,7 +86,7 @@ bool PropManager::UpdatePropagation()
                 if (queuedProps)
                 {
                     absoluteTime = propStartTime[queuedProps-1];
-                    relativeTimeDirection = propDirection[queuedProps-1];
+                    absoluteTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
@@ -103,12 +103,12 @@ bool PropManager::UpdatePropagation()
                 if (queuedProps)
                 {
                     absoluteTime = propStartTime[queuedProps-1];
-                    relativeTimeDirection = propDirection[queuedProps-1];
+                    absoluteTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
                     absoluteTime = presentTime;
-                    relativeTimeDirection = presentDirection;
+                    absoluteTimeDirection = presentDirection;
                     
                     propagating = false;
                     return true;
