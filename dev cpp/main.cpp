@@ -32,7 +32,7 @@ bool exitGameStep;
 const int MAX_GUYS = 200;
 const int MAX_BOXES = 200;
 
-const int MAX_TIME = 5399;
+const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
 const bool VIEW_PROPAGATION = true;
 
@@ -235,6 +235,8 @@ int main()
     relativeTime = 1;
     absoluteTimeDirection = guy[0].GetTimeDirection();
  
+    int rel_test = 1; // this tests for sync between real relativeTime and what it is suppose to be.
+    
     // Game Loop 
     double step_interval = STEP_TIME*CLOCKS_PER_SEC; // minimun time between steps
     start_timer = clock(); // timers for stable steps/second
@@ -270,6 +272,13 @@ int main()
             // get input if not propagating
             if (!propagating)
             {
+                // test for input desync, test can be removed if everything seems to be working
+                if (rel_test != relativeTime)
+                {
+                    allegro_message("input desync");
+                }
+                rel_test++;
+                // end of desync test
                 Guy::StoreInput(relativeTime);
             }
             
@@ -370,7 +379,6 @@ int main()
             if (exitGameStep)
             {
                 exitGameStep = false;
-                relativeTime++;
                 continue;  
             }
             

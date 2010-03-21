@@ -4,8 +4,9 @@ extern bool propagating;
 extern bool exitGameStep;
 extern int absoluteTime;
 extern int absoluteTimeDirection;
+extern int relativeTime;
 
-const int MAX_TIME = 1100;//5399; // update from main
+const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
 PropManager::PropManager()
 {
@@ -37,6 +38,7 @@ void PropManager::AddPropagation(int start_time, int direction)
             
             propagating = true;
             exitGameStep = true;
+            relativeTime++;
             queuedProps++;
         }
         else
