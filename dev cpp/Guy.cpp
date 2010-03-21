@@ -262,14 +262,19 @@ void Guy::ReversePhysicsStep(int time)
     // set xspeed from input
     if (inputLeft[personalTime])
     {
+        draw_moving = true;
+        draw_facing = false;
         newXspeed = -MOVE_SPEED;
     }
     else if (inputRight[personalTime])
     {
+        draw_moving = true;
+        draw_facing = true;
         newXspeed = MOVE_SPEED;
     }
     else
     {
+        draw_moving = false;
         newXspeed = 0;
     }
         
@@ -660,10 +665,13 @@ void Guy::DrawSprite(int time)
         int drawX = int(x[time]);
         int drawY = int(y[time]);
         
-        subimage[time] = subimage[time-timeDirection]+1;
-        if (subimage[time] > 14)
+        if (timeDirection == absoluteTimeDirection)
         {
-            subimage[time] = 0;
+            subimage[time] = subimage[time-timeDirection]+1;
+            if (subimage[time] > 14)
+            {
+                subimage[time] = 0;
+            }
         }
         
         if (!draw_moving)
