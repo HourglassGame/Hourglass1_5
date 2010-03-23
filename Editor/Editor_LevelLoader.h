@@ -10,7 +10,7 @@
 #define HOURGLASS_LEVEL_LOADER_H
 #include "Editor_Loader.h"
 #include "Editor_Level.h"
-//#include "FileString.hpp"
+#include "Editor_AbsoluteTimeDirectionEnum.h"
 #include "Editor_ResourcePathEnum.h"
 #include "Editor_Exceptions.h"
 #include <fstream>

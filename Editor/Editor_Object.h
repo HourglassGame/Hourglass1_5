@@ -17,7 +17,7 @@ public:
 	void SetData(const int newXPos,const int newYPos,const double newXSpeed = 0,const double newYSpeed = 0);
 	void SetPos(const int newXPos,const int newYPos);
 	virtual void DoDraw() = 0;
-	void DoGui();
+	virtual void DoGui();
 	void GetData(int& outputXPos, int& outputYPos, double& outputXSpeed, double& outputYSpeed);
 	virtual int GetType() = 0; //Still needed for Level Saving. May be possible to remove, may not be.
 	void SetSelected(const bool newSelected = 0);

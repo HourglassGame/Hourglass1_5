@@ -121,6 +121,7 @@ END_OF_FUNCTION(ticker)
 
 int main()
 {
+
 	try {
 		Init();
         // Game Loop
@@ -326,7 +327,7 @@ void DoLoadLevelDialog()
 {
     char path[MAX_PATH];
     strncpy(path,levelPath.c_str(),MAX_PATH);
-    if(file_select_ex("Select the file you would like to Load", path, "lvl", 500, 0, 0))
+    if(file_select_ex("Select the file you would like to Load", path, "lvl", MAX_PATH, 0, 0))
     {
 		try
 		{
@@ -354,7 +355,7 @@ void DoSaveLevel()
 {
     char path[MAX_PATH];
     strncpy(path,levelPath.c_str(),MAX_PATH);
-	if(file_select_ex("Please enter the location where you would like this level to be saved", path, NULL, 500, 0, 0)) //Returns zero if closed with "cancel"
+	if(file_select_ex("Please enter the location where you would like this level to be saved", path, "lvl;/-r", MAX_PATH, 0, 0)) //Returns zero if closed with "cancel"
 	{
 		SaveLevel(path);
 	}
@@ -440,7 +441,7 @@ void DoAddingObject()
 			}
 			if (doingAddGuy)
             {
-				currentLevel->AddGuy(objectX, objectY, 0, 0);
+				currentLevel->AddGuy(objectX, objectY, 0, 0, 2700, FORWARDS);
 			}
             doingAddGuy = false;
         }

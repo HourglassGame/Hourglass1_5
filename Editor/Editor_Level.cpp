@@ -53,7 +53,7 @@ Level& Level::operator=(const Level& l) //TODO This was done in a hurry, check i
     canSelect = l.canSelect;
     nextObject = l.nextObject;
     objects = l.objects;
-    for (int i = 0; i < objects.size();++i)
+    for (unsigned int i = 0; i < objects.size();++i)
     {
         if (dynamic_cast<Box*>(objects.at(i)) != NULL)
         {
@@ -71,6 +71,7 @@ Level& Level::operator=(const Level& l) //TODO This was done in a hurry, check i
 			wall[x][y] = l.wall[x][y];
 		}
     }
+	return(*this);
 }
 
 void Level::SetWall(bool value,unsigned int x, unsigned int y) {
@@ -120,9 +121,17 @@ void Level::UpdateSelected()
 	} 
 }
 
-void Level::AddGuy(unsigned int xPos, unsigned int yPos, double xSpeed, double ySpeed)
+void Level::AddGuy(unsigned int xPos, unsigned int yPos, double xSpeed, double ySpeed, unsigned int startTime, AbsoluteTimeDirectionEnum atd)
 {
-	objects.push_back(new Guy(xPos,yPos,xSpeed,ySpeed));
+	for (unsigned int i = 0; i < objects.size(); ++i) {
+		if (dynamic_cast<Guy*> (objects.at(i)) != NULL) {
+			delete objects.at(i);
+			std::vector<Object*>::iterator it = objects.begin();
+			it += i;
+			objects.erase(it);
+		}
+	}
+	objects.push_back(new Guy(xPos,yPos,xSpeed,ySpeed,startTime,atd));
 }
 
 void Level::AddBox(unsigned int xPos, unsigned int yPos, double xSpeed, double ySpeed)

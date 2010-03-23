@@ -17,6 +17,7 @@
 #include <map>
 #include "Editor_HourglassInputsEnum.h"
 #include "Editor_SwitchingInput.h"
+#include "Editor_AbsoluteTimeDirectionEnum.h"
 class Level {
 public:
 	Level();
@@ -31,7 +32,7 @@ public:
 	void UpdateSelection();
 	void UpdateSelected();
 	void SetCanSelect(bool canSelect);
-	void AddGuy(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed);
+	void AddGuy(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed,  unsigned int startTime, AbsoluteTimeDirectionEnum);
 	void AddBox(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed);
 	void SetGridSize(const unsigned int size);
 	Object* GetNextObject();

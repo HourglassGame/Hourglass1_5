@@ -10,6 +10,7 @@
 #define HOURGLASS_LEVEL_SAVER_H
 #include "Hourglass_Allegro.h"
 #include "Editor_ResourcePathEnum.h"
+#include "Editor_AbsoluteTimeDirectionEnum.h"
 #include <string>
 #include <fstream>
 #include "Editor_Level.h"

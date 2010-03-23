@@ -123,10 +123,34 @@ Level* LevelLoader::LoadLevelFromFile(const std::string filePath)
 						int yPos = atoi(guyData["Y_POS"].data());
 						double xSpeed = atof(guyData["X_SPEED"].data());
 						double ySpeed = atof(guyData["Y_SPEED"].data());
+						unsigned int startTime = atoi(guyData["START_TIME"].data());
+						AbsoluteTimeDirectionEnum atd;
+						if (guyData.find("START_DIRECTION") != guyData.end()) {
+							switch (atoi(guyData["START_DIRECTION"].data())) {
+								case 1:
+									atd = FORWARDS;
+									break;
+								case 0:
+									atd = PAUSED;
+									break;
+								case -1:
+									atd = BACKWARDS;
+									break;
+								default:
+									allegro_message("\"%s\" is an invalid start direction, using FORWARDS",guyData["START_DIRECTION"].c_str());
+									atd = FORWARDS;
+									break;
+							}
+							
+						}
+						else
+						{
+							atd = FORWARDS;
+						}
 						//bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
 						//int absTime = atoi(guyData["ABS_TIME"].data());
 						//int relTime = atoi(guyData["REL_TIME"].data());
-						newLevel->AddGuy(xPos,yPos,xSpeed,ySpeed);
+						newLevel->AddGuy(xPos,yPos,xSpeed,ySpeed,startTime,atd);
 					}
 					inputFile.getline(line,MAX_LINE_LENGTH+1,'\n');
 					gotLine->assign(line);
