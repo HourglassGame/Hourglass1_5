@@ -88,7 +88,7 @@ void PropManager::AddPropagation(int start_time, int direction)
 
 void PropManager::PlayerTravel(int start_time, int direction)
 {
-    waitForDraw = true; // draw the current frame
+    
     
     // if the start time is in the relative past (or at the present)
     if (start_time*absoluteTimeDirection <= absoluteTime*absoluteTimeDirection)
@@ -113,7 +113,7 @@ void PropManager::PlayerTravel(int start_time, int direction)
         {
             // no propagation required
             changeTime = true;
-            newTime = start_time;
+            newTime = start_time+direction;
             newTimeDirection = direction;
         }
     }

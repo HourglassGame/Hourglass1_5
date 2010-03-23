@@ -368,7 +368,7 @@ void Box::ReversePhysicsStep(int time)
     }
         
     collideable = true;
-        
+    /* fix me
     // check against old data
     if (newX == x[time] and newY == y[time] and newXspeed == xSpeed[time] and newYspeed == ySpeed[time] and newSupported == supported[time])
     {
@@ -391,7 +391,7 @@ void Box::ReversePhysicsStep(int time)
             requireReverseCheck = time;
         }
     }
-    
+    */
 }
 
 bool Box::GetActive(int time)

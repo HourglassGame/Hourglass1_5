@@ -37,7 +37,7 @@ const int MAX_BOXES = 200;
 
 const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
-bool viewPropagation = false;
+bool viewPropagation = true;
 bool waitForDraw = false; // stalls for a frame to give drawing time between jumps
 
 PropManager propManager;
@@ -353,7 +353,7 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval or (!viewPropagation and !guy[guyCount-1].GetActive(absoluteTime-absoluteTimeDirection) and !waitForDraw)) 
+        if (elapsed_time >= step_interval or (!waitForDraw and propagating and !viewPropagation)) 
         {
             start_timer = clock();
             if (waitForDraw)
@@ -514,7 +514,7 @@ int main()
             }
             
             // Most of drawing
-            if (guy[guyCount-1].GetActive(absoluteTime) or currentGuyCount != guyCount or viewPropagation)
+            if (!propagating or viewPropagation)
             {
                 for (int i = 0; i < currentGuyCount; ++i)
                 {
