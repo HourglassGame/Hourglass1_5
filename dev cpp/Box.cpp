@@ -1,4 +1,5 @@
 #include "Box.h"
+#include "PropManager.h"
 #include <math.h>
 #include <iostream> 
 
@@ -18,6 +19,11 @@ const int BLOCK_SIZE = 32;
 extern bool wall[LEVEL_WIDTH][LEVEL_HEIGHT];
 extern int boxCount;
 extern Box box[];
+
+extern PropManager propManager;
+
+extern int absoluteTime;
+extern int absoluteTimeDirection;
 
 extern bool DeadBox[];
 
@@ -69,6 +75,11 @@ bool Box::GetCollideable()
     return collideable;
 }
 
+bool Box::GetRequireCheck()
+{
+    return requireReverseCheck;
+}
+
 bool Box::CanDropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time)
 {
     bool dropped = true;
@@ -104,7 +115,7 @@ bool Box::CanDropBox(double newX,double newY,double newXspeed,double newYspeed,i
     //check box collision
     for (int i = 0; i < boxCount; ++i)
     {
-        if (!DeadBox[i] and box[i].GetExist(abs_time))
+        if (!DeadBox[i] and box[i].GetExist(abs_time) and !box[i].GetRequireCheck())
         {
         // boxes are stepped through in height order so getting current position is all good!
             double boxX = box[i].GetX(abs_time);
@@ -154,7 +165,7 @@ bool Box::DropBox(double newX,double newY,double newXspeed,double newYspeed,int 
     //check box collision
     for (int i = 0; i < boxCount; ++i)
     {
-        if (!DeadBox[i] and box[i].GetExist(abs_time))
+        if (!DeadBox[i] and box[i].GetExist(abs_time) and !box[i].GetRequireCheck())
         {
         // boxes are stepped through in height order so getting current position is all good!
             double boxX = box[i].GetX(abs_time);
@@ -199,89 +210,186 @@ void Box::UpdateExist(int time)
 
 void Box::PhysicsStep(int time)
 {
-    
-    // only move if existing
-    if (GetActive(time))
+        
+    supported[time] = false;
+        
+    double oldX = x[time-timeDirection];
+    double oldY = y[time-timeDirection];
+        
+    // add GRAVITY
+    ySpeed[time] = ySpeed[time-timeDirection] + GRAVITY;
+    xSpeed[time] = xSpeed[time-timeDirection];
+        
+    // new positions for collision checking
+    double newX = oldX + xSpeed[time];
+    double newY = oldY + ySpeed[time];
+        
+    //check wall collision in Y direction
+    if (ySpeed[time] > 0) // down
     {
-        
-        supported[time] = false;
-        
-        double oldX = x[time-1];
-        double oldY = y[time-1];
-        
-        // add GRAVITY
-        ySpeed[time] = ySpeed[time-1] + GRAVITY;
-        xSpeed[time] = xSpeed[time-1];
-        
-        // new positions for collision checking
-        double newX = oldX + xSpeed[time];
-        double newY = oldY + ySpeed[time];
-        
-        //check wall collision in Y direction
-        if (ySpeed[time] > 0) // down
+        if (wall[int(oldX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
         {
-            if (wall[int(oldX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
-            {
-                ySpeed[time] = 0;
-                xSpeed[time] = 0;
-                newY = floor((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_HEIGHT;
-                supported[time] = true;
-            }
+            ySpeed[time] = 0;
+            xSpeed[time] = 0;
+            newY = floor((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_HEIGHT;
+            supported[time] = true;
         }
-        else if (ySpeed[time] < 0) // up
+    }
+    else if (ySpeed[time] < 0) // up
+    {
+        if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
         {
-            if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
-            {
-                ySpeed[time] = 0;
-                newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
-            }
+            ySpeed[time] = 0;
+            newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
         }
+    }
         
-        //check wall collision in X direction
-        if (xSpeed[time] > 0) // right
+    //check wall collision in X direction
+    if (xSpeed[time] > 0) // right
+    {
+        if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
         {
-            if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
-            {
-                xSpeed[time] = 0;
-                newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
-            }
+            xSpeed[time] = 0;
+            newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
         }
-        else if (xSpeed[time] < 0) // left
+    }
+    else if (xSpeed[time] < 0) // left
+    {
+        if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
         {
-            if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
-            {
-                xSpeed[time] = 0;
-                newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
-            }
+            xSpeed[time] = 0;
+            newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
         }
+    }
         
-        //check Box collision in Y direction
-        if (ySpeed[time] > 0) // down
+    //check Box collision in Y direction
+    if (ySpeed[time] > 0) // down
+    {
+        for (int i = 0; i < boxCount; ++i)
         {
-            for (int i = 0; i < boxCount; ++i)
+            int boxTimeDirection = box[i].GetTimeDirection();
+            if (i != id and box[i].GetActive(time) and (box[i].GetCollideable() or boxTimeDirection !=timeDirection) and !box[i].GetRequireCheck())
             {
-                if (i != id and box[i].GetActive(time) and box[i].GetCollideable())
+                // boxes are stepped through in height order so getting current position is all good!
+                double boxX = box[i].GetX(time);
+                double boxY = box[i].GetY(time);
+                if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
                 {
-                    // boxes are stepped through in height order so getting current position is all good!
-                    double boxX = box[i].GetX(time);
-                    double boxY = box[i].GetY(time);
-                    if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
-                    {
-                        xSpeed[time] = box[i].GetXspeed(time);
-                        ySpeed[time] = box[i].GetYspeed(time);
-                        newY = boxY-BOX_COLLISION_HEIGHT;
-                        supported[time] = true;
-                    }
+                    xSpeed[time] = box[i].GetXspeed(time)*boxTimeDirection*timeDirection;
+                    ySpeed[time] = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
+                    newY = boxY-BOX_COLLISION_HEIGHT;
+                    supported[time] = true;
                 }
             }
         }
+    }
         
-        collideable = true;
+    collideable = true;
         
-        // set new locations
-        x[time] = newX;
-        y[time] = newY; 
+    // set new locations
+    x[time] = newX;
+    y[time] = newY; 
+    
+}
+
+void Box::ReversePhysicsStep(int time)
+{
+    double oldX = x[time-timeDirection];
+    double oldY = y[time-timeDirection];    
+    
+    bool newSupported = false;
        
+    // add GRAVITY 
+    double newYspeed = ySpeed[time-timeDirection] + GRAVITY;;
+    double newXspeed = xSpeed[time-timeDirection];
+        
+    // new positions for collision checking
+    double newX = oldX + newXspeed;
+    double newY = oldY + newYspeed;
+        
+    //check wall collision in Y direction
+    if (newYspeed > 0) // down
+    {
+        if (wall[int(oldX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        {
+            newYspeed = 0;
+            newXspeed = 0;
+            newY = floor((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_HEIGHT;
+            newSupported = true;
+        }
+    }
+    else if (newYspeed < 0) // up
+    {
+        if (wall[int(oldX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_WIDTH) and wall[int((oldX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)]))
+        {
+            newYspeed = 0;
+            newY = (floor(newY/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+        }
+    }
+        
+    //check wall collision in X direction
+    if (newXspeed > 0) // right
+    {
+        if ( wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        {
+            newXspeed = 0;
+            newX = floor((newX+BOX_COLLISION_WIDTH)/BLOCK_SIZE)*BLOCK_SIZE - BOX_COLLISION_WIDTH;
+        }
+    }
+    else if (newXspeed < 0) // left
+    {
+        if (wall[int(newX/BLOCK_SIZE)][int(newY/BLOCK_SIZE)] or ((newY - floor(newY/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-BOX_COLLISION_HEIGHT) and wall[int(newX/BLOCK_SIZE)][int((newY+BOX_COLLISION_HEIGHT)/BLOCK_SIZE)]))
+        {
+            newXspeed = 0;
+            newX = (floor(newX/BLOCK_SIZE) + 1)*BLOCK_SIZE;
+        }
+    }
+        
+    //check Box collision in Y direction
+    if (newYspeed > 0) // down
+    {
+        for (int i = 0; i < boxCount; ++i)
+        {
+            int boxTimeDirection = box[i].GetTimeDirection();
+            if (i != id and box[i].GetActive(time) and (box[i].GetCollideable() or boxTimeDirection !=timeDirection) and !box[i].GetRequireCheck())
+            {
+                // boxes are stepped through in height order so getting current position is all good!
+                double boxX = box[i].GetX(time);
+                double boxY = box[i].GetY(time);
+                if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
+                {
+                    newXspeed = box[i].GetXspeed(time)*boxTimeDirection*timeDirection;
+                    newYspeed = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
+                    newY = boxY-BOX_COLLISION_HEIGHT;
+                    newSupported = true;
+                }
+            }
+        }
+    }
+        
+    collideable = true;
+        
+    // check against old data
+    if (newX == x[time] and newY == y[time] and newXspeed == xSpeed[time] and newYspeed == ySpeed[time] and newSupported == supported[time])
+    {
+        if (requireReverseCheck)
+        {
+            requireReverseCheck = 0;
+            propManager.AddPropagation(time-timeDirection,timeDirection);
+        }
+    }
+    else
+    {
+        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == MAX_TIME and timeDirection == -1))
+        {
+            // propagate new position if end of time is reached regardless of reverse check
+            requireReverseCheck = false;
+            propManager.AddPropagation(time-timeDirection,timeDirection);   
+        }
+        else
+        {
+            requireReverseCheck = time;
+        }
     }
     
 }
@@ -293,7 +401,16 @@ bool Box::GetActive(int time)
 
 void Box::TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection)
 {
-    
+     // fixes any achronal variables that could mess with things during time travel
+    if (oldTimeDir != newTimeDirection and requireReverseCheck)
+    {
+        requireReverseCheck = false;
+        return;
+    }
+    if (oldTimeDir != timeDirection and requireReverseCheck and newTime*timeDirection > requireReverseCheck*timeDirection)
+    {
+        requireReverseCheck = false;
+    }
 }
 
 void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time,int direction)
@@ -323,6 +440,11 @@ void Box::DrawSprite(int time)
         int drawY = int(y[time]);
         
         draw_sprite( buffer, box_sprite, drawX,drawY);
+        
+        if (requireReverseCheck)
+        {
+            textout_ex( buffer, font, ":(", drawX+10, drawY+10, makecol( 255, 255, 0), makecol( 0, 0, 0) );   
+        }
         
         prevDrawX = drawX;
         prevDrawY = drawY;

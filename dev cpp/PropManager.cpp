@@ -10,6 +10,7 @@ extern int relativeTime;
 extern bool changeTime;
 extern int newTime;
 extern int newTimeDirection;
+extern bool waitForDraw;
 
 const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
@@ -42,8 +43,6 @@ void PropManager::AddPropagation(int start_time, int direction)
             newTime = start_time;
             newTimeDirection = direction;
             
-            propagating = true;
-            relativeTime++;
             queuedProps++;
         }
         else
@@ -54,14 +53,14 @@ void PropManager::AddPropagation(int start_time, int direction)
                 {
                     // push the propagation start time into the past relative to the propagation direction
                     propStartTime[queuedProps-1] = start_time;
-                    absoluteTime = start_time;
+                    newTime = start_time;
                 }
                 // if the new propagation is in the future relative to the propagation direction there is no need to create a new one
             }
             else
             {
                 // if the progation directions are not the same a new progation will be needed
-                propStartTime[queuedProps-1] = absoluteTime; // once the new one is done the current one will resume at this point
+                propStartTime[queuedProps-1] = absoluteTime-propDirection[queuedProps-1]; // once the new one is done the current one will resume at this point
                 
                 propStartTime[queuedProps] = start_time;
                 propDirection[queuedProps] = direction;
@@ -87,43 +86,126 @@ void PropManager::AddPropagation(int start_time, int direction)
     
 }
 
+void PropManager::PlayerTravel(int start_time, int direction)
+{
+    waitForDraw = true; // draw the current frame
+    
+    // if the start time is in the relative past (or at the present)
+    if (start_time*absoluteTimeDirection <= absoluteTime*absoluteTimeDirection)
+    {
+        if (absoluteTimeDirection != direction) // if time is to be reversed
+        {
+            // set the present in the past in the opposite direction
+            presentTime = start_time;
+            presentDirection = direction;
+            
+            // propagate from the departure time to the end
+            propStartTime[queuedProps] = start_time;
+            propDirection[queuedProps] = -presentDirection;
+            
+            changeTime = true;
+            newTime = start_time;
+            newTimeDirection = -presentDirection;
+            
+            queuedProps++;
+        }
+        else // if time is not to be reversed
+        {
+            // no propagation required
+            changeTime = true;
+            newTime = start_time;
+            newTimeDirection = direction;
+        }
+    }
+    else // if the start time is in the relative future
+    {
+        if (absoluteTimeDirection != direction) // if time is to be reversed
+        {
+            // set the present to the departure time
+            presentTime = absoluteTime;
+            presentDirection = direction;
+            
+            // once propagation is done the present will be set to this time
+            reverseJumpToFutureTime = start_time;
+            
+            // propagate what is now the past in reverse
+            propStartTime[queuedProps] = absoluteTime;
+            propDirection[queuedProps] = absoluteTimeDirection;
+            
+            changeTime = true;
+            newTime = absoluteTime;
+            newTimeDirection = absoluteTimeDirection;
+            
+            queuedProps++;
+        }
+        else // if time is not to be reversed
+        {
+            // set present to future
+            presentTime = start_time;
+            presentDirection = direction;
+            
+            // propagate to the future
+            propStartTime[queuedProps] = absoluteTime;
+            propDirection[queuedProps] = absoluteTimeDirection;
+            
+            changeTime = true;
+            newTime = absoluteTime;
+            newTimeDirection = absoluteTimeDirection;
+            
+            queuedProps++;
+        }
+    }
+    
+}
 
 
 bool PropManager::UpdatePropagation()
 {
-    if (queuedProps)
+    
+    if (queuedProps) // if there are propagations queued
     {
-        if (propDirection[queuedProps-1] == presentDirection)
+        if (propDirection[queuedProps-1] == presentDirection) // if the most recent propagation is relative forwards
         {
-            if (presentTime*presentDirection <= absoluteTime*presentDirection)
+            if (presentTime*presentDirection <= absoluteTime*presentDirection) // if the abs time is in the relative past
             {
-                queuedProps--;
+                queuedProps--; // finish current propagation
                 if (queuedProps)
                 {
+                    // start the next propagation
                     changeTime = true;
                     newTime = propStartTime[queuedProps-1];
                     newTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
+                    // propagation is over
                     propagating = false;
                     return true;
                 }
             }
         }
-        else
+        else // if the most recent propagation is relative reverse
         {
             if ( (absoluteTime == 1 and propDirection[queuedProps-1] == -1) or (absoluteTime == MAX_TIME and propDirection[queuedProps-1] == 1) )
+            // abs time has reached the far past
             {
-                queuedProps--;
+                queuedProps--; // finish current propagation
                 if (queuedProps)
                 {
+                    // start the next propagation
                     changeTime = true;
                     newTime = propStartTime[queuedProps-1];
                     newTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
+                    // propagation is over return to present
+                    if (reverseJumpToFutureTime)
+                    {
+                        // set a different present if the player jump triggered a reverse future propagation
+                        presentTime = reverseJumpToFutureTime;
+                        reverseJumpToFutureTime = 0;
+                    }
                     changeTime = true;
                     newTime = presentTime;
                     newTimeDirection = presentDirection;

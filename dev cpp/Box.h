@@ -36,12 +36,15 @@ public:
     void SetCollideable(bool state);
     bool GetCollideable();
     
+    bool GetRequireCheck();
+    
     bool DropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
     static bool CanDropBox(double newX,double newY,double newXspeed,double newYspeed,int abs_time);
     
     void UpdateExist(int time);
     
     void PhysicsStep(int time);
+    void ReversePhysicsStep(int time);
 
 private:
     
@@ -58,6 +61,9 @@ private:
     double ySpeed[5400];
     
     bool collideable; // has the box steped so that it can now be hit
+    
+    // for undetermined reverse time guys. set in ReversePhysicsStep
+    int requireReverseCheck;
     
     bool exist[5400];
     

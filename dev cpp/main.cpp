@@ -25,6 +25,7 @@ int absoluteTimeDirection; // -1 = backward, 0 = pause, 1 = forward
 
 // the time which propagation will stop at
 int propagating;
+bool resetParadox;
 
 // read variables from prop manager
 bool changeTime;
@@ -36,7 +37,8 @@ const int MAX_BOXES = 200;
 
 const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
-bool viewPropagation = true;
+bool viewPropagation = false;
+bool waitForDraw = false; // stalls for a frame to give drawing time between jumps
 
 PropManager propManager;
 
@@ -180,14 +182,14 @@ int main()
        return (1); // Could not load level     
     }
 
-    // test loaded level
-    // TestLevel(0.2);
+    // Determine Level
     
+    // determine forwards boxes
+    relativeTime = 1;
     absoluteTime = 1;
     absoluteTimeDirection = 1;
     
-    // Determine Level
-    while (true)
+    while (absoluteTime <= MAX_TIME)
     {
         // boxes
         int activeBoxes = 0;
@@ -195,26 +197,29 @@ int main()
  
         for (int i = 0; i < boxCount; ++i)
         {
-            box[i].UpdateExist(absoluteTime);
-            box[i].SetCollideable(false);
-                
-            if (box[i].GetActive(absoluteTime))
+            if (box[i].GetTimeDirection() == absoluteTimeDirection)
             {
-                double boxY = box[i].GetY(absoluteTime-1);
-                activeBoxOrder[activeBoxes] = i;
-                for (int j = 0; j < activeBoxes; ++j)
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime) )
                 {
-                    if (box[activeBoxOrder[j]].GetY(absoluteTime-1) < boxY)
+                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
                     {
-                        for (int k = activeBoxes; k > j; --k)
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
                         {
-                               activeBoxOrder[k] = activeBoxOrder[k-1];
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
                         }
-                        activeBoxOrder[j] = i;
-                        break;
                     }
+                    activeBoxes++;
                 }
-                activeBoxes++;
             }
         }
         
@@ -224,8 +229,108 @@ int main()
         }
         
         absoluteTime = absoluteTime + absoluteTimeDirection;
+    }
+    
+    // determine backwards boxes
+    // these boxes can disrupt the forwards boxes
+    absoluteTime = MAX_TIME+1;
+    absoluteTimeDirection = -1;
+    
+    while (absoluteTime > 0)
+    {
+        // boxes
+        int activeBoxes = 0;
+		int activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() == absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime) )
+                {
+                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+        }
+        
+        // reverse boxes
+        activeBoxes = 0;
+		activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() != absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime))
+                {
+                    double boxY = box[i].GetY(absoluteTime+absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime+absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+        }
+        
+        // if a propgation has been added that requires a time change time will be changed here
+        if (changeTime)
+        {
+            for (int i = 0; i < boxCount; ++i)
+            {
+                box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+            }
+            changeTime = false;
+            absoluteTime = newTime;
+            absoluteTimeDirection = newTimeDirection;   
+            continue;
+        }
+            
+        // progress asb time
+        
+        absoluteTime = absoluteTime + absoluteTimeDirection;
 
-        if (absoluteTime > MAX_TIME)
+
+        if (absoluteTime < 1)
         {
             break;
         }
@@ -248,9 +353,14 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval or (propagating and !viewPropagation )) 
+        if (elapsed_time >= step_interval or (!viewPropagation and !guy[guyCount-1].GetActive(absoluteTime-absoluteTimeDirection) and !waitForDraw)) 
         {
             start_timer = clock();
+            if (waitForDraw)
+            {
+                waitForDraw = false;
+                continue;
+            }
             // float to string:
             //arg3(string) = arg1(double) to string with arg2(int) figures.
             //gcvt(elpased_time, 10, testString);
@@ -269,8 +379,7 @@ int main()
          
             // extern char allegro_id[];
             // returns true if propagation has just ended
-            
-            bool resetParadox = propManager.UpdatePropagation();
+
             if (changeTime)
             {
                 for (int i = 0; i < boxCount; ++i)
@@ -304,36 +413,31 @@ int main()
             int activeBoxes = 0;
 			int activeBoxOrder[MAX_BOXES];
            
-            sprintf(testString,"%d",activeBoxes);
-            //allegro_message(testString, allegro_error);
-            
             for (int i = 0; i < boxCount; ++i)
             {
-                box[i].UpdateExist(absoluteTime);
-                box[i].SetCollideable(false);
-                
-                if (box[i].GetActive(absoluteTime))
+                if (box[i].GetTimeDirection() == absoluteTimeDirection)
                 {
-                    double boxY = box[i].GetY(absoluteTime-1);
-                    activeBoxOrder[activeBoxes] = i;
-                    for (int j = 0; j < activeBoxes; ++j)
+                    box[i].UpdateExist(absoluteTime);
+                    box[i].SetCollideable(false);
+                        
+                    if (box[i].GetActive(absoluteTime) )
                     {
-                        if (box[activeBoxOrder[j]].GetY(absoluteTime-1) < boxY)
+                        double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                        activeBoxOrder[activeBoxes] = i;
+                        for (int j = 0; j < activeBoxes; ++j)
                         {
-                            for (int k = activeBoxes; k > j; --k)
+                            if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
                             {
-                                activeBoxOrder[k] = activeBoxOrder[k-1];
+                                for (int k = activeBoxes; k > j; --k)
+                                {
+                                       activeBoxOrder[k] = activeBoxOrder[k-1];
+                                }
+                                activeBoxOrder[j] = i;
+                                break;
                             }
-                            activeBoxOrder[j] = i;
-                            break;
                         }
+                        activeBoxes++;
                     }
-                    activeBoxes++;
-                }
-                
-                if (!propagating or viewPropagation)
-                {
-                    box[i].unDrawSprite();
                 }
             }
             
@@ -344,7 +448,46 @@ int main()
                 box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
             }
             
-            for (int i = 0; i < guyCount; ++i)
+            // reverse boxes
+            activeBoxes = 0;
+    		activeBoxOrder[MAX_BOXES];
+     
+            for (int i = 0; i < boxCount; ++i)
+            {
+                if (box[i].GetTimeDirection() != absoluteTimeDirection)
+                {
+                    box[i].UpdateExist(absoluteTime);
+                    box[i].SetCollideable(false);
+                        
+                    if (box[i].GetActive(absoluteTime))
+                    {
+                        double boxY = box[i].GetY(absoluteTime+absoluteTimeDirection);
+                        activeBoxOrder[activeBoxes] = i;
+                        for (int j = 0; j < activeBoxes; ++j)
+                        {
+                            if (box[activeBoxOrder[j]].GetY(absoluteTime+absoluteTimeDirection) < boxY)
+                            {
+                                for (int k = activeBoxes; k > j; --k)
+                                {
+                                       activeBoxOrder[k] = activeBoxOrder[k-1];
+                                }
+                                activeBoxOrder[j] = i;
+                                break;
+                            }
+                        }
+                        activeBoxes++;
+                    }
+                }
+            }
+            
+            for (int i = 0; i < activeBoxes; ++i)
+            {
+                box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+            }
+            
+            // step through guys
+            int currentGuyCount = guyCount; // for when new ones are created
+            for (int i = 0; i < currentGuyCount; ++i)
             {
                 if (guy[i].GetActive(absoluteTime))
                 {
@@ -359,14 +502,10 @@ int main()
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
                 }
-                if (!propagating or viewPropagation)
-                {
-                    guy[i].unDrawSprite();
-                }
             }
             
             // paradox tests have to be reset after the time step as a propagation may occur at this step
-            if (resetParadox and !propagating)
+            if (resetParadox)
             {
                 for (int i = 0; i < guyCount; ++i)
                 {
@@ -375,24 +514,36 @@ int main()
             }
             
             // Most of drawing
-            if (!propagating or viewPropagation)
+            if (guy[guyCount-1].GetActive(absoluteTime) or currentGuyCount != guyCount or viewPropagation)
             {
+                for (int i = 0; i < currentGuyCount; ++i)
+                {
+                    guy[i].unDrawSprite();
+                }
+                for (int i = 0; i < boxCount; ++i)
+                {
+                    box[i].unDrawSprite();
+                }
+                
                 for (int i = 0; i < boxCount; ++i)
                 {
                     box[i].DrawSprite(absoluteTime);
                 }
-                for (int i = 0; i < guyCount; ++i)
+                
+                for (int i = 0; i < currentGuyCount; ++i)
                 {
                     guy[i].DrawSprite(absoluteTime);
                 }
-                if (!propagating)
-                {
-                    relativeTime++;
-                }
+               
                 Draw();
             }
             
-            // if a propgation has been added that requires a time change time will be changed here
+            if (!propagating)
+            {
+                relativeTime++;
+            }
+            
+            // if a propgation has been added that requires a time change, time will be changed here
             if (changeTime)
             {
                 for (int i = 0; i < boxCount; ++i)
@@ -403,13 +554,24 @@ int main()
                 {
                     guy[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
                 }
+                
+                if (propManager.GetQueuedProps())
+                {
+                    propagating = true;   
+                }
                 changeTime = false;
                 absoluteTime = newTime;
-                absoluteTimeDirection = newTimeDirection;   
+                absoluteTimeDirection = newTimeDirection;
+                
+                resetParadox = propManager.UpdatePropagation();
                 continue;
             }
+            else
+            {
+                resetParadox = propManager.UpdatePropagation();
+            }
             
-            // progress asb time
+            // progress abs time
             absoluteTime = absoluteTime + absoluteTimeDirection;
 
             if (absoluteTime > MAX_TIME)
@@ -556,7 +718,7 @@ void LoadLevel (char* filePath)
 						//bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
 						//int absTime = atoi(guyData["ABS_TIME"].data());
 						//int relTime = atoi(guyData["REL_TIME"].data());
-						guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,start_time,start_direction);
+						guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0,start_time,start_direction,0);
 						guy[guyCount].SetOrder(guyCount);
 						guyCount++;
 					}

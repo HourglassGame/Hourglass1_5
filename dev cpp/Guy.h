@@ -25,7 +25,7 @@ public:
     void DrawSprite(int time); 
     void unDrawSprite();
     
-    void SetStart(double newX,double newY,double newXspeed,double newYspeed, int newCarryingBox, int rel_time,int abs_time, int direction); 
+    void SetStart(double newX,double newY,double newXspeed,double newYspeed, int newCarryingBox, int oldCarryBoxId, int rel_time,int abs_time, int direction, int newSubimage); 
     
     void TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection);
     

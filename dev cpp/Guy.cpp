@@ -219,7 +219,7 @@ void Guy::PhysicsStep(int time)
     {
         for (int i = 0; i < boxCount; ++i)
         {
-            if (box[i].GetActive(time))
+            if (box[i].GetActive(time) and !box[i].GetRequireCheck())
             {
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
@@ -329,7 +329,7 @@ void Guy::ReversePhysicsStep(int time)
     {
         for (int i = 0; i < boxCount; ++i)
         {
-            if (box[i].GetActive(time))
+            if (box[i].GetActive(time) and !box[i].GetRequireCheck())
             {
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
@@ -441,6 +441,7 @@ void Guy::UpdateBoxCarrying(int time)
                             {
                                 box[i] = MintConditionBox;
                                 dropReverseBoxID[time] = i;
+                                box[i].SetTimeDirection(-timeDirection);
                                 box[i].SetId(i);
                                 DeadBox[i] = false;
                                 createdBox = true;
@@ -450,6 +451,7 @@ void Guy::UpdateBoxCarrying(int time)
                         if (!createdBox)
                         {
                             box[boxCount].SetId(boxCount);
+                            box[boxCount].SetTimeDirection(-timeDirection);
                             dropReverseBoxID[time] = boxCount;
                             boxCount++;
                         }
@@ -499,7 +501,7 @@ void Guy::UpdateBoxCarrying(int time)
             if (oldCarryingBox == -1 and carryBoxId[time] == -1) // if I dropped a box last time
             {
                 DeadBox[dropReverseBoxID[time]] = true;
-                propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+                propManager.AddPropagation(time+timeDirection, timeDirection); // propagate into the my future
                 CheckForParadox(time, carryingBox[time],-1);
                 AddParadoxCheck(time, carryingBox[time],-1);
             }
@@ -542,7 +544,7 @@ void Guy::UpdateBoxCarrying(int time)
             }
             if (oldCarryingBox == 2 and carryingBox[time] != 2 and carryBoxId[time] == -1) // if I picked up a reverse box last time and did not this time
             {
-                propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into past
+                propManager.AddPropagation(time+timeDirection, timeDirection); // propagate into past
                 CheckForParadox(time, carryingBox[time],-1);
                 AddParadoxCheck(time, carryingBox[time],-1);
             }
@@ -575,11 +577,10 @@ void Guy::UpdateTimeTravel(int time)
         if (order+1 == guyCount)
         {
             int portTime = inputSpecialArg1[personalTime];
-            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0),relativeTime,portTime,timeDirection);
+            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0), carryBoxId[time],relativeTime,portTime,timeDirection,subimage[time]);
             guy[guyCount].SetOrder(guyCount);
 
-            absoluteTime = portTime;
-            propManager.AddPropagation(time,timeDirection);
+            propManager.PlayerTravel(portTime,timeDirection);
             
             AddImportantTime(time, carryingBox[time], portTime);
              
@@ -598,7 +599,7 @@ void Guy::UpdateTimeTravel(int time)
             {
                 CheckForParadox(time,carryingBox[time],portTime);
                 
-                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0),endRelTime,portTime,timeDirection);
+                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0), carryBoxId[time],endRelTime,portTime,timeDirection,subimage[time]);
  
                 propManager.AddPropagation(portTime,timeDirection);
                 
@@ -688,7 +689,7 @@ bool Guy::GetActive(int time)
     return (time*timeDirection > startAbsTime*timeDirection and (!endAbsTime or time*timeDirection <= endAbsTime*timeDirection));
 }
 
-void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int newCarryingBox,int rel_time,int abs_time, int direction)
+void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int newCarryingBox, int oldCarryBoxId,int rel_time,int abs_time, int direction, int newSubimage)
 {
     startRelTime = rel_time;
     startAbsTime = abs_time;
@@ -696,38 +697,47 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int
     y[abs_time] = newY;
     xSpeed[abs_time] = newXspeed;
     ySpeed[abs_time] = newYspeed;
+    subimage[abs_time] = newSubimage;
     
     timeDirection = direction;
     
-    if (newCarryingBox and !carryingBox[abs_time]) // create box
+    if (oldCarryBoxId == -1)
     {
-        for (int i = 0; i < boxCount; ++i)
+        carryBoxId[abs_time] = -1;
+        carryingBox[abs_time] = true;
+    }
+    else
+    {
+        if (newCarryingBox and !carryingBox[abs_time]) // create box
         {
-            if (DeadBox[i])
+            for (int i = 0; i < boxCount; ++i)
             {
-                box[i] = MintConditionBox;
-                box[i].SetTimeDirection(1);
-                carryBoxId[abs_time] = i;
-                box[i].SetId(i);
+                if (DeadBox[i])
+                {
+                    box[i] = MintConditionBox;
+                    box[i].SetTimeDirection(1);
+                    carryBoxId[abs_time] = i;
+                    box[i].SetId(i);
+                    carryingBox[abs_time] = true;
+                    DeadBox[i] = false;
+                    break;
+                }
+            }
+            if (!carryingBox[abs_time])
+            {
+                carryBoxId[abs_time] = boxCount;
+                box[boxCount].SetId(boxCount);
+                box[boxCount].SetTimeDirection(1);
                 carryingBox[abs_time] = true;
-                DeadBox[i] = false;
-                break;
+                boxCount++;
             }
         }
-        if (!carryingBox[abs_time])
+        else if (!newCarryingBox and carryingBox[abs_time]) // destroy a box
         {
-            carryBoxId[abs_time] = boxCount;
-            box[boxCount].SetId(boxCount);
-            box[boxCount].SetTimeDirection(1);
-            carryingBox[abs_time] = true;
-            boxCount++;
+            DeadBox[carryBoxId[abs_time]] = true;
+            carryingBox[abs_time] = false;
         }
-    }
-    else if (!newCarryingBox and carryingBox[abs_time]) // destroy a box
-    {
-        DeadBox[carryBoxId[abs_time]] = true;
-        carryingBox[abs_time] = false;
-    }
+}
     
     // set time offset based on direction, start abs time and start relative time
     if (direction == 1)
@@ -803,6 +813,11 @@ void Guy::DrawSprite(int time)
         {
             draw_sprite( buffer, box_sprite, drawX+BOX_CARRY_OFFSET_X,drawY+BOX_CARRY_OFFSET_Y);
             prevDrawHead = true;
+        }
+        
+        if (requireReverseCheck)
+        {
+            textout_ex( buffer, font, ":(", drawX+5, drawY+10, makecol( 255, 255, 0), makecol( 0, 0, 0) );   
         }
         
         prevDrawX = drawX;
