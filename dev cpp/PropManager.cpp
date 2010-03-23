@@ -1,10 +1,15 @@
 #include "PropManager.h"
 
+// variables (mainly) read from main
 extern bool propagating;
-extern bool exitGameStep;
 extern int absoluteTime;
 extern int absoluteTimeDirection;
 extern int relativeTime;
+
+// variables that main must know
+extern bool changeTime;
+extern int newTime;
+extern int newTimeDirection;
 
 const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
@@ -33,11 +38,11 @@ void PropManager::AddPropagation(int start_time, int direction)
             propStartTime[queuedProps] = start_time;
             propDirection[queuedProps] = direction;
             
-            absoluteTime = start_time;
-            absoluteTimeDirection = direction;
+            changeTime = true;
+            newTime = start_time;
+            newTimeDirection = direction;
             
             propagating = true;
-            exitGameStep = true;
             relativeTime++;
             queuedProps++;
         }
@@ -61,9 +66,10 @@ void PropManager::AddPropagation(int start_time, int direction)
                 propStartTime[queuedProps] = start_time;
                 propDirection[queuedProps] = direction;
                 
-                absoluteTime = start_time;
-                absoluteTimeDirection = direction;
-                exitGameStep = true;
+                changeTime = true;
+                newTime = start_time;
+                newTimeDirection = direction;
+                
                 queuedProps++;
             }
         }
@@ -94,8 +100,9 @@ bool PropManager::UpdatePropagation()
                 queuedProps--;
                 if (queuedProps)
                 {
-                    absoluteTime = propStartTime[queuedProps-1];
-                    absoluteTimeDirection = propDirection[queuedProps-1];
+                    changeTime = true;
+                    newTime = propStartTime[queuedProps-1];
+                    newTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
@@ -106,18 +113,20 @@ bool PropManager::UpdatePropagation()
         }
         else
         {
-            if ( (absoluteTime == 0 and propDirection[queuedProps-1] == -1) or (absoluteTime == MAX_TIME and propDirection[queuedProps-1] == 1) )
+            if ( (absoluteTime == 1 and propDirection[queuedProps-1] == -1) or (absoluteTime == MAX_TIME and propDirection[queuedProps-1] == 1) )
             {
                 queuedProps--;
                 if (queuedProps)
                 {
-                    absoluteTime = propStartTime[queuedProps-1];
-                    absoluteTimeDirection = propDirection[queuedProps-1];
+                    changeTime = true;
+                    newTime = propStartTime[queuedProps-1];
+                    newTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
-                    absoluteTime = presentTime;
-                    absoluteTimeDirection = presentDirection;
+                    changeTime = true;
+                    newTime = presentTime;
+                    newTimeDirection = presentDirection;
                     
                     propagating = false;
                     return true;

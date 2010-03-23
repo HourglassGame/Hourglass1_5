@@ -8,6 +8,8 @@ extern BITMAP* background;
 extern BITMAP* foreground;
 extern BITMAP* buffer;
 
+const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
+
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
 const int LEVEL_HEIGHT = 19;
@@ -180,6 +182,11 @@ bool Box::GetSupported(int time)
 {
     return supported[time];   
 }
+
+void Box::SetTimeDirection(int newDirection)
+{
+    timeDirection = newDirection;
+}
 int Box::GetTimeDirection()
 {
     return timeDirection;
@@ -284,6 +291,10 @@ bool Box::GetActive(int time)
     return (!DeadBox[id] and exist[time]);
 }
 
+void Box::TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection)
+{
+    
+}
 
 void Box::SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time,int direction)
 {

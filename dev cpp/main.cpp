@@ -26,8 +26,10 @@ int absoluteTimeDirection; // -1 = backward, 0 = pause, 1 = forward
 // the time which propagation will stop at
 int propagating;
 
-// exits the step if true, used by propmanager
-bool exitGameStep;
+// read variables from prop manager
+bool changeTime;
+int newTime;
+int newTimeDirection;
 
 const int MAX_GUYS = 200;
 const int MAX_BOXES = 200;
@@ -269,6 +271,21 @@ int main()
             // returns true if propagation has just ended
             
             bool resetParadox = propManager.UpdatePropagation();
+            if (changeTime)
+            {
+                for (int i = 0; i < boxCount; ++i)
+                {
+                    box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+                }
+                for (int i = 0; i < guyCount; ++i)
+                {
+                    guy[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+                }
+                changeTime = false;
+                absoluteTime = newTime;
+                absoluteTimeDirection = newTimeDirection;   
+            }
+            
             // get input if not propagating
             if (!propagating)
             {
@@ -375,13 +392,24 @@ int main()
                 Draw();
             }
             
-            
-            if (exitGameStep)
+            // if a propgation has been added that requires a time change time will be changed here
+            if (changeTime)
             {
-                exitGameStep = false;
-                continue;  
+                for (int i = 0; i < boxCount; ++i)
+                {
+                    box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+                }
+                for (int i = 0; i < guyCount; ++i)
+                {
+                    guy[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+                }
+                changeTime = false;
+                absoluteTime = newTime;
+                absoluteTimeDirection = newTimeDirection;   
+                continue;
             }
             
+            // progress asb time
             absoluteTime = absoluteTime + absoluteTimeDirection;
 
             if (absoluteTime > MAX_TIME)

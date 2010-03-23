@@ -44,6 +44,8 @@ extern int absoluteTimeDirection;
 
 extern bool paradoxTriggered;
 
+const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
+
 // physics magic numbers
 const double MOVE_SPEED = 4;
 const double JUMP_SPEED = 8;
@@ -59,6 +61,7 @@ const int GUY_COLLISION_HEIGHT = 32;
 
 // Input Storing
 static bool leftMousePressed;
+static bool rightMousePressed;
     
 static bool inputLeft[9000];
 static bool inputRight[9000];
@@ -76,6 +79,7 @@ Guy::Guy()
     
 }
 
+// Static functions
 void Guy::StoreInput(int time)
 {
     inputLeft[time] = key[KEY_A];
@@ -95,9 +99,23 @@ void Guy::StoreInput(int time)
     else
     {
         leftMousePressed = false;
-    }    
+    }  
+    
+    if (mouse_b & 2) // right mouse is pressed
+    {
+        if (!rightMousePressed)
+        {
+            inputSpecial[time] = 2;
+        }
+        rightMousePressed = true;
+    }
+    else
+    {
+        rightMousePressed = false;
+    }   
 }
 
+// Mini return functions
 double Guy::GetX(int time)
 {
     return x[time];
@@ -140,6 +158,7 @@ void Guy::SetId(int newId)
     id = newId;
 }
 
+// Physics functions
 void Guy::PhysicsStep(int time)
 {
     // input is in relative time
@@ -354,13 +373,22 @@ void Guy::ReversePhysicsStep(int time)
     {
         if (requireReverseCheck)
         {
-            requireReverseCheck = false;
+            requireReverseCheck = 0;
             propManager.AddPropagation(time-timeDirection,timeDirection);
         }
     }
     else
     {
-        requireReverseCheck = true;
+        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == MAX_TIME and timeDirection == -1))
+        {
+            // propagate new position if end of time is reached regardless of reverse check
+            requireReverseCheck = false;
+            propManager.AddPropagation(time-timeDirection,timeDirection);   
+        }
+        else
+        {
+            requireReverseCheck = time;
+        }
     }
     
 }
@@ -395,7 +423,9 @@ void Guy::UpdateBoxCarrying(int time)
                 
             }
             else // If I am carrying a box with an opposite direction as I am
-            { 
+            {
+                
+                carryBoxId[time] = -1;
                 if (Box::CanDropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time)) // if the box is able to be dropped
                 {
                     if (carryingBox[time] != -1) // if I did not drop a box last time this time was observed
@@ -456,6 +486,13 @@ void Guy::UpdateBoxCarrying(int time)
         {
             int oldCarryingBox = carryingBox[time];
             carryingBox[time] = 0;
+            
+            if (oldCarryingBox == -1 and carryBoxId[time] == -1) // if I dropped a box last time
+            {
+                DeadBox[dropReverseBoxID[time]] = true;
+                propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+            }
+            
             //check against all boxes for ones able to be picked up.
             for (int i = 0; i < boxCount; ++i)
             {
@@ -465,6 +502,7 @@ void Guy::UpdateBoxCarrying(int time)
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
                     if (( x[time] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
+                    // if there is a box able to be picked up
                     {
                         box[i].SetExist(time,false);
                         
@@ -489,10 +527,11 @@ void Guy::UpdateBoxCarrying(int time)
                 }
  
             }
-            if (oldCarryingBox == 2 and carryingBox[time] != 2 and carryBoxId[time] == -1)
+            if (oldCarryingBox == 2 and carryingBox[time] != 2 and carryBoxId[time] == -1) // if I picked up a reverse box last time and did not this time
             {
                 propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into past
             }
+            
         }
     }
     else // down was not just pressed
@@ -510,10 +549,11 @@ void Guy::UpdateBoxCarrying(int time)
     
 }
 
+// updates time travel changes from special input
 void Guy::UpdateTimeTravel(int time)
 {
     int personalTime = time*timeDirection+timeOffset;
- // time travel
+    // time travel
         
     if (inputSpecial[personalTime] == 1)
     {
@@ -526,12 +566,7 @@ void Guy::UpdateTimeTravel(int time)
             absoluteTime = portTime;
             propManager.AddPropagation(time,timeDirection);
             
-            departureX = int(x[time]);
-            departureY = int(y[time]);
-            departureXspeed = int(xSpeed[time]);
-            departureYspeed = int(ySpeed[time]);
-            departureCarrying = carryingBox[time];
-            depatureTimeDestination = portTime;
+            AddImportantTime(time, carryingBox[time], portTime);
              
             guyCount++;
             
@@ -542,37 +577,19 @@ void Guy::UpdateTimeTravel(int time)
         {
             endAbsTime = time;
             
-            if (departureX != int(x[time]) or departureY != int(y[time]) or departureXspeed != int(xSpeed[time]) or departureYspeed != int(ySpeed[time]) or departureCarrying != carryingBox[time])
+            int portTime = inputSpecialArg1[personalTime];
+            
+            if (TimeDiffersFromImportantTime(time,portTime))
             {
-                for (int i = 0; i < paradoxChecks; ++i)
-                {
-                    if (departureX == paradoxCheckX[i] and departureY == paradoxCheckY[i] and departureXspeed == paradoxCheckXspeed[i] and departureYspeed == paradoxCheckYspeed[i] and departureCarrying == paradoxCheckCarrying[i])
-                    {
-                        if (!paradoxTriggered)
-                        {
-                            allegro_message("PARADOX! (foo)", allegro_error);
-                        }
-                        paradoxTriggered = true;
-                        break;
-                    }
-                }
+                CheckForParadox(time, portTime);
                 
-                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0),endRelTime,depatureTimeDestination,timeDirection);
+                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0),endRelTime,portTime,timeDirection);
  
-                propManager.AddPropagation(depatureTimeDestination,timeDirection);
+                propManager.AddPropagation(portTime,timeDirection);
                 
-                paradoxCheckX[paradoxChecks] = departureX;
-                paradoxCheckY[paradoxChecks] = departureY;
-                paradoxCheckXspeed[paradoxChecks] = departureXspeed;
-                paradoxCheckYspeed[paradoxChecks] = departureYspeed;
-                paradoxCheckCarrying[paradoxChecks] = departureCarrying;
-                paradoxChecks++;
-                
-                departureX = int(x[time]);
-                departureY = int(y[time]);
-                departureXspeed = int(xSpeed[time]);
-                departureYspeed = int(ySpeed[time]);
-                departureCarrying = carryingBox[time];
+                AddParadoxCheck(time, carryingBox[time], portTime);
+
+                AddImportantTime(time, carryingBox[time], portTime);
             }
             
             
@@ -580,14 +597,84 @@ void Guy::UpdateTimeTravel(int time)
     }    
 }
 
-bool Guy::GetActive(int time)
+// paradox stuff
+void Guy::CheckForParadox(int time, int otherTime)
 {
-    return (time*timeDirection > startAbsTime*timeDirection and (!endAbsTime or time*timeDirection <= endAbsTime*timeDirection));
+    // checks data at time against paradox data at time for equal data. Equal data = paradox triggered
+    if (!importantTime[time])
+    {
+        allegro_message("Paradox checking unimportant time");
+    }
+    
+    //allegro_message("bla");
+    for (int i = 0; i < paradoxChecks; ++i)
+    {
+        if (time == paradoxCheckTime[i] and int(x[time]) == paradoxCheckX[i] and int(y[time]) == paradoxCheckY[i] and int(xSpeed[time]) == paradoxCheckXspeed[i] and  int(ySpeed[time]) == paradoxCheckYspeed[i] and carryingBox[time] == paradoxCheckCarrying[i] and otherTime == paradoxCheckOtherTime[i])
+        {
+            if (!paradoxTriggered)
+            {
+                allegro_message("PARADOX! (foo)", allegro_error);
+            }
+            paradoxTriggered = true;
+            break;
+        }
+    }  
+}
+
+void Guy::AddParadoxCheck(int time, int boxCarry, int otherTime)
+{
+    // adds paradox data at time from data at time
+    paradoxCheckTime[paradoxChecks] = time;
+    paradoxCheckX[paradoxChecks] = int(x[time]);
+    paradoxCheckY[paradoxChecks] = int(y[time]);
+    paradoxCheckXspeed[paradoxChecks] = int(xSpeed[time]);
+    paradoxCheckYspeed[paradoxChecks] = int(ySpeed[time]);
+    paradoxCheckCarrying[paradoxChecks] = boxCarry;
+    paradoxCheckOtherTime[paradoxChecks] = otherTime;
+    paradoxChecks++;
+}
+
+void Guy::AddImportantTime(int time, int boxCarry, int otherTime)
+{
+    // adds important time data at time
+    importantTime[time] = true;
+    importantX[time] = int(x[time]);
+    importantY[time] = int(y[time]);
+    importantXspeed[time] = int(xSpeed[time]);
+    importantYspeed[time] = int(ySpeed[time]);
+    importantCarrying[time] = boxCarry;
+    importantOtherTime[time] = otherTime;
+}
+
+bool Guy::TimeDiffersFromImportantTime(int time, int otherTime)
+{
+    // checks if data at time differs from important data at time
+    return (importantTime[time] and (importantX[time] != int(x[time]) or importantY[time] != int(y[time]) or importantXspeed[time] != int(xSpeed[time]) or importantYspeed[time] != int(ySpeed[time]) or importantCarrying[time] != carryingBox[time] or importantOtherTime[time] != otherTime));
+}
+
+void Guy::TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection)
+{
+    // fixes any achronal variables that could mess with things during time travel
+    if (oldTimeDir != newTimeDirection and requireReverseCheck)
+    {
+        requireReverseCheck = false;
+        return;
+    }
+    if (oldTimeDir != timeDirection and requireReverseCheck and newTime*timeDirection > requireReverseCheck*timeDirection)
+    {
+        requireReverseCheck = false;
+    }
 }
 
 void Guy::ResetParadoxChecking()
 {
     paradoxChecks = 0;
+}
+
+//
+bool Guy::GetActive(int time)
+{
+    return (time*timeDirection > startAbsTime*timeDirection and (!endAbsTime or time*timeDirection <= endAbsTime*timeDirection));
 }
 
 void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int newCarryingBox,int rel_time,int abs_time, int direction)
@@ -608,6 +695,7 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int
             if (DeadBox[i])
             {
                 box[i] = MintConditionBox;
+                box[i].SetTimeDirection(1);
                 carryBoxId[abs_time] = i;
                 box[i].SetId(i);
                 carryingBox[abs_time] = true;
@@ -619,6 +707,7 @@ void Guy::SetStart(double newX,double newY,double newXspeed,double newYspeed,int
         {
             carryBoxId[abs_time] = boxCount;
             box[boxCount].SetId(boxCount);
+            box[boxCount].SetTimeDirection(1);
             carryingBox[abs_time] = true;
             boxCount++;
         }

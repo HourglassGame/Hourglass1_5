@@ -27,9 +27,10 @@ public:
     
     void SetStart(double newX,double newY,double newXspeed,double newYspeed, int newCarryingBox, int rel_time,int abs_time, int direction); 
     
+    void TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection);
+    
     void PhysicsStep(int time);
     void ReversePhysicsStep(int time);
-    
     
     void UpdateBoxCarrying(int time);
     void UpdateTimeTravel(int time);
@@ -37,6 +38,8 @@ public:
     static void StoreInput(int time);
 
 private:
+    
+
 
     int id; // array number in guy array
     
@@ -53,24 +56,41 @@ private:
     double xSpeed[5400];
     double ySpeed[5400];
     
-    // departure variables
-    int departureX;
-    int departureY;
-    int departureXspeed;
-    int departureYspeed;
-    bool departureCarrying;
+    // paradox checking functions
     
-    int depatureTimeDestination;
+    // checks data at time against paradox data at time for equal data. Equal data = paradox triggered
+    void CheckForParadox(int time, int otherTime); 
     
+    // adds paradox data at time from data at time
+    void AddParadoxCheck(int time, int boxCarry, int otherTime);
+    
+    // adds important time data at time
+    void AddImportantTime(int time, int boxCarry, int otherTime);
+    
+    // checks if data at time differs from important data at time
+    bool TimeDiffersFromImportantTime(int time, int otherTime);
+    
+    // important times, for paradox checking
+    int importantTime[5400];
+    int importantX[5400];
+    int importantY[5400];
+    int importantXspeed[5400];
+    int importantYspeed[5400];
+    int importantCarrying[5400];
+    int importantOtherTime[5400];
+    
+    // previous paradox information
+    int paradoxCheckTime[50];
     int paradoxCheckX[50];
     int paradoxCheckY[50];
     int paradoxCheckXspeed[50];
     int paradoxCheckYspeed[50];
-    bool paradoxCheckCarrying[50];
+    int paradoxCheckCarrying[50];
+    int paradoxCheckOtherTime[50]; // for checking destination, -1 if no check is wanted
     int paradoxChecks;
     
     // for undetermined reverse time guys. set in ReversePhysicsStep
-    bool requireReverseCheck;
+    int requireReverseCheck;
     
     // start times, for spawning
     int startAbsTime;

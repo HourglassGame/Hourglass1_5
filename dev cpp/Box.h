@@ -22,10 +22,13 @@ public:
     void unDrawSprite();
 
     int GetTimeDirection();
+    void SetTimeDirection(int newDirection);
+    
     bool GetSupported(int time);
     
     void SetStart(double newX,double newY,double newXspeed,double newYspeed,int abs_time, int direction); 
-    void SetEnd(int newEndType, int abs_time);
+    
+    void TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection);
     
     void SetExist(int abs_time,bool state);
     bool GetExist(int abs_time);
