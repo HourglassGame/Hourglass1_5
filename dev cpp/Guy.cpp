@@ -375,7 +375,7 @@ void Guy::ReversePhysicsStep(int time)
         if (requireReverseCheck)
         {
             requireReverseCheck = 0;
-            propManager.AddPropagation(time-timeDirection,timeDirection);
+            propManager.AddPropagation(time,timeDirection);
         }
     }
     else
@@ -384,7 +384,7 @@ void Guy::ReversePhysicsStep(int time)
         {
             // propagate new position if end of time is reached regardless of reverse check
             requireReverseCheck = false;
-            propManager.AddPropagation(time-timeDirection,timeDirection);   
+            propManager.AddPropagation(time,timeDirection);   
         }
         else
         {

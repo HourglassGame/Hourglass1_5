@@ -233,7 +233,7 @@ int main()
     
     // determine backwards boxes
     // these boxes can disrupt the forwards boxes
-    absoluteTime = MAX_TIME+1;
+    absoluteTime = MAX_TIME-1;
     absoluteTimeDirection = -1;
     
     while (absoluteTime > 0)

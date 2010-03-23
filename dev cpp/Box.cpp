@@ -368,14 +368,14 @@ void Box::ReversePhysicsStep(int time)
     }
         
     collideable = true;
-    /* fix me
+    
     // check against old data
     if (newX == x[time] and newY == y[time] and newXspeed == xSpeed[time] and newYspeed == ySpeed[time] and newSupported == supported[time])
     {
         if (requireReverseCheck)
         {
             requireReverseCheck = 0;
-            propManager.AddPropagation(time-timeDirection,timeDirection);
+            propManager.AddPropagation(time,timeDirection);
         }
     }
     else
@@ -384,14 +384,14 @@ void Box::ReversePhysicsStep(int time)
         {
             // propagate new position if end of time is reached regardless of reverse check
             requireReverseCheck = false;
-            propManager.AddPropagation(time-timeDirection,timeDirection);   
+            propManager.AddPropagation(time,timeDirection);   
         }
         else
         {
             requireReverseCheck = time;
         }
     }
-    */
+    
 }
 
 bool Box::GetActive(int time)
