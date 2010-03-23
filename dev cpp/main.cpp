@@ -36,7 +36,7 @@ const int MAX_BOXES = 200;
 
 const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
-const bool VIEW_PROPAGATION = true;
+bool viewPropagation = true;
 
 PropManager propManager;
 
@@ -248,7 +248,7 @@ int main()
         finish_timer = clock();
         elapsed_time = (double(finish_timer)-double(start_timer));
         
-        if (elapsed_time >= step_interval or (propagating and !VIEW_PROPAGATION )) 
+        if (elapsed_time >= step_interval or (propagating and !viewPropagation )) 
         {
             start_timer = clock();
             // float to string:
@@ -331,7 +331,7 @@ int main()
                     activeBoxes++;
                 }
                 
-                if (!propagating or VIEW_PROPAGATION)
+                if (!propagating or viewPropagation)
                 {
                     box[i].unDrawSprite();
                 }
@@ -359,7 +359,7 @@ int main()
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
                 }
-                if (!propagating or VIEW_PROPAGATION)
+                if (!propagating or viewPropagation)
                 {
                     guy[i].unDrawSprite();
                 }
@@ -375,7 +375,7 @@ int main()
             }
             
             // Most of drawing
-            if (!propagating or VIEW_PROPAGATION)
+            if (!propagating or viewPropagation)
             {
                 for (int i = 0; i < boxCount; ++i)
                 {

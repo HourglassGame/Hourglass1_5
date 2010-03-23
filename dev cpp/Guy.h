@@ -59,14 +59,11 @@ private:
     // paradox checking functions
     
     // checks data at time against paradox data at time for equal data. Equal data = paradox triggered
-    void CheckForParadox(int time, int otherTime); 
-    
+    void CheckForParadox(int time, int boxCarry, int otherTime); 
     // adds paradox data at time from data at time
     void AddParadoxCheck(int time, int boxCarry, int otherTime);
-    
     // adds important time data at time
     void AddImportantTime(int time, int boxCarry, int otherTime);
-    
     // checks if data at time differs from important data at time
     bool TimeDiffersFromImportantTime(int time, int otherTime);
     

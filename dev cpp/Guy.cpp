@@ -43,6 +43,7 @@ extern int absoluteTime;
 extern int absoluteTimeDirection;
 
 extern bool paradoxTriggered;
+extern bool viewPropagation;
 
 const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
 
@@ -401,7 +402,7 @@ void Guy::UpdateBoxCarrying(int time)
     //pickup or drop box
     if (inputDown[personalTime] and !inputDown[personalTime-1]) // down was just pressed
     {
-         
+                
         if (carryingBox[time-timeDirection] > 0) // If I am carrying a box
         {
             if (carryBoxId[time-timeDirection] != -1) // If I am carrying a box that has the same direction as I do
@@ -416,6 +417,8 @@ void Guy::UpdateBoxCarrying(int time)
                     if (timeDirection != absoluteTimeDirection) // If my time direction is opposite the absolute direction
                     {
                         propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+                        CheckForParadox(time, carryingBox[time],-1);
+                        AddParadoxCheck(time, carryingBox[time],-1);
                     }
                     carryingBox[time] = 1; // do not drop box
                     carryBoxId[time] = carryBoxId[time-timeDirection];
@@ -453,6 +456,8 @@ void Guy::UpdateBoxCarrying(int time)
                         //
                         box[dropReverseBoxID[time]].DropBox(x[time]+BOX_CARRY_OFFSET_X,y[time]+BOX_CARRY_OFFSET_Y,0,0,time); // set box start positon
                         propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+                        CheckForParadox(time, carryingBox[time],-1);
+                        AddParadoxCheck(time, carryingBox[time],-1);
                     }
                     else // if I did create a box last time
                     {
@@ -466,6 +471,8 @@ void Guy::UpdateBoxCarrying(int time)
                         if (oldX != box[id].GetX(time) or oldY != box[id].GetY(time) or oldXspeed != box[id].GetXspeed(time) or oldYspeed != box[id].GetYspeed(time))
                         {
                             propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+                            CheckForParadox(time, carryingBox[time],-1);
+                            AddParadoxCheck(time, carryingBox[time],-1);
                         }
                     }
                     carryingBox[time] = -1; // set not carrying box
@@ -477,6 +484,8 @@ void Guy::UpdateBoxCarrying(int time)
                         //destroy the box
                         DeadBox[dropReverseBoxID[time]] = true;
                         propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+                        CheckForParadox(time, carryingBox[time],-1);
+                        AddParadoxCheck(time, carryingBox[time],-1);
                     }
                     carryingBox[time] = 1; // set carrying box
                 }
@@ -491,6 +500,8 @@ void Guy::UpdateBoxCarrying(int time)
             {
                 DeadBox[dropReverseBoxID[time]] = true;
                 propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into the past
+                CheckForParadox(time, carryingBox[time],-1);
+                AddParadoxCheck(time, carryingBox[time],-1);
             }
             
             //check against all boxes for ones able to be picked up.
@@ -509,6 +520,8 @@ void Guy::UpdateBoxCarrying(int time)
                         if (oldCarryingBox != 2 and (box[i].GetTimeDirection() != absoluteTimeDirection or timeDirection != absoluteTimeDirection) )
                         {
                             propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into past
+                            CheckForParadox(time, carryingBox[time],-1);
+                            AddParadoxCheck(time, carryingBox[time],-1);
                         }
                         
                         // set carrying box ID
@@ -530,6 +543,8 @@ void Guy::UpdateBoxCarrying(int time)
             if (oldCarryingBox == 2 and carryingBox[time] != 2 and carryBoxId[time] == -1) // if I picked up a reverse box last time and did not this time
             {
                 propManager.AddPropagation(time-absoluteTimeDirection, -absoluteTimeDirection); // propagate into past
+                CheckForParadox(time, carryingBox[time],-1);
+                AddParadoxCheck(time, carryingBox[time],-1);
             }
             
         }
@@ -581,7 +596,7 @@ void Guy::UpdateTimeTravel(int time)
             
             if (TimeDiffersFromImportantTime(time,portTime))
             {
-                CheckForParadox(time, portTime);
+                CheckForParadox(time,carryingBox[time],portTime);
                 
                 guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0),endRelTime,portTime,timeDirection);
  
@@ -598,21 +613,17 @@ void Guy::UpdateTimeTravel(int time)
 }
 
 // paradox stuff
-void Guy::CheckForParadox(int time, int otherTime)
+void Guy::CheckForParadox(int time, int boxCarry, int otherTime)
 {
-    // checks data at time against paradox data at time for equal data. Equal data = paradox triggered
-    if (!importantTime[time])
-    {
-        allegro_message("Paradox checking unimportant time");
-    }
     
     //allegro_message("bla");
     for (int i = 0; i < paradoxChecks; ++i)
     {
-        if (time == paradoxCheckTime[i] and int(x[time]) == paradoxCheckX[i] and int(y[time]) == paradoxCheckY[i] and int(xSpeed[time]) == paradoxCheckXspeed[i] and  int(ySpeed[time]) == paradoxCheckYspeed[i] and carryingBox[time] == paradoxCheckCarrying[i] and otherTime == paradoxCheckOtherTime[i])
+        if (time == paradoxCheckTime[i] and int(x[time]) == paradoxCheckX[i] and int(y[time]) == paradoxCheckY[i] and int(xSpeed[time]) == paradoxCheckXspeed[i] and  int(ySpeed[time]) == paradoxCheckYspeed[i] and boxCarry == paradoxCheckCarrying[i] and otherTime == paradoxCheckOtherTime[i])
         {
             if (!paradoxTriggered)
             {
+                viewPropagation = true;
                 allegro_message("PARADOX! (foo)", allegro_error);
             }
             paradoxTriggered = true;
