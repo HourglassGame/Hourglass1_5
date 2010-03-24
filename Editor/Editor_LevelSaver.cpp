@@ -49,22 +49,7 @@ void LevelSaver::DoSaveLevel(Level* level, const std::string fileName)
 	{
 		if (dynamic_cast<Guy*>(object) != NULL)
 		{
-			outputFile << "<GUY>\n";
-			int xPos;
-			int yPos;
-			double xSpeed;
-			double ySpeed;
-			unsigned int startTime;
-			AbsoluteTimeDirectionEnum atd;
-			object->GetData(xPos, yPos, xSpeed, ySpeed);
-			dynamic_cast<Guy*>(object)->GetTimeData(startTime, atd);
-			outputFile << "X_POS=" << xPos << '\n';
-			outputFile << "Y_POS=" << yPos << '\n';
-			outputFile << "X_SPEED=" << xSpeed << '\n';
-			outputFile << "Y_SPEED=" << ySpeed << '\n';
-			outputFile << "START_TIME=" << startTime  << '\n';
-			outputFile << "START_DIRECTION=" <<  (atd == PAUSED ? "0" : (atd == BACKWARDS ? "-1" : "1")) << '\n';
-			outputFile << "</GUY>\n";
+			outputFile << (object->GetOutputString()).c_str() << "\n";
 		}
 	}
 	outputFile << "</GUYS>\n";
@@ -74,17 +59,7 @@ void LevelSaver::DoSaveLevel(Level* level, const std::string fileName)
 	{
 		if (dynamic_cast<Box*>(object) != NULL)
 		{
-			outputFile << "<BOX>\n";
-			int xPos;
-			int yPos;
-			double xSpeed;
-			double ySpeed;
-			object->GetData(xPos, yPos, xSpeed, ySpeed);
-			outputFile << "X_POS=" << xPos << '\n';
-			outputFile << "Y_POS=" << yPos << '\n';
-			outputFile << "X_SPEED=" << xSpeed << '\n';
-			outputFile << "Y_SPEED=" << ySpeed << '\n';
-			outputFile << "</BOX>\n";
+			outputFile << (object->GetOutputString()).c_str() << "\n";
 		}
 	}
 	outputFile << "</BOXES>";

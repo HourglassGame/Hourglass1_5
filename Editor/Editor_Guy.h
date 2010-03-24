@@ -1,14 +1,15 @@
 #ifndef HOURGLASS_GUY_H
 #define HOURGLASS_GUY_H
 
-#include "Editor_Object.h" // inheriting class's header file
+#include "Editor_TimeDirectionObject.h" // inheriting class's header file
+#include "Editor_MobileObject.h"
 #include "Editor_IntField.h"
-#include "Editor_DoubleField.h"
 #include "Editor_AbsoluteTimeDirectionEnum.h"
+#include <string>
 /*
  * No description
  */
-class Guy : public Object
+class Guy : public TimeDirectionObject, public MobileObject
 {
 public:
 	// class constructor
@@ -16,20 +17,18 @@ public:
 	// class destructor
 	~Guy();
 	void DoDraw();
-	int GetType();
 	int GetXSize();
 	int GetYSize();
-	void GetTimeData(unsigned int& startingTime, AbsoluteTimeDirectionEnum& atd);
+	std::string GetOutputString();
 	void DoGui();
 private:
+	std::string GetOutputStringParts();
 	static const int WIDTH = 24;
 	static const int HEIGHT = 32;
 	unsigned int startTime; //When the guy spawns
-	AbsoluteTimeDirectionEnum direction;
-	IntField startTimeField;
-	DoubleField startDirectionField; //TODO - do it properly, this is incredibly dodgy.
-									 //ATM I just want to make compatibility and can't be bothered with coding 
-									 //a drop-down menu or anything.
+	void InitGui();
+	void UpdateGui();
+	IntField startTimeField;	
 };
 
 #endif // GUY_H
