@@ -604,7 +604,7 @@ bool DetermineLevel()
             
         sprintf(testString,"%d",propManager.GetQueuedProps());
         textout_ex( buffer, font, testString, 150, 160, makecol( 255, 255, 0), makecol( 0, 0, 0) );
-         
+        
         
          for (int i = 0; i < boxCount; ++i)
         {
@@ -616,7 +616,7 @@ bool DetermineLevel()
             box[i].DrawSprite(absoluteTime);
         }   
         Draw();
-        */
+         */
         // if a propgation has been added that requires a time change time will be changed here
         if (changeTime)
         {
@@ -633,19 +633,13 @@ bool DetermineLevel()
         // progress asb time
         
         absoluteTime = absoluteTime + absoluteTimeDirection;
-
-
-        if (absoluteTime < 1)
-        {
-            break;
-        }
         
     }
     
     // copy boxes for future comparison
     for (int i = 0; i < boxCount; ++i)
     {
-        box[i+boxCount+1] = box[i];
+        box[i+boxCount] = box[i];
         if (box[i].GetTimeDirection() == 1)
         {
             double x = box[i].GetX(0);
@@ -838,12 +832,6 @@ bool DetermineLevel()
         // progress asb time
         
         absoluteTime = absoluteTime + absoluteTimeDirection;
-
-
-        if (absoluteTime < 1)
-        {
-            break;
-        }
         
     }
     
@@ -851,9 +839,9 @@ bool DetermineLevel()
     // check reverse-first against forwards-first
     for (int i = 0; i < boxCount; ++i)
     {
-        for (int time = 0; time <= maxTime; time++)
+        for (int time = 0; time < maxTime; time++)
         {
-            int copyId = i + boxCount + 1;
+            int copyId = i + boxCount;
             if (box[i].GetX(time) != box[copyId].GetX(time) or box[i].GetY(time) != box[copyId].GetY(time) or box[i].GetXspeed(time) != box[copyId].GetXspeed(time) or box[i].GetYspeed(time) != box[copyId].GetYspeed(time) or box[i].GetSupported(time) != box[copyId].GetSupported(time) )
             {
                 return false; // load level not possible
