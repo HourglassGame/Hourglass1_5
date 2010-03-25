@@ -45,7 +45,7 @@ extern int absoluteTimeDirection;
 extern bool paradoxTriggered;
 extern bool viewPropagation;
 
-const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
+extern int maxTime; // max time on level
 
 // physics magic numbers
 const double MOVE_SPEED = 4;
@@ -380,7 +380,7 @@ void Guy::ReversePhysicsStep(int time)
     }
     else
     {
-        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == MAX_TIME and timeDirection == -1))
+        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == maxTime and timeDirection == -1))
         {
             // propagate new position if end of time is reached regardless of reverse check
             requireReverseCheck = false;
@@ -514,7 +514,7 @@ void Guy::UpdateBoxCarrying(int time)
                 {
                     double boxX = box[i].GetX(time);
                     double boxY = box[i].GetY(time);
-                    if (( x[time] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
+                    if (!box[i].GetRequireCheck() and ( x[time] < boxX+Box::BOX_WIDTH) and (x[time]+GUY_COLLISION_WIDTH > boxX) and ( y[time]+GUY_COLLISION_HEIGHT > boxY) and (y[time] < boxY+Box::BOX_HEIGHT) )     
                     // if there is a box able to be picked up
                     {
                         box[i].SetExist(time,false);
@@ -812,6 +812,10 @@ void Guy::DrawSprite(int time)
         if (carryingBox[time] > 0)
         {
             draw_sprite( buffer, box_sprite, drawX+BOX_CARRY_OFFSET_X,drawY+BOX_CARRY_OFFSET_Y);
+            if (carryingBox[time] == -1)
+            {
+                textout_ex( buffer, font, "R", drawX+BOX_CARRY_OFFSET_X+10, drawY+BOX_CARRY_OFFSET_Y+10, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+            }
             prevDrawHead = true;
         }
         

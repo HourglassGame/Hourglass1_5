@@ -35,7 +35,7 @@ int newTimeDirection;
 const int MAX_GUYS = 200;
 const int MAX_BOXES = 200;
 
-const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
+int maxTime = 1500; // max abs time, no larger than 5400 or classes will need changing
 
 bool viewPropagation = true;
 bool waitForDraw = false; // stalls for a frame to give drawing time between jumps
@@ -104,6 +104,7 @@ void Draw();
 void StringAdd(const char* string1,const char* string2, char* newString);
 BITMAP* LoadImage(const char* imageName);
 void TestLevel(double squareSize);
+bool DetermineLevel();
 void LoadLevel (char* filePath);
 void MakeLevelFile(char* outputPath);
 
@@ -182,159 +183,11 @@ int main()
        return (1); // Could not load level     
     }
 
-    // Determine Level
     
-    // determine forwards boxes
-    relativeTime = 1;
-    absoluteTime = 1;
-    absoluteTimeDirection = 1;
-    
-    while (absoluteTime <= MAX_TIME)
+    if (!DetermineLevel())
     {
-        // boxes
-        int activeBoxes = 0;
-		int activeBoxOrder[MAX_BOXES];
- 
-        for (int i = 0; i < boxCount; ++i)
-        {
-            if (box[i].GetTimeDirection() == absoluteTimeDirection)
-            {
-                box[i].UpdateExist(absoluteTime);
-                box[i].SetCollideable(false);
-                    
-                if (box[i].GetActive(absoluteTime) )
-                {
-                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
-                    activeBoxOrder[activeBoxes] = i;
-                    for (int j = 0; j < activeBoxes; ++j)
-                    {
-                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
-                        {
-                            for (int k = activeBoxes; k > j; --k)
-                            {
-                                   activeBoxOrder[k] = activeBoxOrder[k-1];
-                            }
-                            activeBoxOrder[j] = i;
-                            break;
-                        }
-                    }
-                    activeBoxes++;
-                }
-            }
-        }
-        
-        for (int i = 0; i < activeBoxes; ++i)
-        {
-            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
-        }
-        
-        absoluteTime = absoluteTime + absoluteTimeDirection;
-    }
-    
-    // determine backwards boxes
-    // these boxes can disrupt the forwards boxes
-    absoluteTime = MAX_TIME-1;
-    absoluteTimeDirection = -1;
-    
-    while (absoluteTime > 0)
-    {
-        // boxes
-        int activeBoxes = 0;
-		int activeBoxOrder[MAX_BOXES];
- 
-        for (int i = 0; i < boxCount; ++i)
-        {
-            if (box[i].GetTimeDirection() == absoluteTimeDirection)
-            {
-                box[i].UpdateExist(absoluteTime);
-                box[i].SetCollideable(false);
-                    
-                if (box[i].GetActive(absoluteTime) )
-                {
-                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
-                    activeBoxOrder[activeBoxes] = i;
-                    for (int j = 0; j < activeBoxes; ++j)
-                    {
-                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
-                        {
-                            for (int k = activeBoxes; k > j; --k)
-                            {
-                                   activeBoxOrder[k] = activeBoxOrder[k-1];
-                            }
-                            activeBoxOrder[j] = i;
-                            break;
-                        }
-                    }
-                    activeBoxes++;
-                }
-            }
-        }
-        
-        for (int i = 0; i < activeBoxes; ++i)
-        {
-            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
-        }
-        
-        // reverse boxes
-        activeBoxes = 0;
-		activeBoxOrder[MAX_BOXES];
- 
-        for (int i = 0; i < boxCount; ++i)
-        {
-            if (box[i].GetTimeDirection() != absoluteTimeDirection)
-            {
-                box[i].UpdateExist(absoluteTime);
-                box[i].SetCollideable(false);
-                    
-                if (box[i].GetActive(absoluteTime))
-                {
-                    double boxY = box[i].GetY(absoluteTime+absoluteTimeDirection);
-                    activeBoxOrder[activeBoxes] = i;
-                    for (int j = 0; j < activeBoxes; ++j)
-                    {
-                        if (box[activeBoxOrder[j]].GetY(absoluteTime+absoluteTimeDirection) < boxY)
-                        {
-                            for (int k = activeBoxes; k > j; --k)
-                            {
-                                   activeBoxOrder[k] = activeBoxOrder[k-1];
-                            }
-                            activeBoxOrder[j] = i;
-                            break;
-                        }
-                    }
-                    activeBoxes++;
-                }
-            }
-        }
-        
-        for (int i = 0; i < activeBoxes; ++i)
-        {
-            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
-        }
-        
-        // if a propgation has been added that requires a time change time will be changed here
-        if (changeTime)
-        {
-            for (int i = 0; i < boxCount; ++i)
-            {
-                box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
-            }
-            changeTime = false;
-            absoluteTime = newTime;
-            absoluteTimeDirection = newTimeDirection;   
-            continue;
-        }
-            
-        // progress asb time
-        
-        absoluteTime = absoluteTime + absoluteTimeDirection;
-
-
-        if (absoluteTime < 1)
-        {
-            break;
-        }
-        
+        allegro_message("Level has seperate realities, creator is a foo",allegro_error);
+       return (1); // Could not load level 
     }
     
     // Set player start
@@ -574,9 +427,9 @@ int main()
             // progress abs time
             absoluteTime = absoluteTime + absoluteTimeDirection;
 
-            if (absoluteTime > MAX_TIME)
+            if (absoluteTime > maxTime)
             {
-                absoluteTime = MAX_TIME;
+                absoluteTime = maxTime;
             }
              if (absoluteTime < 1)
             {
@@ -605,7 +458,418 @@ int main()
 }   
 END_OF_MAIN()
 
+bool DetermineLevel()
+{
+    // determine forwards-first determination first
+    
+    // determine forwards boxes
+    relativeTime = 1;
+    absoluteTime = 1;
+    absoluteTimeDirection = 1;
+    
+    while (absoluteTime <= maxTime)
+    {
+        // boxes
+        int activeBoxes = 0;
+		int activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() == absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime) )
+                {
+                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+        }
+        
+        absoluteTime = absoluteTime + absoluteTimeDirection;
+    }
+    
+    // determine backwards boxes
+    // these boxes can disrupt the forwards boxes
+    absoluteTime = maxTime-1;
+    absoluteTimeDirection = -1;
+    
+    while (!key[KEY_ESC] and (absoluteTime > 0 or propManager.GetQueuedProps()))
+    {
+        // boxes
+        int activeBoxes = 0;
+		int activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() == absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime) )
+                {
+                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+        }
+        
+        // reverse boxes
+        activeBoxes = 0;
+		activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() != absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime))
+                {
+                    double boxY = box[i].GetY(absoluteTime+absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime+absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+        }
+        
+        
+        // draw, for testing
+        /*
+        //blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
+        rectfill( buffer, 100, 150, 250, 250, makecol ( 0, 0, 0));
+        char testString[20];
+        sprintf(testString,"%d",absoluteTime);
+        textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed
+            
+        sprintf(testString,"%d",(mouse_x*3));
+        textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+            
+        sprintf(testString,"%d",propManager.GetQueuedProps());
+        textout_ex( buffer, font, testString, 150, 160, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+         
+        
+         for (int i = 0; i < boxCount; ++i)
+        {
+            box[i].unDrawSprite();
+        }
+                
+        for (int i = 0; i < boxCount; ++i)
+        {
+            box[i].DrawSprite(absoluteTime);
+        }   
+        Draw();
+        */
+        // if a propgation has been added that requires a time change time will be changed here
+        if (changeTime)
+        {
+            for (int i = 0; i < boxCount; ++i)
+            {
+                box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+            }
+            changeTime = false;
+            absoluteTime = newTime;
+            absoluteTimeDirection = newTimeDirection;   
+            continue;
+        }
+            
+        // progress asb time
+        
+        absoluteTime = absoluteTime + absoluteTimeDirection;
 
+
+        if (absoluteTime < 1)
+        {
+            break;
+        }
+        
+    }
+    
+    // copy boxes for future comparison
+    for (int i = 0; i < boxCount; ++i)
+    {
+        box[i+boxCount+1] = box[i];
+        if (box[i].GetTimeDirection() == 1)
+        {
+            double x = box[i].GetX(0);
+            double y = box[i].GetY(0);
+            double xSpeed = box[i].GetXspeed(0);
+            double ySpeed = box[i].GetYspeed(0);
+            box[i] = MintConditionBox;
+            box[i].SetStart(x,y,xSpeed,ySpeed,0,1);
+        }
+        else
+        {
+            double x = box[i].GetX(maxTime);
+            double y = box[i].GetY(maxTime);
+            double xSpeed = box[i].GetXspeed(maxTime);
+            double ySpeed = box[i].GetYspeed(maxTime);
+            box[i] = MintConditionBox;
+            box[i].SetStart(x,y,xSpeed,ySpeed,maxTime,-1);
+        }
+    }
+    
+    // determine level reverse-first
+    
+    // determine reverse boxes
+    absoluteTime = maxTime-1;
+    absoluteTimeDirection = -1;
+    
+    while (absoluteTime > 0)
+    {
+        // boxes
+        int activeBoxes = 0;
+		int activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() == absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime) )
+                {
+                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+        }
+        
+        absoluteTime = absoluteTime + absoluteTimeDirection;
+    }
+    
+    // determine forwards
+    // these boxes can disrupt the backwards boxes
+    absoluteTime = 1;
+    absoluteTimeDirection = 1;
+    
+    while (!key[KEY_ESC] and (absoluteTime < maxTime or propManager.GetQueuedProps()))
+    {
+        // boxes
+        int activeBoxes = 0;
+		int activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() == absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime) )
+                {
+                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+        }
+        
+        // reverse boxes
+        activeBoxes = 0;
+		activeBoxOrder[MAX_BOXES];
+ 
+        for (int i = 0; i < boxCount; ++i)
+        {
+            if (box[i].GetTimeDirection() != absoluteTimeDirection)
+            {
+                box[i].UpdateExist(absoluteTime);
+                box[i].SetCollideable(false);
+                    
+                if (box[i].GetActive(absoluteTime))
+                {
+                    double boxY = box[i].GetY(absoluteTime+absoluteTimeDirection);
+                    activeBoxOrder[activeBoxes] = i;
+                    for (int j = 0; j < activeBoxes; ++j)
+                    {
+                        if (box[activeBoxOrder[j]].GetY(absoluteTime+absoluteTimeDirection) < boxY)
+                        {
+                            for (int k = activeBoxes; k > j; --k)
+                            {
+                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                            }
+                            activeBoxOrder[j] = i;
+                            break;
+                        }
+                    }
+                    activeBoxes++;
+                }
+            }
+        }
+        
+        for (int i = 0; i < activeBoxes; ++i)
+        {
+            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+        }
+        
+        
+        // draw, for testing
+        /*
+        //blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
+        rectfill( buffer, 100, 150, 250, 250, makecol ( 0, 0, 0));
+        char testString[20];
+        sprintf(testString,"%d",absoluteTime);
+        textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed
+            
+        sprintf(testString,"%d",(mouse_x*3));
+        textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+            
+        sprintf(testString,"%d",propManager.GetQueuedProps());
+        textout_ex( buffer, font, testString, 150, 160, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+         
+        
+         for (int i = 0; i < boxCount; ++i)
+        {
+            box[i].unDrawSprite();
+        }
+                
+        for (int i = 0; i < boxCount; ++i)
+        {
+            box[i].DrawSprite(absoluteTime);
+        }   
+        Draw();
+        */
+        // if a propgation has been added that requires a time change time will be changed here
+        if (changeTime)
+        {
+            for (int i = 0; i < boxCount; ++i)
+            {
+                box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
+            }
+            changeTime = false;
+            absoluteTime = newTime;
+            absoluteTimeDirection = newTimeDirection;   
+            continue;
+        }
+            
+        // progress asb time
+        
+        absoluteTime = absoluteTime + absoluteTimeDirection;
+
+
+        if (absoluteTime < 1)
+        {
+            break;
+        }
+        
+    }
+    
+    
+    // check reverse-first against forwards-first
+    for (int i = 0; i < boxCount; ++i)
+    {
+        for (int time = 0; time <= maxTime; time++)
+        {
+            int copyId = i + boxCount + 1;
+            if (box[i].GetX(time) != box[copyId].GetX(time) or box[i].GetY(time) != box[copyId].GetY(time) or box[i].GetXspeed(time) != box[copyId].GetXspeed(time) or box[i].GetYspeed(time) != box[copyId].GetYspeed(time) or box[i].GetSupported(time) != box[copyId].GetSupported(time) )
+            {
+                return false; // load level not possible
+            }
+        }
+    }
+    
+    // clean up box arrays
+     for (int i = 0; i < boxCount; ++i)
+    {
+        box[i+boxCount+1] = MintConditionBox;
+    }
+    
+    
+    return true;
+}
 
 void Draw()
 {
@@ -748,8 +1012,13 @@ void LoadLevel (char* filePath)
 						int yPos = atoi(boxData["Y_POS"].data());
 						double xSpeed = atof(boxData["X_SPEED"].data());
 						double ySpeed = atof(boxData["Y_SPEED"].data());
-						//int absTime = atoi(boxData["ABS_TIME"].data());
-						box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,0,1);
+						int start_direction = atoi(boxData["START_DIRECTION"].data());
+						int start_time = 0;
+						if (start_direction == -1)
+						{
+                            start_time = maxTime;
+                        }
+						box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,start_time,start_direction);
 						box[boxCount].SetId(boxCount);
 						boxCount++;
 					}

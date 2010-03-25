@@ -9,7 +9,7 @@ extern BITMAP* background;
 extern BITMAP* foreground;
 extern BITMAP* buffer;
 
-const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
+extern int maxTime; // max abs time
 
 // wall segment count within level
 const int LEVEL_WIDTH = 32;
@@ -205,7 +205,7 @@ int Box::GetTimeDirection()
 
 void Box::UpdateExist(int time)
 {
-    exist[time] = exist[time-1];
+    exist[time] = exist[time-timeDirection];
 }
 
 void Box::PhysicsStep(int time)
@@ -273,7 +273,8 @@ void Box::PhysicsStep(int time)
                 // boxes are stepped through in height order so getting current position is all good!
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
-                if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
+                double oldBoxY = box[i].GetY(time-timeDirection);
+                if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= oldBoxY) ) 
                 {
                     xSpeed[time] = box[i].GetXspeed(time)*boxTimeDirection*timeDirection;
                     ySpeed[time] = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
@@ -356,7 +357,8 @@ void Box::ReversePhysicsStep(int time)
                 // boxes are stepped through in height order so getting current position is all good!
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
-                if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= boxY) ) 
+                double oldBoxY = box[i].GetY(time-timeDirection);
+                if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= oldBoxY) ) 
                 {
                     newXspeed = box[i].GetXspeed(time)*boxTimeDirection*timeDirection;
                     newYspeed = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
@@ -380,7 +382,7 @@ void Box::ReversePhysicsStep(int time)
     }
     else
     {
-        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == MAX_TIME and timeDirection == -1))
+        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == maxTime and timeDirection == -1))
         {
             // propagate new position if end of time is reached regardless of reverse check
             requireReverseCheck = false;
@@ -440,6 +442,11 @@ void Box::DrawSprite(int time)
         int drawY = int(y[time]);
         
         draw_sprite( buffer, box_sprite, drawX,drawY);
+        
+        if (timeDirection != absoluteTimeDirection)
+            {
+                textout_ex( buffer, font, "R", drawX+10, drawY+20, makecol( 255, 255, 0), makecol( 0, 0, 0) );
+            }
         
         if (requireReverseCheck)
         {

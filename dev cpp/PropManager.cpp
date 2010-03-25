@@ -12,7 +12,7 @@ extern int newTime;
 extern int newTimeDirection;
 extern bool waitForDraw;
 
-const int MAX_TIME = 3000; // should be 5400 for 3 minutes, 3000 is nice for now
+extern int maxTime; // max abs time
 
 PropManager::PropManager()
 {
@@ -60,7 +60,7 @@ void PropManager::AddPropagation(int start_time, int direction)
             else
             {
                 // if the progation directions are not the same a new progation will be needed
-                propStartTime[queuedProps-1] = absoluteTime-propDirection[queuedProps-1]; // once the new one is done the current one will resume at this point
+                propStartTime[queuedProps-1] = absoluteTime; // once the new one is done the current one will resume at this point
                 
                 propStartTime[queuedProps] = start_time;
                 propDirection[queuedProps] = direction;
@@ -186,7 +186,7 @@ bool PropManager::UpdatePropagation()
         }
         else // if the most recent propagation is relative reverse
         {
-            if ( (absoluteTime == 1 and propDirection[queuedProps-1] == -1) or (absoluteTime == MAX_TIME and propDirection[queuedProps-1] == 1) )
+            if ( (absoluteTime == 1 and propDirection[queuedProps-1] == -1) or (absoluteTime == maxTime and propDirection[queuedProps-1] == 1) )
             // abs time has reached the far past
             {
                 queuedProps--; // finish current propagation
