@@ -335,7 +335,7 @@ int main()
             
             for (int i = 0; i < activeBoxes; ++i)
             {
-                box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+                box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime+absoluteTimeDirection);
             }
             
             // step through guys
@@ -350,7 +350,7 @@ int main()
                     }
                     else
                     {
-                         guy[i].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+                         guy[i].ReversePhysicsStep(absoluteTime+absoluteTimeDirection);
                     }
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
@@ -467,7 +467,7 @@ bool DetermineLevel()
     absoluteTime = 1;
     absoluteTimeDirection = 1;
     
-    while (absoluteTime <= maxTime)
+    while (absoluteTime < maxTime)
     {
         // boxes
         int activeBoxes = 0;
@@ -526,7 +526,7 @@ bool DetermineLevel()
             {
                 box[i].UpdateExist(absoluteTime);
                 box[i].SetCollideable(false);
-                    
+                        
                 if (box[i].GetActive(absoluteTime) )
                 {
                     double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
@@ -537,7 +537,7 @@ bool DetermineLevel()
                         {
                             for (int k = activeBoxes; k > j; --k)
                             {
-                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                                activeBoxOrder[k] = activeBoxOrder[k-1];
                             }
                             activeBoxOrder[j] = i;
                             break;
@@ -547,7 +547,7 @@ bool DetermineLevel()
                 }
             }
         }
-        
+            
         for (int i = 0; i < activeBoxes; ++i)
         {
             box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
@@ -587,7 +587,7 @@ bool DetermineLevel()
         
         for (int i = 0; i < activeBoxes; ++i)
         {
-            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime+absoluteTimeDirection);
         }
         
         
@@ -647,6 +647,7 @@ bool DetermineLevel()
             double xSpeed = box[i].GetXspeed(0);
             double ySpeed = box[i].GetYspeed(0);
             box[i] = MintConditionBox;
+            box[i].SetId(i);
             box[i].SetStart(x,y,xSpeed,ySpeed,0,1);
         }
         else
@@ -656,6 +657,7 @@ bool DetermineLevel()
             double xSpeed = box[i].GetXspeed(maxTime);
             double ySpeed = box[i].GetYspeed(maxTime);
             box[i] = MintConditionBox;
+            box[i].SetId(i);
             box[i].SetStart(x,y,xSpeed,ySpeed,maxTime,-1);
         }
     }
@@ -719,39 +721,41 @@ bool DetermineLevel()
         int activeBoxes = 0;
 		int activeBoxOrder[MAX_BOXES];
  
-        for (int i = 0; i < boxCount; ++i)
+        if (absoluteTime < maxTime)
         {
-            if (box[i].GetTimeDirection() == absoluteTimeDirection)
+            for (int i = 0; i < boxCount; ++i)
             {
-                box[i].UpdateExist(absoluteTime);
-                box[i].SetCollideable(false);
-                    
-                if (box[i].GetActive(absoluteTime) )
+                if (box[i].GetTimeDirection() == absoluteTimeDirection)
                 {
-                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
-                    activeBoxOrder[activeBoxes] = i;
-                    for (int j = 0; j < activeBoxes; ++j)
+                    box[i].UpdateExist(absoluteTime);
+                    box[i].SetCollideable(false);
+                        
+                    if (box[i].GetActive(absoluteTime) )
                     {
-                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
+                        double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
+                        activeBoxOrder[activeBoxes] = i;
+                        for (int j = 0; j < activeBoxes; ++j)
                         {
-                            for (int k = activeBoxes; k > j; --k)
+                            if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
                             {
-                                   activeBoxOrder[k] = activeBoxOrder[k-1];
+                                for (int k = activeBoxes; k > j; --k)
+                                {
+                                       activeBoxOrder[k] = activeBoxOrder[k-1];
+                                }
+                                activeBoxOrder[j] = i;
+                                break;
                             }
-                            activeBoxOrder[j] = i;
-                            break;
                         }
+                        activeBoxes++;
                     }
-                    activeBoxes++;
                 }
             }
+            
+            for (int i = 0; i < activeBoxes; ++i)
+            {
+                box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
+            }
         }
-        
-        for (int i = 0; i < activeBoxes; ++i)
-        {
-            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
-        }
-        
         // reverse boxes
         activeBoxes = 0;
 		activeBoxOrder[MAX_BOXES];
@@ -786,7 +790,7 @@ bool DetermineLevel()
         
         for (int i = 0; i < activeBoxes; ++i)
         {
-            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
+            box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime+absoluteTimeDirection);
         }
         
         
@@ -839,7 +843,7 @@ bool DetermineLevel()
     // check reverse-first against forwards-first
     for (int i = 0; i < boxCount; ++i)
     {
-        for (int time = 0; time < maxTime; time++)
+        for (int time = 1; time < maxTime; time++)
         {
             int copyId = i + boxCount;
             if (box[i].GetX(time) != box[copyId].GetX(time) or box[i].GetY(time) != box[copyId].GetY(time) or box[i].GetXspeed(time) != box[copyId].GetXspeed(time) or box[i].GetYspeed(time) != box[copyId].GetYspeed(time) or box[i].GetSupported(time) != box[copyId].GetSupported(time) )
@@ -852,10 +856,11 @@ bool DetermineLevel()
     // clean up box arrays
      for (int i = 0; i < boxCount; ++i)
     {
-        box[i+boxCount+1] = MintConditionBox;
+        box[i+boxCount] = MintConditionBox;
+        box[i].SetRequireReverseCheck(false);
     }
     
-    
+
     return true;
 }
 

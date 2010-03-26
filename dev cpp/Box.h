@@ -30,6 +30,8 @@ public:
     
     void TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection);
     
+    void SetRequireReverseCheck(int state);
+    
     void SetExist(int abs_time,bool state);
     bool GetExist(int abs_time);
     

@@ -57,6 +57,11 @@ void Box::SetId(int newId)
     id = newId;
 }
 
+void Box::SetRequireReverseCheck(int state)
+{
+    requireReverseCheck = state;
+}
+
 void Box::SetExist(int abs_time,bool state)
 {
     exist[abs_time] = state;
@@ -352,7 +357,7 @@ void Box::ReversePhysicsStep(int time)
         for (int i = 0; i < boxCount; ++i)
         {
             int boxTimeDirection = box[i].GetTimeDirection();
-            if (i != id and box[i].GetActive(time) and (box[i].GetCollideable() or boxTimeDirection !=timeDirection) and !box[i].GetRequireCheck())
+            if (i != id and box[i].GetActive(time) and (box[i].GetCollideable() or boxTimeDirection != timeDirection) and !box[i].GetRequireCheck())
             {
                 // boxes are stepped through in height order so getting current position is all good!
                 double boxX = box[i].GetX(time);
