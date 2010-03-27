@@ -27,7 +27,7 @@ void PropManager::AddPropagation(int start_time, int direction)
 {
     
     // if the start time is in the relative past
-    if ((queuedProps and start_time*presentDirection < presentTime*presentDirection) or start_time*absoluteTimeDirection < absoluteTime*absoluteTimeDirection)
+    if ((queuedProps and start_time*presentDirection <= presentTime*presentDirection) or start_time*absoluteTimeDirection <= absoluteTime*absoluteTimeDirection)
     {
         if (!queuedProps)
         {

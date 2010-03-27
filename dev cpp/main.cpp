@@ -35,9 +35,9 @@ int newTimeDirection;
 const int MAX_GUYS = 200;
 const int MAX_BOXES = 200;
 
-int maxTime = 1500; // max abs time, no larger than 5400 or classes will need changing
+int maxTime = 1000; // max abs time, no larger than 5400 or classes will need changing
 
-bool viewPropagation = true;
+bool viewPropagation = false;
 bool waitForDraw = false; // stalls for a frame to give drawing time between jumps
 
 PropManager propManager;
@@ -335,7 +335,7 @@ int main()
             
             for (int i = 0; i < activeBoxes; ++i)
             {
-                box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime+absoluteTimeDirection);
+                box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime);
             }
             
             // step through guys
@@ -350,7 +350,7 @@ int main()
                     }
                     else
                     {
-                         guy[i].ReversePhysicsStep(absoluteTime+absoluteTimeDirection);
+                         guy[i].ReversePhysicsStep(absoluteTime);
                     }
                     guy[i].UpdateBoxCarrying(absoluteTime);
                     guy[i].UpdateTimeTravel(absoluteTime);
@@ -364,6 +364,7 @@ int main()
                 {
                     guy[i].ResetParadoxChecking();
                 }
+                resetParadox = false;
             }
             
             // Most of drawing

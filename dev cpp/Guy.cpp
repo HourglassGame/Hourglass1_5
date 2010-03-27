@@ -572,7 +572,7 @@ void Guy::UpdateTimeTravel(int time)
     int personalTime = time*timeDirection+timeOffset;
     // time travel
         
-    if (inputSpecial[personalTime] == 1)
+    if (inputSpecial[personalTime] == 1) // jump
     {
         if (order+1 == guyCount)
         {
@@ -611,6 +611,42 @@ void Guy::UpdateTimeTravel(int time)
             
         }
     }    
+    else if (inputSpecial[personalTime] == 2) // reverse
+    {
+        if (order+1 == guyCount)
+        {
+            guy[guyCount].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0), carryBoxId[time],relativeTime,time,-timeDirection,subimage[time]);
+            guy[guyCount].SetOrder(guyCount);
+
+            propManager.PlayerTravel(time,-timeDirection);
+            
+            AddImportantTime(time, carryingBox[time], time);
+             
+            guyCount++;
+            
+            endAbsTime = time;
+            endRelTime = relativeTime;
+        }
+        else
+        {
+            endAbsTime = time;
+            
+            if (TimeDiffersFromImportantTime(time,time))
+            {
+                CheckForParadox(time,carryingBox[time],time);
+                
+                guy[order+1].SetStart(x[time],y[time],xSpeed[time],ySpeed[time],(carryingBox[time] > 0), carryBoxId[time],endRelTime,time,-timeDirection,subimage[time]);
+ 
+                propManager.AddPropagation(time,-timeDirection);
+                
+                AddParadoxCheck(time, carryingBox[time], time);
+
+                AddImportantTime(time, carryingBox[time], time);
+            }
+            
+            
+        }
+    }
 }
 
 // paradox stuff
