@@ -1,12 +1,3 @@
-/*
- *  Editor_LevelSaver.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "Editor_LevelSaver.h"
 
 // class constructor

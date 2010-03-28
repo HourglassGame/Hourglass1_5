@@ -1,20 +1,3 @@
-/*
- *  Editor_DoubleField.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 18/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
-/*
- *  TextField.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
 #ifndef HOURGLASS_DOUBLE_FIELD_H
 #define HOURGLASS_DOUBLE_FIELD_H
 #include "Hourglass_Allegro.h"
@@ -36,5 +19,4 @@ public:
 private:
 	std::string readVal(int input);
 };
-
 #endif //HOURGLASS_DOUBLE_FIELD_H

@@ -3,10 +3,8 @@
 #include "Hourglass_Allegro.h"
 #include <fstream>
 #include <map>
-//#include "FileString.hpp"
 #include "Editor_ResourcePathEnum.h"
 #include "Editor_Exceptions.h"
-
 
 /* ------------===constructor options===---------------
  *   
@@ -42,5 +40,4 @@ private:
 	static std::map<std::string,BITMAP*> loadedImages;
 	void DestroyImage(std::pair<std::string,BITMAP*> toDestroy);
 };
-
 #endif // IMAGELOADER_H

@@ -120,6 +120,11 @@ void SwitchingInput::Toggle()
 	isToggledOn = isToggledOn ? false : true;
 }
 
+bool SwitchingInput::operator()()
+{
+	return(GetCurrentValue());
+}
+
 bool SwitchingInput::GetCurrentValue()
 {
     return(currentValue);

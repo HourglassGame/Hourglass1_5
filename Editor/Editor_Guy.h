@@ -12,15 +12,12 @@
 class Guy : public TimeDirectionObject, public MobileObject
 {
 public:
-	// class constructor
-	Guy(int newXPos = 0, int newYPos = 0, double newXSpeed = 0, double newYSpeed = 0, unsigned int newStartTime = 2700, AbsoluteTimeDirectionEnum newATD = FORWARDS);
-	// class destructor
+	Guy(const unsigned int newXPos = 0,const unsigned int newYPos = 0,const double newXSpeed = 0,const double newYSpeed = 0,const unsigned int newStartTime = 2700,const AbsoluteTimeDirectionEnum newATD = FORWARDS);
 	~Guy();
 	void DoDraw();
 	int GetXSize();
 	int GetYSize();
 	std::string GetOutputString();
-	void DoGui();
 private:
 	std::string GetOutputStringParts();
 	static const int WIDTH = 24;
@@ -30,5 +27,4 @@ private:
 	void UpdateGui();
 	IntField startTimeField;	
 };
-
 #endif // GUY_H

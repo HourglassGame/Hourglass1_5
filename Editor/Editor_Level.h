@@ -1,11 +1,3 @@
-/*
- *  Editor_Level.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
 #ifndef HOURGLASS_LEVEL_H
 #define HOURGLASS_LEVEL_H
 #include "Hourglass_Allegro.h"
@@ -32,7 +24,7 @@ public:
 	void UpdateSelection();
 	void UpdateSelected();
 	void SetCanSelect(bool canSelect);
-	void AddGuy(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed,  unsigned int startTime, AbsoluteTimeDirectionEnum);
+	void AddGuy(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed,const unsigned int startTime,const AbsoluteTimeDirectionEnum atd);
 	void AddBox(const unsigned int xPos, const unsigned int yPos, const double xSpeed, const double ySpeed);
 	void SetGridSize(const unsigned int size);
 	Object* GetNextObject();
@@ -53,5 +45,4 @@ private:
 	bool canSelect;
 	unsigned int nextObject;
 };
-
 #endif //HOURGLASS_LEVEL_H

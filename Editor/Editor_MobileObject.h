@@ -5,10 +5,10 @@
 class MobileObject : virtual public Object
 {
 protected:
-	MobileObject(double newXSpeed = 0, double newYSpeed = 0);
+	MobileObject(const double newXSpeed = 0,const double newYSpeed = 0);
 	virtual~ MobileObject();
-	void InitGui();
-	void UpdateGui();
+	virtual void InitGui();
+	virtual void UpdateGui();
 	std::string GetOutputStringParts();
 private:
 	double xSpeed;
@@ -16,5 +16,4 @@ private:
 	DoubleField xSpeedField;
 	DoubleField	ySpeedField;
 };
-
 #endif //HOURGLASS_MOBILE_OBJECT_H

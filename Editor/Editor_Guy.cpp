@@ -2,24 +2,17 @@
 extern BITMAP* buffer;
 extern BITMAP* guy_left_stop;
 extern BITMAP* guy_right_stop;
-// class constructor
 
-Guy::Guy(const int newXPos, const int newYPos, const double newXSpeed, const double newYSpeed, unsigned int newStartTime, AbsoluteTimeDirectionEnum newATD) :
+Guy::Guy(const unsigned int newXPos, const unsigned int newYPos, const double newXSpeed, const double newYSpeed,const unsigned int newStartTime,const AbsoluteTimeDirectionEnum newATD) :
 	TimeDirectionObject(newATD),
 	MobileObject(newXSpeed,newYSpeed),
 	Object(newXPos, newYPos),
 	startTime(newStartTime),
 	startTimeField(IntField(200,628,10,1))
 { }
-// class destructor
+
 Guy::~Guy()
 { }
-
-void Guy::DoGui()
-{
-	InitGui();
-	UpdateGui();
-}
 
 void Guy::InitGui()
 {

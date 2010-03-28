@@ -2,7 +2,7 @@
 extern BITMAP* buffer;
 extern BITMAP* box_sprite;
 
-Box::Box(const int newXPos, const int newYPos, const double newXSpeed, const double newYSpeed, AbsoluteTimeDirectionEnum newATD) :
+Box::Box(const int newXPos, const int newYPos, const double newXSpeed, const double newYSpeed,const AbsoluteTimeDirectionEnum newATD) :
 TimeDirectionObject(newATD),
 MobileObject(newXSpeed,newYSpeed),
 Object(newXPos,newYPos)
@@ -10,12 +10,6 @@ Object(newXPos,newYPos)
 
 Box::~Box()
 { }
-
-void Box::DoGui()
-{
-	InitGui();
-	UpdateGui();
-}
 
 void Box::InitGui()
 {

@@ -1,6 +1,6 @@
 #include "Editor_MobileObject.h"
 
-MobileObject::MobileObject(double newXSpeed, double newYSpeed) :
+MobileObject::MobileObject(const double newXSpeed,const double newYSpeed) :
 xSpeed(newXSpeed),
 ySpeed(newYSpeed),
 xSpeedField(DoubleField(100,668,10,1)),

@@ -1,11 +1,3 @@
-/*
- *  Editor_Input_Field.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
 #ifndef HOURGLASS_INPUT_FIELD_H
 #define HOURGLASS_INPUT_FIELD_H
 #include "Hourglass_Allegro.h"
@@ -30,5 +22,4 @@ protected:
 	int height; //Bottom Right x
 	int width; //Bottom Right y
 };
-
 #endif //HOURGLASS_INPUT_FIELD_H

@@ -1,17 +1,7 @@
-/*
- *  Exceptions.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 15/03/10.
- *  Copyright 2010 Team Causality. All rights reserved.
- *
- */
-
 #ifndef HOURGLASS_EXCPETIONS_H
 #define HOURGLASS_EXCPETIONS_H
 #include "Hourglass_Allegro.h"
 #include <string>
-//#include "FileString.hpp"
 class HourglassException
 {
 public:
@@ -110,6 +100,4 @@ public:
 	~MaxPathLengthExceededException();
 	virtual std::string what();
 };
-
-
 #endif

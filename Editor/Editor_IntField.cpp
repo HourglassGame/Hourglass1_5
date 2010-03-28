@@ -1,12 +1,3 @@
-/*
- *  TextField.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "Editor_IntField.h"
 extern BITMAP* buffer;
 extern std::map<HourglassInput,SwitchingInput> inputs;
@@ -31,7 +22,7 @@ int IntField::Update()//const int& initialValue)
 	clear_keybuf();
 	if ((mouse_b & 1) && (mouse_x > x0 && mouse_x < x0+text_length(font, currentValue.c_str()) && mouse_y > y0 && mouse_y < y0+height*text_height(font))) {
 		while (!(((mouse_b & 1) && (mouse_x < x0 || mouse_x > x0+text_length(font, currentValue.c_str())|| mouse_y < y0 || mouse_y > y0+height*text_height(font)))
-				 || inputs[LEAVE_INPUT_FIELD].GetCurrentValue())) {
+				 || inputs[LEAVE_INPUT_FIELD]())) {
 			poll_mouse();
 			poll_keyboard();
 			TranslateInputs();

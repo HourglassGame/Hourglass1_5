@@ -1,17 +1,7 @@
-/*
- *  Editor_LevelLoader.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "Editor_LevelLoader.h"
 
 std::map<std::string,Level*> LevelLoader::loadedLevels;
 
-// class constructor
 LevelLoader::LevelLoader(ResourcePathType rpt) :
 Loader(rpt)
 {
@@ -23,15 +13,14 @@ LevelLoader::LevelLoader(const std::string str) :
 Loader(str)
 {}
 
-// class destructor
 LevelLoader::~LevelLoader()
 {
-   // for (std::map<std::string,Level*>::iterator it = loadedLevels.begin(); loadedLevels.size() !=0;)
-   // {
-   //     delete it->second;
-   //     loadedLevels.erase(it);
-   //     it = loadedLevels.begin();
-   // }
+	// for (std::map<std::string,Level*>::iterator it = loadedLevels.begin(); loadedLevels.size() !=0;)
+	// {
+	//     delete it->second;
+	//     loadedLevels.erase(it);
+	//     it = loadedLevels.begin();
+	// }
 }
 
 Level* LevelLoader::LoadLevel()

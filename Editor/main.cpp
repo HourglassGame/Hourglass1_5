@@ -1,8 +1,8 @@
 #include "Hourglass_Allegro.h"
 #include <semaphore.h> //To get this to work you will need to download 
-                       //http://mirrors.kernel.org/sources.redhat.com/pthreads-win32/pthreads-w32-2-8-0-release.exe
-                       //And copy the headers into somewhere in your include path.
-                       //It's not that hard, but ask me if you need more details.
+//http://mirrors.kernel.org/sources.redhat.com/pthreads-win32/pthreads-w32-2-8-0-release.exe
+//And copy the headers into somewhere in your include path.
+//It's not that hard, but ask me if you need more details.
 #include <vector>
 #include <map>
 #include <string>
@@ -65,7 +65,7 @@ BITMAP* guy_left_stop;
 BITMAP* guy_right_stop;
 BITMAP* box_sprite;
 #ifdef ALLEGRO_MACOSX
-const int MAX_PATH = 2600;
+const int MAX_PATH = 2600; //TODO - properly investigate path-lengths on MACOSX
 #endif //ALLEGRO_MACOSX
 bool closeButtonPressed = false;
 bool drawingWall = false;
@@ -121,11 +121,11 @@ END_OF_FUNCTION(ticker)
 
 int main()
 {
-
+	
 	try {
 		Init();
         // Game Loop
-		while (!(inputs[EXIT_EDITOR].GetCurrentValue() || closeButtonPressed))
+		while (!(inputs[EXIT_EDITOR]() || closeButtonPressed))
 		{
 #ifdef ALLEGRO_MACOSX
 			sem_wait(sem_rest_ptr);//wait until a full tick has passed using the semaphore
@@ -142,7 +142,7 @@ int main()
 	}
 	catch (HourglassException& e) {
 		allegro_message("An incompletely handled hourglass exception occurred in main(); exiting.\n"
-						"The exception was %s.",e.what().data());
+						"The exception was %s.",e.what().c_str());
 		exit(-4);
 	}
 	catch (exception& e) {
@@ -156,6 +156,7 @@ int main()
 	}
    	return(0);
 }
+
 END_OF_MAIN()
 
 void Init()
@@ -167,7 +168,7 @@ void Init()
 void DeInit()
 {
 	clear_keybuf();
-
+	
 #ifdef ALLEGRO_MACOSX
 	remove_int(Ticker);
 	sem_close(sem_rest_ptr);
@@ -224,11 +225,11 @@ void EngineInit()
     {
         allegro_message("\"install_mouse()\" failed, allegro_error is:\n%s",allegro_error);
     }
-
+	
 	LOCK_VARIABLE(ticks)
 	LOCK_FUNCTION(Ticker)
 	install_int_ex(Ticker, BPS_TO_TIMER(updates_per_second));
-
+	
 	//   LOCK_FUNCTION(CloseButtonHandler); // in manual, unneeded? - used in DOS or something
 	set_close_button_callback(CloseButtonHandler);
     
@@ -266,13 +267,13 @@ void StateInit()
     drawingWall = false;
     doingAddGuy = false;
     doingAddBox = false;
-
+	
     InputInit();
 }
 
 void InputInit() //when we port to Linux, KEY_* must be replaced with _allegro_KEY_*
 {
-    for (map<HourglassInput,SwitchingInput>::iterator it = inputs.begin(); inputs.size() !=0;)
+    for (map<HourglassInput,SwitchingInput>::iterator it = inputs.begin(); inputs.size() != 0;)
     {
         it->second.Reset(); //calls KeyCombination destructors, stops memory leak.
         inputs.erase(it);
@@ -343,7 +344,7 @@ void DoLoadLevelDialog()
 			allegro_message("\"[WALL]\" could not be found in the level file:\n%s\nthe file may be corrupt or incorrect",path);
 			DoLoadLevelDialog();
 		}
-	//	currentLevel->Draw();
+		//	currentLevel->Draw();
     }
     else
     {
@@ -363,7 +364,7 @@ void DoSaveLevel()
 
 void UpdateDrawingWall()
 {
-    drawingWall = inputs[DRAW_WALL].GetCurrentValue();
+    drawingWall = inputs[DRAW_WALL]();
 	if (drawingWall)
     {
 		currentLevel->SetCanSelect(false);
@@ -376,21 +377,21 @@ void UpdateDrawingWall()
 
 void DoDrawWall()
 {
-    if ((inputs[ADD_WALL].GetCurrentValue()) && !(mouse_b & 2))
+    if ((inputs[ADD_WALL]()) && !(mouse_b & 2))
     {
         //add wall
-        int x = int(floor(mouse_x/BLOCK_SIZE));
-        int y = int(floor(mouse_y/BLOCK_SIZE));
+        int x = static_cast<int>(floor(mouse_x/BLOCK_SIZE));
+        int y = static_cast<int>(floor(mouse_y/BLOCK_SIZE));
         if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
         {
             currentLevel->SetWall(true,x,y);
         }
     }
-    else if (inputs[DELETE_WALL].GetCurrentValue() && !(mouse_b & 1))
+    else if (inputs[DELETE_WALL]() && !(mouse_b & 1))
     {
         //delete wall
-        int x = int(floor(mouse_x/BLOCK_SIZE));
-        int y = int(floor(mouse_y/BLOCK_SIZE));
+        int x = static_cast<int>(floor(mouse_x/BLOCK_SIZE));
+        int y = static_cast<int>(floor(mouse_y/BLOCK_SIZE));
         if (x < LEVEL_WIDTH && y < LEVEL_HEIGHT)
         {
             currentLevel->SetWall(false, x, y);
@@ -414,26 +415,26 @@ void DoAddingObject()
     draw_sprite(tempBuffer, buffer,0,0);
     if (snapToGrid)
     {
-        objectX = int(gridSize*floor(double(mouse_x/gridSize)));
-        objectY = int(gridSize*floor(double(mouse_y/gridSize)));
+        objectX = static_cast<int>(gridSize*floor(static_cast<double>(mouse_x/gridSize)));
+        objectY = static_cast<int>(gridSize*floor(static_cast<double>(mouse_y/gridSize)));
     }
     else
     {
-        objectX = int(floor(mouse_x));
-        objectY = int(floor(mouse_y));
+        objectX = static_cast<int>(floor(mouse_x));
+        objectY = static_cast<int>(floor(mouse_y));
     }
     
     if((doingAddGuy && objectX <= LEVEL_WIDTH*BLOCK_SIZE-Guy().GetXSize() && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Guy().GetYSize()) || (doingAddBox && (objectX <= LEVEL_WIDTH*BLOCK_SIZE-Box().GetXSize() && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Box().GetYSize())))
     {
         if (doingAddGuy)
         {
-            draw_sprite(buffer,guy_left_stop, objectX, objectY);
+            draw_sprite(buffer, guy_left_stop, objectX, objectY);
         }
         else if (doingAddBox)
         {
-            draw_sprite(buffer,box_sprite, objectX, objectY);
+            draw_sprite(buffer, box_sprite, objectX, objectY);
         }
-        if (inputs[ADD_OBJECT].GetCurrentValue())
+        if (inputs[ADD_OBJECT]())
         {
 			if (doingAddBox)
             {
@@ -446,7 +447,7 @@ void DoAddingObject()
             doingAddGuy = false;
         }
     }
-    if (inputs[CANCEL_ADD_OBJECT].GetCurrentValue())
+    if (inputs[CANCEL_ADD_OBJECT]())
     {
         doingAddGuy = false;
         doingAddBox = false;
@@ -487,20 +488,20 @@ void DrawToScreen()
 
 void DoStep()
 {
-    if(inputs[RESET_STATE].GetCurrentValue())
+    if(inputs[RESET_STATE]())
     {
-         StateInit();      
+		StateInit();      
     }
-	if(inputs[DO_LOAD_LEVEL_DIALOG].GetCurrentValue() && !(menus.find("addObjectMenu") != menus.end()) && !doingAddGuy && !doingAddBox)
+	if(inputs[DO_LOAD_LEVEL_DIALOG]() && !(menus.find("addObjectMenu") != menus.end()) && !doingAddGuy && !doingAddBox)
 	{
 		DoLoadLevel();
 	}
 	
-	if(inputs[DO_SAVE_LEVEL_DIALOG].GetCurrentValue())
+	if(inputs[DO_SAVE_LEVEL_DIALOG]())
     {
 		DoSaveLevel();
     }
-
+	
   	UpdateDrawingWall();
 	
 	if (drawingWall)
@@ -519,14 +520,14 @@ void DoStep()
         DoAddingObject();
     }
 	
-	if(inputs[ADD_ADD_OBJECT_MENU].GetCurrentValue() && !(doingAddGuy || doingAddBox))
+	if(inputs[ADD_ADD_OBJECT_MENU]() && !(doingAddGuy || doingAddBox))
     {
 		if (menus.find("addObjectMenu") == menus.end())
 		{
 			DoAddObjectMenu();
 		}
     }
-
+	
     if (menus.find("addObjectMenu") != menus.end())
     {
         switch(menus["addObjectMenu"].Step())

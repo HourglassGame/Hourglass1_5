@@ -34,10 +34,10 @@ public:
 	void Reset();
 	void Update();
 	bool GetCurrentValue();
+	bool operator()(); //Another name for GetCurrentValue, that is all.
 private:
 	std::list<KeyCombination*> assignedCombinations;
 	bool currentValue; //Does this Input return true this step
 	bool isToggledOn;
 };
-
 #endif // HOURGLASS_SWITCHINGINPUT_H

@@ -1,11 +1,3 @@
-/*
- *  Editor_Loader.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
 #ifndef HOURGLASS_LEVEL_SAVER_H
 #define HOURGLASS_LEVEL_SAVER_H
 #include "Hourglass_Allegro.h"
@@ -26,5 +18,4 @@ private:
 	static const int LEVEL_WIDTH = 32;
 	static const int LEVEL_HEIGHT = 19;
 };
-
 #endif //HOURGLASS_LOADER_H

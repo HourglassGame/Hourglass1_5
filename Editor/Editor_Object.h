@@ -12,13 +12,11 @@ class Object
 {
 public:
 	Object(const int newXPos = 0,const int newYPos = 0);
-	
 	virtual ~Object();
 	
-	void SetData(const int newXPos,const int newYPos);
-	void SetPos(const int newXPos,const int newYPos);
+	void SetPos(const int newXPos = 0,const int newYPos = 0);
 	virtual void DoDraw() = 0;
-	virtual void DoGui() = 0;
+	void DoGui();
 	void SetSelected(const bool newSelected = 0);
 	bool DoSelectionCheck();
 	virtual std::string GetOutputString() = 0;
@@ -26,8 +24,8 @@ public:
 	virtual int GetYSize() = 0;
 protected:
 	std::string GetOutputStringParts();
-	void InitGui();
-	void UpdateGui();
+	virtual void InitGui();
+	virtual void UpdateGui();
 	bool drawFacing;
 	bool selected;
 	int xPos;
@@ -36,5 +34,4 @@ private:
 	IntField xPositionField;
 	IntField yPositionField;
 };
-
 #endif // OBJECT_H

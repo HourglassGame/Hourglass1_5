@@ -88,13 +88,13 @@ void Level::UpdateSelection()
 		if (mouse_b & 1) {
 			for(unsigned int i=0;i < objects.size();++i)
 			{
-				if(objects[i]->DoSelectionCheck())
+				if(objects.at(i)->DoSelectionCheck())
 				{
 					for(unsigned int j=0;j < objects.size(); ++j)
 					{
 						if(j != i)
 						{
-							objects[j]->SetSelected(false);
+							objects.at(j)->SetSelected(false);
 						}
 					}
 					objectSelected = true;
@@ -114,7 +114,7 @@ void Level::UpdateSelected()
 		{
 			DoMoveSelected();
 		}
-		if(inputs[DELETE_OBJECT].GetCurrentValue())
+		if(inputs[DELETE_OBJECT]())
 		{
 			DeleteSelectedObject();
 		}
@@ -144,7 +144,7 @@ void Level::Draw()
 	TestLevel(1);
 	for(unsigned int i=0; i < objects.size(); ++i)
     {
-        objects[i]->DoDraw();
+        objects.at(i)->DoDraw();
     }	
 }
 void Level::DrawWall()
@@ -155,7 +155,7 @@ void Level::DrawObjects()
 {
 	for(unsigned int i=0; i < objects.size(); ++i)
     {
-        objects[i]->DoDraw();
+        objects.at(i)->DoDraw();
     }	
 }
 void Level::TestLevel(const double squareSize)
@@ -167,7 +167,11 @@ void Level::TestLevel(const double squareSize)
         {
             if (wall[x][y])
             {
-                rectfill( buffer, int((x+(0.5-squareSize/2))*BLOCK_SIZE), int((y+(0.5-squareSize/2))*BLOCK_SIZE), int((x+(0.5+squareSize/2))*BLOCK_SIZE), int((y+(0.5+squareSize/2))*BLOCK_SIZE), makecol ( 70, 70, 70));
+                rectfill( buffer, static_cast<int>((x+(0.5-squareSize/2))*BLOCK_SIZE), 
+						 static_cast<int>((y+(0.5-squareSize/2))*BLOCK_SIZE),
+						 static_cast<int>((x+(0.5+squareSize/2))*BLOCK_SIZE), 
+						 static_cast<int>((y+(0.5+squareSize/2))*BLOCK_SIZE), 
+						 makecol ( 70, 70, 70));
             }
         }
     }
@@ -179,19 +183,19 @@ void Level::DoMoveSelected()
     int objectY = 0;
     if (snapToGrid)
     {
-        objectX = int(gridSize*floor(double(mouse_x/gridSize)));
-        objectY = int(gridSize*floor(double(mouse_y/gridSize)));
+        objectX = static_cast<int>(gridSize*floor(static_cast<double>(mouse_x/gridSize)));
+        objectY = static_cast<int>(gridSize*floor(static_cast<double>(mouse_y/gridSize)));
     }             
     else
     {
-        objectX = int(floor(mouse_x));
-        objectY = int(floor(mouse_y));
+        objectX = static_cast<int>(floor(mouse_x));
+        objectY = static_cast<int>(floor(mouse_y));
     }
     
-    if(objectX <= LEVEL_WIDTH*BLOCK_SIZE-objects[selectedObject]->GetXSize() && 
-	   objectY <= LEVEL_HEIGHT*BLOCK_SIZE-objects[selectedObject]->GetYSize())
+    if(objectX <= LEVEL_WIDTH*BLOCK_SIZE-objects.at(selectedObject)->GetXSize() && 
+	   objectY <= LEVEL_HEIGHT*BLOCK_SIZE-objects.at(selectedObject)->GetYSize())
     {
-        objects[selectedObject]->SetPos(objectX,objectY);
+        objects.at(selectedObject)->SetPos(objectX,objectY);
     }
 }
 
@@ -201,7 +205,7 @@ void Level::DeleteSelectedObject()
     //(although that can't happen with the current code)
 	std::vector<Object*>::iterator it = objects.begin();
     it += selectedObject;
-    delete objects[selectedObject];
+    delete objects.at(selectedObject);
     objects.erase(it);
     selectedObject = -1;
     objectSelected = false;
@@ -224,7 +228,7 @@ void Level::UpdateGUI()
 {
 	if (objectSelected)
 	{
-		objects[selectedObject]->DoGui();
+		objects.at(selectedObject)->DoGui();
 	} 
 }
 
@@ -232,8 +236,8 @@ Object* Level::GetNextObject()
 {
 	if (nextObject < objects.size())
 	{
-	++nextObject;
-	return (objects.at(nextObject - 1));
+		++nextObject;
+		return (objects.at(nextObject - 1));
 	}
 	else {
 		return NULL;

@@ -1,11 +1,3 @@
-/*
- *  TextField.h
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
 #ifndef HOURGLASS_INT_FIELD_H
 #define HOURGLASS_INT_FIELD_H
 #include "Hourglass_Allegro.h"
@@ -26,5 +18,4 @@ public:
 private:
 	std::string readVal(int input);
 };
-
 #endif //HOURGLASS_INT_FIELD_H

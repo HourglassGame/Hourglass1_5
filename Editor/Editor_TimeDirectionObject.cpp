@@ -5,30 +5,16 @@ TimeDirectionObject::TimeDirectionObject(AbsoluteTimeDirectionEnum newATD) :
 	startDirectionField(DoubleField(200,648,10,1))
 { }
 
-// class destructor
 TimeDirectionObject::~TimeDirectionObject()
 { }
 
 void TimeDirectionObject::InitGui()
 {
-	startDirectionField.Init(double((direction ==  FORWARDS) ? 1 : ((direction == BACKWARDS) ? -1 : 0)));	
+	startDirectionField.Init(static_cast<double>(direction));	
 }
 void TimeDirectionObject::UpdateGui()
 {
-	switch (int(startDirectionField.Update())) {
-		case 1:
-			direction = FORWARDS;
-			break;
-		case 0:
-			direction = PAUSED;
-			break;
-		case -1:
-			direction = BACKWARDS;
-			break;
-		default:
-			//allegro_message("startDirectionField.Update() fell through to default");
-			break;
-	}
+	direction = static_cast<AbsoluteTimeDirectionEnum>(static_cast<int>(startDirectionField.Update()));
 }
 std::string TimeDirectionObject::GetOutputStringParts()
 {

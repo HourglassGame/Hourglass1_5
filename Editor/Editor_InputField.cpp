@@ -1,23 +1,3 @@
-/*
- *  Editor_InputField.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 18/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
-#include "Editor_InputField.h"
-
-/*
- *  TextField.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "Editor_InputField.h"
 extern BITMAP* buffer;
 extern std::map<HourglassInput,SwitchingInput> inputs;
@@ -50,42 +30,3 @@ void InputField::TranslateInputs()
         it->second.Update();
     }
 }
-//std::string InputField::readVal(int input)
-//{
-
-//	std::string output("");
-	/*
-	if ((input & 0xff) == '0') {
-		output.assign("0");
-	}
-	else if ((input & 0xff) == '1') {
-		output.assign("1");
-	}
-	else if ((input & 0xff) == '2') {
-		output.assign("2");
-	}
-	else if ((input & 0xff) == '3') {
-		output.assign("3");
-	}
-	else if ((input & 0xff) == '4') {
-		output.assign("4");
-	}
-	else if ((input & 0xff) == '5') {
-		output.assign("5");
-	}
-	else if ((input & 0xff) == '6') {
-		output.assign("6");
-	}
-	else if ((input & 0xff) == '7') {
-		output.assign("7");
-	}
-	else if ((input & 0xff) == '8') {
-		output.assign("8");
-	}
-	else if ((input & 0xff) == '9') {
-		output.assign("9");
-	}
-	 */
-//	return output;
-	
-//}

@@ -29,7 +29,6 @@ Loader(str)
 {
 }
 
-// class destructor
 ImageLoader::~ImageLoader()
 {
 }

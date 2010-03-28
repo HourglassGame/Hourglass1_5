@@ -61,7 +61,7 @@ void Menu::Draw()
 
 int Menu::Step()
 {
-	if (!firstStep && inputs[REMOVE_ADD_OBJECT_MENU].GetCurrentValue()) {// || inputs[ADD_ADD_OBJECT_MENU].GetCurrentValue()) {
+	if (!firstStep && inputs[REMOVE_ADD_OBJECT_MENU]()) {// || inputs[ADD_ADD_OBJECT_MENU]()) {
 		return 0;
 	}
 	firstStep = false;

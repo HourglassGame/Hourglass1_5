@@ -1,12 +1,3 @@
-/*
- *  Exceptions.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 15/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "Editor_Exceptions.h"
 
 // class constructor

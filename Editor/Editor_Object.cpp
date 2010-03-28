@@ -13,6 +13,13 @@ Object::Object(const int newXPos,const int newYPos):
 // class destructor
 Object::~Object()
 { }
+
+void Object::DoGui()
+{
+	InitGui();
+	UpdateGui();
+}
+
 void Object::InitGui()
 {
 	xPositionField.Init(xPos);
