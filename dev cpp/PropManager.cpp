@@ -27,7 +27,7 @@ void PropManager::AddPropagation(int start_time, int direction)
 {
     
     // if the start time is in the relative past
-    if ((queuedProps and start_time*presentDirection <= presentTime*presentDirection) or start_time*absoluteTimeDirection <= absoluteTime*absoluteTimeDirection)
+    if ((queuedProps and start_time*presentDirection < presentTime*presentDirection) or start_time*absoluteTimeDirection < absoluteTime*absoluteTimeDirection)
     {
         if (!queuedProps)
         {
@@ -89,9 +89,8 @@ void PropManager::AddPropagation(int start_time, int direction)
 void PropManager::PlayerTravel(int start_time, int direction)
 {
     
-    
     // if the start time is in the relative past (or at the present)
-    if (start_time*absoluteTimeDirection <= absoluteTime*absoluteTimeDirection)
+    if (start_time*absoluteTimeDirection < absoluteTime*absoluteTimeDirection)
     {
         if (absoluteTimeDirection != direction) // if time is to be reversed
         {
@@ -100,11 +99,11 @@ void PropManager::PlayerTravel(int start_time, int direction)
             presentDirection = direction;
             
             // propagate from the departure time to the end
-            propStartTime[queuedProps] = start_time;
+            propStartTime[queuedProps] = absoluteTime-presentDirection;
             propDirection[queuedProps] = -presentDirection;
             
             changeTime = true;
-            newTime = start_time;
+            newTime = absoluteTime-presentDirection;
             newTimeDirection = -presentDirection;
             
             queuedProps++;
@@ -145,11 +144,11 @@ void PropManager::PlayerTravel(int start_time, int direction)
             presentDirection = direction;
             
             // propagate to the future
-            propStartTime[queuedProps] = absoluteTime;
-            propDirection[queuedProps] = absoluteTimeDirection;
+            propStartTime[queuedProps] = absoluteTime+direction;
+            propDirection[queuedProps] = direction;
             
             changeTime = true;
-            newTime = absoluteTime;
+            newTime = absoluteTime+direction;
             newTimeDirection = absoluteTimeDirection;
             
             queuedProps++;
@@ -173,8 +172,8 @@ bool PropManager::UpdatePropagation()
                 {
                     // start the next propagation
                     changeTime = true;
-                    newTime = propStartTime[queuedProps-1];
-                    newTimeDirection = propDirection[queuedProps-1];
+                    absoluteTime = propStartTime[queuedProps-1];
+                    absoluteTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
@@ -194,8 +193,8 @@ bool PropManager::UpdatePropagation()
                 {
                     // start the next propagation
                     changeTime = true;
-                    newTime = propStartTime[queuedProps-1];
-                    newTimeDirection = propDirection[queuedProps-1];
+                    absoluteTime = propStartTime[queuedProps-1];
+                    absoluteTimeDirection = propDirection[queuedProps-1];
                 }
                 else
                 {
@@ -207,8 +206,8 @@ bool PropManager::UpdatePropagation()
                         reverseJumpToFutureTime = 0;
                     }
                     changeTime = true;
-                    newTime = presentTime;
-                    newTimeDirection = presentDirection;
+                    absoluteTime = presentTime;
+                    absoluteTimeDirection = presentDirection;
                     
                     propagating = false;
                     return true;

@@ -278,6 +278,7 @@ void Box::PhysicsStep(int time)
                 // boxes are stepped through in height order so getting current position is all good!
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
+                int boxTimeDirection = box[i].GetTimeDirection();
                 double oldBoxY = box[i].GetY(time-timeDirection);
                 if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= oldBoxY) ) 
                 {
@@ -362,6 +363,7 @@ void Box::ReversePhysicsStep(int time)
                 // boxes are stepped through in height order so getting current position is all good!
                 double boxX = box[i].GetX(time);
                 double boxY = box[i].GetY(time);
+                int boxTimeDirection = box[i].GetTimeDirection();
                 double oldBoxY = box[i].GetY(time-timeDirection);
                 if (( newX <= boxX+BOX_WIDTH) and (newX+BOX_COLLISION_WIDTH >= boxX) and ( newY+BOX_COLLISION_HEIGHT >= boxY) and (oldY+BOX_COLLISION_HEIGHT <= oldBoxY) ) 
                 {
@@ -387,11 +389,14 @@ void Box::ReversePhysicsStep(int time)
     }
     else
     {
-        if (requireReverseCheck and (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == maxTime and timeDirection == -1))
+        if (requireReverseCheck)
         {
-            // propagate new position if end of time is reached regardless of reverse check
-            requireReverseCheck = false;
-            propManager.AddPropagation(time,timeDirection);   
+            if ( (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == maxTime-1 and timeDirection == -1))
+            {
+                // propagate new position if end of time is reached regardless of reverse check
+                requireReverseCheck = false;
+                propManager.AddPropagation(time,timeDirection);   
+            }
         }
         else
         {
