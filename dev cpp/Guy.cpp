@@ -49,7 +49,7 @@ extern int maxTime; // max time on level
 
 // physics magic numbers
 const double MOVE_SPEED = 4;
-const double JUMP_SPEED = 8;
+const double JUMP_SPEED = 5;
 const double GRAVITY = 0.17;
 
 // box variables
@@ -228,12 +228,20 @@ void Guy::PhysicsStep(int time)
                 if ( (newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) )     
                 {
                     //allegro_message("bla 1");
-                    ySpeed[time] = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
-                    newY = boxY-GUY_COLLISION_HEIGHT;
-                    if (box[i].GetSupported(time) or boxTimeDirection != timeDirection)
+                    if (boxTimeDirection != timeDirection)
                     {
                         jump = true;
+                        ySpeed[time] = box[i].GetYspeed(time-timeDirection)*boxTimeDirection*timeDirection;
                     }
+                    else
+                    {
+                        ySpeed[time] = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
+                        if (box[i].GetSupported(time))
+                        {
+                            jump = true;
+                        }
+                    }
+                    newY = boxY-GUY_COLLISION_HEIGHT;
                 }
             }
         }
@@ -341,12 +349,21 @@ void Guy::ReversePhysicsStep(int time)
                 double oldBoxY = box[i].GetY(time-timeDirection);
                 if ( (newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) )     
                 {
-                    newYspeed = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
-                    newY = boxY-GUY_COLLISION_HEIGHT;
-                    if (box[i].GetSupported(time) or boxTimeDirection != timeDirection)
+                    //allegro_message("bla 1");
+                    if (boxTimeDirection != timeDirection)
                     {
                         jump = true;
+                        newYspeed = box[i].GetYspeed(time-timeDirection)*boxTimeDirection*timeDirection;
                     }
+                    else
+                    {
+                        newYspeed = box[i].GetYspeed(time)*boxTimeDirection*timeDirection;
+                        if (box[i].GetSupported(time))
+                        {
+                            jump = true;
+                        }
+                    }
+                    newY = boxY-GUY_COLLISION_HEIGHT;
                 }
             }
         }
