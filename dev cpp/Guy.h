@@ -29,6 +29,8 @@ public:
     
     void TimeChangeHousekeeping(int oldTime,int oldTimeDir,int newTime,int newTimeDirection);
     
+    bool InsideWall(int time);
+    
     void PhysicsStep(int time);
     void ReversePhysicsStep(int time);
     

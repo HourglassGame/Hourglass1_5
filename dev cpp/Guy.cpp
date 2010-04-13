@@ -195,7 +195,7 @@ void Guy::PhysicsStep(int time)
     double newX = oldX + xSpeed[time];
     double newY = oldY + ySpeed[time];
         
-        //check wall collision in Y direction
+    //check wall collision in Y direction
     if (ySpeed[time] > 0) // down
     {
         if (wall[int(oldX/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)] or ((oldX - floor(oldX/BLOCK_SIZE)*BLOCK_SIZE > BLOCK_SIZE-GUY_COLLISION_WIDTH) and wall[int((oldX+GUY_COLLISION_WIDTH)/BLOCK_SIZE)][int((newY+GUY_COLLISION_HEIGHT)/BLOCK_SIZE)]))
@@ -215,7 +215,7 @@ void Guy::PhysicsStep(int time)
     }
          
     //check Box collision in Y direction
-    if (ySpeed[time] > 0) // down
+    if (ySpeed[time] >= 0) // down
     {
         for (int i = 0; i < boxCount; ++i)
         {
@@ -225,7 +225,7 @@ void Guy::PhysicsStep(int time)
                 double boxY = box[i].GetY(time);
                 int boxTimeDirection = box[i].GetTimeDirection();
                 double oldBoxY = box[i].GetY(time-timeDirection);
-                if ( (newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) )     
+                if ((newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) )     
                 {
                     //allegro_message("bla 1");
                     if (boxTimeDirection != timeDirection)
@@ -268,7 +268,11 @@ void Guy::PhysicsStep(int time)
     // set new locations
     x[time] = newX;
     y[time] = newY;
-        
+    if (InsideWall(time) and !paradoxTriggered)
+    {
+        allegro_message("Squished");
+        paradoxTriggered = true;
+    }
     // jump next step
     if (inputUp[personalTime] and jump)
     {
@@ -337,7 +341,7 @@ void Guy::ReversePhysicsStep(int time)
     }
         
     //check Box collision in Y direction
-    if (newYspeed > 0) // down
+    if (newYspeed >= 0) // down
     {
         for (int i = 0; i < boxCount; ++i)
         {
@@ -347,7 +351,7 @@ void Guy::ReversePhysicsStep(int time)
                 double boxY = box[i].GetY(time);
                 int boxTimeDirection = box[i].GetTimeDirection();
                 double oldBoxY = box[i].GetY(time-timeDirection);
-                if ( (newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) )     
+                if ((newX <= boxX+Box::BOX_WIDTH) and (newX+GUY_COLLISION_WIDTH >= boxX) and ( newY+GUY_COLLISION_HEIGHT >= boxY) and (oldY+GUY_COLLISION_HEIGHT <= oldBoxY) )     
                 {
                     //allegro_message("bla 1");
                     if (boxTimeDirection != timeDirection)
@@ -419,6 +423,46 @@ void Guy::ReversePhysicsStep(int time)
         }
     }
     
+}
+
+bool Guy::InsideWall(int time)
+{
+    // left, right, top and bottom coords in wall array
+    int left = int(x[time]/BLOCK_SIZE);
+    int right = int((x[time]+GUY_COLLISION_WIDTH)/BLOCK_SIZE);
+    if (int(x[time]+GUY_COLLISION_WIDTH)%BLOCK_SIZE == 0)
+    {
+        right--;   
+    }
+    int top = int(y[time]/BLOCK_SIZE);
+    int bottom = int((y[time]+GUY_COLLISION_HEIGHT)/BLOCK_SIZE);
+    if (int(y[time]+GUY_COLLISION_HEIGHT)%BLOCK_SIZE == 0)
+    {
+        bottom--;   
+    }
+    
+    // check top left wall
+    if (wall[left][top])
+    {
+        return true;
+    }
+    // check top right wall
+    if (wall[right][top])
+    {
+        return true;
+    }
+    // check bottom left wall
+    if (wall[left][bottom])
+    {
+        return true;
+    }
+    // check bottom right wall
+    if (wall[right][bottom])
+    {
+        return true;
+    }
+
+    return false;
 }
 
 void Guy::UpdateBoxCarrying(int time)
