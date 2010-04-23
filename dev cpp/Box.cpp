@@ -301,6 +301,7 @@ void Box::PhysicsStep(int time)
 
 void Box::ReversePhysicsStep(int time)
 {
+    
     double oldX = x[time-timeDirection];
     double oldY = y[time-timeDirection];    
     
@@ -391,7 +392,7 @@ void Box::ReversePhysicsStep(int time)
     {
         if (requireReverseCheck)
         {
-            if ( (absoluteTime == 1 and timeDirection == 1) or (absoluteTime == maxTime-1 and timeDirection == -1))
+            if ( (absoluteTime == 0 and timeDirection == 1) or (absoluteTime == maxTime-1 and timeDirection == -1))
             {
                 // propagate new position if end of time is reached regardless of reverse check
                 requireReverseCheck = false;
@@ -404,6 +405,11 @@ void Box::ReversePhysicsStep(int time)
         }
     }
     
+}
+
+void Box::StartReverseCheck(int time)
+{
+    // check determinism for un-assisted arrivals. ie shooting.
 }
 
 bool Box::GetActive(int time)

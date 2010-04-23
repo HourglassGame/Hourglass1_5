@@ -47,6 +47,8 @@ public:
     
     void PhysicsStep(int time);
     void ReversePhysicsStep(int time);
+    
+    void StartReverseCheck(int time);
 
 private:
     

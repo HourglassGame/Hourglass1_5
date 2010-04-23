@@ -46,7 +46,7 @@ Release=2
 <<<<<<< .mine
 Build=489
 =======
-Build=1600
+Build=1683
 >>>>>>> .r53
 LanguageID=3081
 CharsetID=1252
@@ -115,16 +115,6 @@ BuildCmd=
 FileName=Hourglass_Allegro.h
 CompileCpp=1
 Folder=time game
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit10]
-FileName=Exceptions.h
-CompileCpp=1
-Folder=
 Compile=1
 Link=1
 Priority=1000

@@ -54,6 +54,7 @@ void PropManager::AddPropagation(int start_time, int direction)
                     // push the propagation start time into the past relative to the propagation direction
                     propStartTime[queuedProps-1] = start_time;
                     newTime = start_time;
+                    changeTime = true;
                 }
                 // if the new propagation is in the future relative to the propagation direction there is no need to create a new one
             }

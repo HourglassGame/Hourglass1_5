@@ -37,7 +37,7 @@ const int MAX_BOXES = 200;
 
 int maxTime = 3000; // max abs time, no larger than 5400 or classes will need changing
 
-bool viewPropagation = false;
+bool viewPropagation = true;
 
 PropManager propManager;
 
@@ -296,7 +296,7 @@ int main()
                 box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
             }
             
-            if (absoluteTime < maxTime and absoluteTime > 0)
+            if (absoluteTime < maxTime-1 and absoluteTime > 0)
             { 
                 // reverse boxes
                 activeBoxes = 0;
@@ -371,7 +371,7 @@ int main()
                 resetParadox = false;
             }
             
-            // Most of drawing
+            // drawing
             if (!propagating or viewPropagation)
             {
                 for (int i = 0; i < currentGuyCount; ++i)
@@ -448,13 +448,13 @@ int main()
                  // progress abs time
                     absoluteTime = absoluteTime + absoluteTimeDirection;
         
-                    if (absoluteTime > maxTime)
+                    if (absoluteTime >= maxTime-1)
                     {
-                        absoluteTime = maxTime;
+                        absoluteTime = maxTime-1;
                     }
-                     if (absoluteTime < 1)
+                     if (absoluteTime <= 0)
                     {
-                        absoluteTime = 1;
+                        absoluteTime = 0;
                     }   
                 }
             }
@@ -483,16 +483,10 @@ int main()
 }   
 END_OF_MAIN()
 
-bool DetermineLevel()
+void createBoxesSingleDirection()
 {
-    // determine forwards-first determination first
     
-    // determine forwards boxes
-    relativeTime = 1;
-    absoluteTime = 1;
-    absoluteTimeDirection = 1;
-    
-    while (absoluteTime < maxTime)
+    while ((absoluteTime < maxTime and absoluteTimeDirection == 1 ) or (absoluteTime >= 0 and absoluteTimeDirection == -1 ))
     {
         // boxes
         int activeBoxes = 0;
@@ -532,14 +526,13 @@ bool DetermineLevel()
         }
         
         absoluteTime = absoluteTime + absoluteTimeDirection;
-    }
+    }   
+}
+
+void determineBoxesBothDirections(int startDirection)
+{
     
-    // determine backwards boxes
-    // these boxes can disrupt the forwards boxes
-    absoluteTime = maxTime-1;
-    absoluteTimeDirection = -1;
-    
-    while (!key[KEY_ESC] and (absoluteTime > 0 or propManager.GetQueuedProps()))
+    while (!key[KEY_ESC])
     {
         // boxes
         int activeBoxes = 0;
@@ -578,7 +571,7 @@ bool DetermineLevel()
             box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
         }
         
-        if (absoluteTime < maxTime and absoluteTime > 0)
+        if (absoluteTime < maxTime-1 and absoluteTime > 0)
         {  
             // reverse boxes
             activeBoxes = 0;
@@ -673,10 +666,44 @@ bool DetermineLevel()
             {
                 // progress asb time
                 absoluteTime = absoluteTime + absoluteTimeDirection;
+                
+                if (absoluteTime > maxTime)
+                {
+                    absoluteTime = maxTime;
+                    if (startDirection == 1)
+                    {
+                        break;   
+                    }
+                }
+                if (absoluteTime <= 0)
+                {
+                    absoluteTime = 0;
+                    if (startDirection == -1)
+                    {
+                        break;   
+                    }
+                }   
             }
         }
         
     }
+}
+
+bool DetermineLevel()
+{
+    // determine forwards-first determination first
+    relativeTime = 1;
+    
+    // determine forwards boxes
+    absoluteTime = 1;
+    absoluteTimeDirection = 1;
+    createBoxesSingleDirection();
+    
+    // determine backwards boxes
+    // these boxes can disrupt the forwards boxes
+    absoluteTime = maxTime-2;
+    absoluteTimeDirection = -1;
+    determineBoxesBothDirections(-1);
     
     // copy boxes for future comparison
     for (int i = 0; i < boxCount; ++i)
@@ -694,210 +721,28 @@ bool DetermineLevel()
         }
         else
         {
-            double x = box[i].GetX(maxTime);
-            double y = box[i].GetY(maxTime);
-            double xSpeed = box[i].GetXspeed(maxTime);
-            double ySpeed = box[i].GetYspeed(maxTime);
+            double x = box[i].GetX(maxTime-1);
+            double y = box[i].GetY(maxTime-1);
+            double xSpeed = box[i].GetXspeed(maxTime-1);
+            double ySpeed = box[i].GetYspeed(maxTime-1);
             box[i] = MintConditionBox;
             box[i].SetId(i);
-            box[i].SetStart(x,y,xSpeed,ySpeed,maxTime,-1);
+            box[i].SetStart(x,y,xSpeed,ySpeed,maxTime-1,-1);
         }
     }
     
     // determine level reverse-first
     
-    // determine reverse boxes
-    absoluteTime = maxTime-1;
+    // determine bakcwards boxes
+    absoluteTime = maxTime-2;
     absoluteTimeDirection = -1;
+    createBoxesSingleDirection();
     
-    while (absoluteTime > 0)
-    {
-        // boxes
-        int activeBoxes = 0;
-		int activeBoxOrder[MAX_BOXES];
- 
-        for (int i = 0; i < boxCount; ++i)
-        {
-            if (box[i].GetTimeDirection() == absoluteTimeDirection)
-            {
-                box[i].UpdateExist(absoluteTime);
-                box[i].SetCollideable(false);
-                    
-                if (box[i].GetActive(absoluteTime) )
-                {
-                    double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
-                    activeBoxOrder[activeBoxes] = i;
-                    for (int j = 0; j < activeBoxes; ++j)
-                    {
-                        if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
-                        {
-                            for (int k = activeBoxes; k > j; --k)
-                            {
-                                   activeBoxOrder[k] = activeBoxOrder[k-1];
-                            }
-                            activeBoxOrder[j] = i;
-                            break;
-                        }
-                    }
-                    activeBoxes++;
-                }
-            }
-        }
-        
-        for (int i = 0; i < activeBoxes; ++i)
-        {
-            box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
-        }
-        
-        absoluteTime = absoluteTime + absoluteTimeDirection;
-    }
-    
-    // determine forwards
-    // these boxes can disrupt the backwards boxes
+    // determine backwards boxes
+    // these boxes can disrupt the forwards boxes
     absoluteTime = 1;
     absoluteTimeDirection = 1;
-    
-    while (!key[KEY_ESC] and (absoluteTime < maxTime or propManager.GetQueuedProps()))
-    {
-        // boxes
-        int activeBoxes = 0;
-		int activeBoxOrder[MAX_BOXES];
- 
-        if (absoluteTime < maxTime)
-        {
-            for (int i = 0; i < boxCount; ++i)
-            {
-                if (box[i].GetTimeDirection() == absoluteTimeDirection)
-                {
-                    box[i].UpdateExist(absoluteTime);
-                    box[i].SetCollideable(false);
-                        
-                    if (box[i].GetActive(absoluteTime) )
-                    {
-                        double boxY = box[i].GetY(absoluteTime-absoluteTimeDirection);
-                        activeBoxOrder[activeBoxes] = i;
-                        for (int j = 0; j < activeBoxes; ++j)
-                        {
-                            if (box[activeBoxOrder[j]].GetY(absoluteTime-absoluteTimeDirection) < boxY)
-                            {
-                                for (int k = activeBoxes; k > j; --k)
-                                {
-                                       activeBoxOrder[k] = activeBoxOrder[k-1];
-                                }
-                                activeBoxOrder[j] = i;
-                                break;
-                            }
-                        }
-                        activeBoxes++;
-                    }
-                }
-            }
-            
-            for (int i = 0; i < activeBoxes; ++i)
-            {
-                box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
-            }
-        }
-        
-        if (absoluteTime < maxTime and absoluteTime > 0)
-        { 
-            // reverse boxes
-            activeBoxes = 0;
-    		activeBoxOrder[MAX_BOXES];
-     
-            for (int i = 0; i < boxCount; ++i)
-            {
-                if (box[i].GetTimeDirection() != absoluteTimeDirection)
-                {
-                    box[i].UpdateExist(absoluteTime);
-                    box[i].SetCollideable(false);
-                        
-                    if (box[i].GetActive(absoluteTime))
-                    {
-                        double boxY = box[i].GetY(absoluteTime);
-                        activeBoxOrder[activeBoxes] = i;
-                        for (int j = 0; j < activeBoxes; ++j)
-                        {
-                            if (box[activeBoxOrder[j]].GetY(absoluteTime) < boxY)
-                            {
-                                for (int k = activeBoxes; k > j; --k)
-                                {
-                                       activeBoxOrder[k] = activeBoxOrder[k-1];
-                                }
-                                activeBoxOrder[j] = i;
-                                break;
-                            }
-                        }
-                        activeBoxes++;
-                    }
-                }
-            }
-            
-            for (int i = 0; i < activeBoxes; ++i)
-            {
-                box[activeBoxOrder[i]].ReversePhysicsStep(absoluteTime-absoluteTimeDirection);
-            }
-        }
-        
-        
-        // draw, for testing
-        /*
-        //blank the area of the buffer, faster than copying over entire foreground and background every frame, remember to implement fully
-        rectfill( buffer, 100, 150, 250, 250, makecol ( 0, 0, 0));
-        char testString[20];
-        sprintf(testString,"%d",absoluteTime);
-        textout_ex( buffer, font, testString, 150, 200, makecol( 255, 0, 0), makecol( 0, 0, 0) ); // display elapsed frames to ensure the steps are happening at the correct speed
-            
-        sprintf(testString,"%d",(mouse_x*3));
-        textout_ex( buffer, font, testString, 150, 240, makecol( 255, 255, 0), makecol( 0, 0, 0) );
-            
-        sprintf(testString,"%d",propManager.GetQueuedProps());
-        textout_ex( buffer, font, testString, 150, 160, makecol( 255, 255, 0), makecol( 0, 0, 0) );
-         
-        
-         for (int i = 0; i < boxCount; ++i)
-        {
-            box[i].unDrawSprite();
-        }
-                
-        for (int i = 0; i < boxCount; ++i)
-        {
-            box[i].DrawSprite(absoluteTime);
-        }   
-        Draw();
-        */
-        // if a propgation has been added that requires a time change time will be changed here
-        if (changeTime)
-        {
-            for (int i = 0; i < boxCount; ++i)
-            {
-                box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
-            }
-            changeTime = false;
-            absoluteTime = newTime;
-            absoluteTimeDirection = newTimeDirection;   
-            
-            propManager.UpdatePropagation();
-        }
-        else
-        {
-            propManager.UpdatePropagation();  
-            if (changeTime)
-            { 
-                for (int i = 0; i < boxCount; ++i)
-                {
-                    box[i].TimeChangeHousekeeping(absoluteTime,absoluteTimeDirection,newTime,newTimeDirection);
-                }
-                changeTime = false;
-            }
-            else
-            {
-                // progress asb time
-                absoluteTime = absoluteTime + absoluteTimeDirection;
-            }
-        }
-        
-    }
+    determineBoxesBothDirections(1);
     
     
     // check reverse-first against forwards-first
@@ -1032,7 +877,7 @@ void LoadLevel (char* filePath)
 						double ySpeed = atof(guyData["Y_SPEED"].data());
 						int start_time = atoi(guyData["START_TIME"].data());
 						int start_direction = atoi(guyData["START_DIRECTION"].data());
-						//bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly
+						//bool carryingBox = atoi(guyData["CARRYING_BOX"].data()); //need some kind of ascii to bool - this is ugly // oh no.. 1 = true, 0 = false. run to the hills!
 						//int absTime = atoi(guyData["ABS_TIME"].data());
 						//int relTime = atoi(guyData["REL_TIME"].data());
 						guy[guyCount].SetStart(xPos,yPos,xSpeed,ySpeed,false,0,0,start_time,start_direction,0);
@@ -1069,7 +914,7 @@ void LoadLevel (char* filePath)
 						int start_time = 0;
 						if (start_direction == -1)
 						{
-                            start_time = maxTime;
+                            start_time = maxTime-1;
                         }
 						box[boxCount].SetStart(xPos,yPos,xSpeed,ySpeed,start_time,start_direction);
 						box[boxCount].SetId(boxCount);

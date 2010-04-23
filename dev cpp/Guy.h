@@ -36,6 +36,8 @@ public:
     
     void UpdateBoxCarrying(int time);
     void UpdateTimeTravel(int time);
+    
+    void StartReverseCheck(int time);
 
     static void StoreInput(int time);
 

@@ -49,7 +49,7 @@ extern int maxTime; // max time on level
 
 // physics magic numbers
 const double MOVE_SPEED = 4;
-const double JUMP_SPEED = 5;
+const double JUMP_SPEED = 6;
 const double GRAVITY = 0.17;
 
 // box variables
@@ -408,9 +408,10 @@ void Guy::ReversePhysicsStep(int time)
     }
     else
     {
-        if (requireReverseCheck )
+        if (requireReverseCheck)
         {
-            if ((absoluteTime == 1 and timeDirection == 1) or (absoluteTime == maxTime-1 and timeDirection == -1))
+            // 
+            if ((absoluteTime == 0 and timeDirection == 1) or (absoluteTime == maxTime-1 and timeDirection == -1) )
             {
                 // propagate new position if end of time is reached regardless of reverse check
                 requireReverseCheck = false;
@@ -423,6 +424,11 @@ void Guy::ReversePhysicsStep(int time)
         }
     }
     
+}
+
+void Guy::StartReverseCheck(int time)
+{
+    // start coords will need checking for reverse time guys to see if it is still determined
 }
 
 bool Guy::InsideWall(int time)
@@ -739,6 +745,7 @@ void Guy::CheckForParadox(int time, int boxCarry, int otherTime)
     //allegro_message("bla");
     for (int i = 0; i < paradoxChecks; ++i)
     {
+        int xt = int(x[time]);int yt = int(y[time]);int xst = int(xSpeed[time]);int yst = int(ySpeed[time]);
         if (time == paradoxCheckTime[i] and int(x[time]) == paradoxCheckX[i] and int(y[time]) == paradoxCheckY[i] and int(xSpeed[time]) == paradoxCheckXspeed[i] and  int(ySpeed[time]) == paradoxCheckYspeed[i] and boxCarry == paradoxCheckCarrying[i] and otherTime == paradoxCheckOtherTime[i])
         {
             if (!paradoxTriggered)
