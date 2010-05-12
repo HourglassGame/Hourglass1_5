@@ -20,9 +20,7 @@ hg_key(newKey), modifiers(-1), type(newType), pastPressed(false), pressed(false)
 
 // class destructor
 KeyCombination::~KeyCombination()
-{
-	// insert your code here
-}
+{ }
 
 
 int KeyCombination::GetKey()

@@ -8,7 +8,7 @@
 #include <fstream>
 #include <map>
 #include <string>
-class LevelLoader : public Loader {
+class LevelLoader {
 public:
 	LevelLoader(ResourcePathType ipt = GAME);
 	LevelLoader(const std::string);
@@ -21,6 +21,7 @@ private:
 	Level* LoadLevelFromFile(const std::string filePath);
 	static const unsigned int LEVEL_WIDTH = 32;
 	static const unsigned int LEVEL_HEIGHT = 19;
+	Loader loader;
 	//static void Clear();
 };
 #endif // HOURGLASS_LEVEL_LOADER_H

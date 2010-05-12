@@ -26,7 +26,7 @@
  */
 #include "Editor_Loader.h"
 #include <string>
-class ImageLoader : public Loader
+class ImageLoader
 {
 public:
 	// class constructor
@@ -39,5 +39,6 @@ public:
 private:
 	static std::map<std::string,BITMAP*> loadedImages;
 	void DestroyImage(std::pair<std::string,BITMAP*> toDestroy);
+	Loader loader;
 };
 #endif // IMAGELOADER_H

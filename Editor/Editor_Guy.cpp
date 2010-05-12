@@ -3,10 +3,10 @@ extern BITMAP* buffer;
 extern BITMAP* guy_left_stop;
 extern BITMAP* guy_right_stop;
 
-Guy::Guy(const unsigned int newXPos, const unsigned int newYPos, const double newXSpeed, const double newYSpeed,const unsigned int newStartTime,const AbsoluteTimeDirectionEnum newATD) :
-	TimeDirectionObject(newATD),
-	MobileObject(newXSpeed,newYSpeed),
-	Object(newXPos, newYPos),
+Guy::Guy(const unsigned int newXPos, const unsigned int newYPos, const double newXSpeed, const double newYSpeed, const unsigned int newStartTime, const AbsoluteTimeDirectionEnum newATD) :
+	timeDirectionObject(TimeDirectionObject(newATD)),
+	mobileObject(MobileObject(newXSpeed,newYSpeed)),
+	object(ObjectSkeleton(newXPos, newYPos, WIDTH, HEIGHT)),
 	startTime(newStartTime),
 	startTimeField(IntField(200,628,10,1))
 { }
@@ -14,37 +14,50 @@ Guy::Guy(const unsigned int newXPos, const unsigned int newYPos, const double ne
 Guy::~Guy()
 { }
 
+void Guy::SetPos(const int newXPos,const int newYPos) {
+	object.SetPos(newXPos, newYPos);
+}
+void Guy::DoGui() {
+	object.DoGui();
+}
+void Guy::SetSelected(const bool newSelected) {
+	object.SetSelected(newSelected);
+}
+bool Guy::DoSelectionCheck() {
+	return object.DoSelectionCheck();
+}
+
 void Guy::InitGui()
 {
-	TimeDirectionObject::InitGui();
-	Object::InitGui();
-	MobileObject::InitGui();
+	timeDirectionObject.InitGui();
+	object.InitGui();
+	mobileObject.InitGui();
 	startTimeField.Init(startTime);
 }
 void Guy::UpdateGui()
 {
-	TimeDirectionObject::UpdateGui();
-	Object::UpdateGui();
-	MobileObject::UpdateGui();
+	timeDirectionObject.UpdateGui();
+	object.UpdateGui();
+	mobileObject.UpdateGui();
 	startTime = startTimeField.Update();
 }
 
 void Guy::DoDraw()
 {
-    if(drawFacing)
+    if(object.drawFacing)
     {
-        draw_sprite(buffer, guy_right_stop, xPos, yPos);
-        if(selected)
+        draw_sprite(buffer, guy_right_stop, object.xPos, object.yPos);
+        if(object.selected)
         {
-            rect(buffer,xPos,yPos,xPos+WIDTH,yPos+HEIGHT,makecol(255,0,0));
+            rect(buffer,object.xPos,object.yPos,object.xPos+WIDTH,object.yPos+HEIGHT,makecol(255,0,0));
         }
     }
     else
     {
-        draw_sprite(buffer, guy_left_stop, xPos, yPos);
-        if(selected)
+        draw_sprite(buffer, guy_left_stop, object.xPos, object.yPos);
+        if(object.selected)
         {
-            rect(buffer,xPos,yPos,xPos+WIDTH,yPos+HEIGHT,makecol(255,0,0));
+            rect(buffer,object.xPos,object.yPos,object.xPos+WIDTH,object.yPos+HEIGHT,makecol(255,0,0));
         }
     }   
 }
@@ -62,9 +75,9 @@ int Guy::GetYSize()
 std::string Guy::GetOutputString()
 {
 	std::string returnString = "<GUY>";
-	returnString += Object::GetOutputStringParts();
-	returnString += MobileObject::GetOutputStringParts();
-	returnString += TimeDirectionObject::GetOutputStringParts();
+	returnString += object.GetOutputStringParts();
+	returnString += mobileObject.GetOutputStringParts();
+	returnString += timeDirectionObject.GetOutputStringParts();
 	returnString += Guy::GetOutputStringParts();
 	returnString += "\n</GUY>";
 	return(returnString);

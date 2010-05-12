@@ -3,14 +3,14 @@
 std::map<std::string,Level*> LevelLoader::loadedLevels;
 
 LevelLoader::LevelLoader(ResourcePathType rpt) :
-Loader(rpt)
+loader(Loader(rpt))
 {
 #ifdef ALLEGRO_MINGW32
     pathToResourceDirectory = pathToResourceDirectory + "levels/";
 #endif //ALLEGRO_MINGW32
 }
 LevelLoader::LevelLoader(const std::string str) :
-Loader(str)
+loader(Loader(str))
 {}
 
 LevelLoader::~LevelLoader()

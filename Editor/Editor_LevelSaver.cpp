@@ -2,15 +2,16 @@
 
 // class constructor
 LevelSaver::LevelSaver(){}
+
 // class destructor
+LevelSaver::~LevelSaver(){}
+
 void LevelSaver::SaveLevel(Level* level, const std::string fileName)
 {
 	std::string filePath;
     filePath = fileName; //absolutePath + fileName;
 	DoSaveLevel(level, fileName.c_str());
 }
-
-LevelSaver::~LevelSaver(){}
 
 void LevelSaver::DoSaveLevel(Level* level, const std::string fileName)
 {

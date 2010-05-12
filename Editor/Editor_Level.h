@@ -44,5 +44,6 @@ private:
 	int gridSize;
 	bool canSelect;
 	unsigned int nextObject;
+	std::map<HourglassInput,SwitchingInput> inputs;
 };
 #endif //HOURGLASS_LEVEL_H

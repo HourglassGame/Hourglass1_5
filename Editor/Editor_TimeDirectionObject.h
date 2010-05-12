@@ -4,13 +4,13 @@
 #include "Editor_AbsoluteTimeDirectionEnum.h"
 #include "Editor_DoubleField.h"
 
-class TimeDirectionObject : virtual public Object
+class TimeDirectionObject //: virtual public Object
 {
-protected:
+public:
 	TimeDirectionObject(const AbsoluteTimeDirectionEnum newATD = FORWARDS);
-	virtual~ TimeDirectionObject();
-	virtual void InitGui();
-	virtual void UpdateGui();
+	~ TimeDirectionObject();
+	void InitGui();
+	void UpdateGui();
 	std::string GetOutputStringParts();
 private:
 	AbsoluteTimeDirectionEnum direction;

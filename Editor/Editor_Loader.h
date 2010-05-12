@@ -12,7 +12,7 @@ public:
 	// class destructor
 	virtual ~Loader();
 	
-protected:
+//public:
 	std::string pathToResourceDirectory;
 	std::string gameRelativeResourcePath;
 	std::string editorRelativeResourcePath;

@@ -1,6 +1,7 @@
 #include "Editor_IntField.h"
+#include "Editor_InputMap.h"
 extern BITMAP* buffer;
-extern std::map<HourglassInput,SwitchingInput> inputs;
+//std::map<HourglassInput,SwitchingInput> inputs = InputMap::GetMap();
 IntField::IntField(const int tLX,const int tLY,const int Width,const int Height) :
 InputField(tLX,tLY,Width,Height)
 {}

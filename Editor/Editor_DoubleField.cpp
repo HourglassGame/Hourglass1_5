@@ -1,15 +1,7 @@
-/*
- *  Editor_DoubleField.cpp
- *  HourglassIIMac
- *
- *  Created by Evan Wallace on 18/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
- *
- */
-
 #include "Editor_DoubleField.h"
+#include "Editor_InputMap.h"
 extern BITMAP* buffer;
-extern std::map<HourglassInput,SwitchingInput> inputs;
+//std::map<HourglassInput,SwitchingInput> inputs = InputMap::GetMap();
 DoubleField::DoubleField(const int tLX,const int tLY,const int Width,const int Height) :
 InputField(tLX,tLY,Width,Height)
 {}

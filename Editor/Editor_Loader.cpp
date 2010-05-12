@@ -3,7 +3,7 @@
  *  HourglassIIMac
  *
  *  Created by Evan Wallace on 17/03/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
+ *  Copyright 2010 Team Causality. All rights reserved.
  *
  */
 

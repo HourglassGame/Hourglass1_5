@@ -11,27 +11,16 @@
 class Object
 {
 public:
-	Object(const int newXPos = 0,const int newYPos = 0);
-	virtual ~Object();
+	Object(const int newXPos = 0,const int newYPos = 0, const int newXSize = 0, const int newYSize = 0);
+	virtual ~Object() = 0;
 	
-	void SetPos(const int newXPos = 0,const int newYPos = 0);
+	virtual void SetPos(const int newXPos, const int newYPos) = 0;
 	virtual void DoDraw() = 0;
-	void DoGui();
-	void SetSelected(const bool newSelected = 0);
-	bool DoSelectionCheck();
+	virtual void DoGui() = 0;
+	virtual void SetSelected(const bool newSelected) = 0;
+	virtual bool DoSelectionCheck() = 0;
 	virtual std::string GetOutputString() = 0;
 	virtual int GetXSize() = 0;
 	virtual int GetYSize() = 0;
-protected:
-	std::string GetOutputStringParts();
-	virtual void InitGui();
-	virtual void UpdateGui();
-	bool drawFacing;
-	bool selected;
-	int xPos;
-	int yPos;
-private:
-	IntField xPositionField;
-	IntField yPositionField;
 };
 #endif // OBJECT_H

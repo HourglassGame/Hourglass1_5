@@ -3,33 +3,45 @@ extern BITMAP* buffer;
 extern BITMAP* box_sprite;
 
 Box::Box(const int newXPos, const int newYPos, const double newXSpeed, const double newYSpeed,const AbsoluteTimeDirectionEnum newATD) :
-TimeDirectionObject(newATD),
-MobileObject(newXSpeed,newYSpeed),
-Object(newXPos,newYPos)
+timeDirectionObject(TimeDirectionObject(newATD)),
+mobileObject(MobileObject(newXSpeed,newYSpeed)),
+object(ObjectSkeleton(newXPos,newYPos,WIDTH,HEIGHT))
 { }
 
 Box::~Box()
 { }
 
+void Box::SetPos(const int newXPos, const int newYPos) {
+	object.SetPos(newXPos, newYPos);
+}
+void Box::DoGui() {
+	object.DoGui();
+}
+bool Box::DoSelectionCheck() {
+	return object.DoSelectionCheck();
+}
+void Box::SetSelected(const bool newSelected) {
+	object.SetSelected(newSelected);
+}
 void Box::InitGui()
 {
-	TimeDirectionObject::InitGui();
-	Object::InitGui();
-	MobileObject::InitGui();
+	timeDirectionObject.InitGui();
+	object.InitGui();
+	mobileObject.InitGui();
 }
 void Box::UpdateGui()
 {
-	TimeDirectionObject::UpdateGui();
-	Object::UpdateGui();
-	MobileObject::UpdateGui();
+	timeDirectionObject.UpdateGui();
+	object.UpdateGui();
+	mobileObject.UpdateGui();
 }
 
 void Box::DoDraw()
 {
-    draw_sprite(buffer, box_sprite, xPos, yPos);
-    if(selected)
+    draw_sprite(buffer, box_sprite, object.xPos, object.yPos);
+    if(object.selected)
     {
-        rect(buffer,xPos,yPos,xPos+WIDTH,yPos+HEIGHT,makecol(255,0,0));
+        rect(buffer,object.xPos,object.yPos,object.xPos+WIDTH,object.yPos+HEIGHT,makecol(255,0,0));
     }
 }
 
@@ -45,9 +57,9 @@ int Box::GetYSize()
 std::string Box::GetOutputString()
 {
 	std::string returnString = "<BOX>";
-	returnString += Object::GetOutputStringParts();
-	returnString += MobileObject::GetOutputStringParts();
-	returnString += TimeDirectionObject::GetOutputStringParts();
+	returnString += object.GetOutputStringParts();
+	returnString += mobileObject.GetOutputStringParts();
+	returnString += timeDirectionObject.GetOutputStringParts();
 	returnString += "\n</BOX>";
 	return(returnString);
 }

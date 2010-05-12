@@ -8,10 +8,11 @@
  */
 
 #include "Editor_Level.h"
-
+#include "Editor_InputMap.h"
 extern BITMAP* buffer;
-extern std::map<HourglassInput,SwitchingInput> inputs;
+//std::map<HourglassInput,SwitchingInput> inputs = InputMap::GetMap();
 Level::Level() :
+inputs(InputMap::GetMap()),
 snapToGrid(true),
 gridSize(16),
 objectSelected(false),

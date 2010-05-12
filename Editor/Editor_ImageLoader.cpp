@@ -17,26 +17,27 @@
 
 std::map<std::string,BITMAP*> ImageLoader::loadedImages;
 ImageLoader::ImageLoader(const ResourcePathType rpt) :
-Loader(rpt)
+loader(Loader(rpt))
 {
 #ifdef ALLEGRO_MINGW32
-    pathToResourceDirectory = pathToResourceDirectory + "images/";
+    loader.pathToResourceDirectory += "images/";
 #endif
 }
 
 ImageLoader::ImageLoader(const std::string str) :
-Loader(str)
+loader(Loader(str))
 {
 }
 
 ImageLoader::~ImageLoader()
 {
+	//delete loader;
 }
 
 BITMAP* ImageLoader::LoadImage(const std::string fileName)
 {
 	std::string filePath;
-    filePath = pathToResourceDirectory + fileName;
+    filePath = loader.pathToResourceDirectory + fileName;
 	if (loadedImages.find(filePath) == loadedImages.end()) {
 		BITMAP* newBitmap = load_bitmap(filePath.c_str(), NULL);
 		if (!newBitmap)

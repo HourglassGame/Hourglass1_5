@@ -4,9 +4,6 @@
 #include "Editor_ImageLoader.h"
 #include <map>
 #include "Editor_SwitchingInput.h"
-/*
- * No description
- */
 
 class Menu
 {

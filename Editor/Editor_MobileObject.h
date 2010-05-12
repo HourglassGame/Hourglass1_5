@@ -2,13 +2,13 @@
 #define HOURGLASS_MOBILE_OBJECT_H
 #include "Editor_Object.h"
 #include "Editor_DoubleField.h"
-class MobileObject : virtual public Object
+class MobileObject
 {
-protected:
+public:
 	MobileObject(const double newXSpeed = 0,const double newYSpeed = 0);
-	virtual~ MobileObject();
-	virtual void InitGui();
-	virtual void UpdateGui();
+	~ MobileObject();
+	void InitGui();
+	void UpdateGui();
 	std::string GetOutputStringParts();
 private:
 	double xSpeed;

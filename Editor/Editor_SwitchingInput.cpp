@@ -6,15 +6,11 @@ SwitchingInput::SwitchingInput() :
     currentValue(false),
     isToggledOn(false),
 	assignedCombinations(std::list<KeyCombination*>())
-{
-
-}
+{ }
 
 // class destructor
 SwitchingInput::~SwitchingInput()
-{
-	// insert your code here
-}
+{ }
 
 void SwitchingInput::Add(const int keyCode, const RepeatType repeatType, int shiftCode)
 {

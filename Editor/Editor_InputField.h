@@ -19,7 +19,8 @@ protected:
 	void TranslateInputs();
 	int x0; //Top Left x
 	int y0; //Top Left y
-	int height; //Bottom Right x
-	int width; //Bottom Right y
+	int height;
+	int width;
+	std::map<HourglassInput,SwitchingInput> inputs;
 };
 #endif //HOURGLASS_INPUT_FIELD_H

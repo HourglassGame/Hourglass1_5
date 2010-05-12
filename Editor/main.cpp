@@ -18,6 +18,7 @@
 #include "Editor_LevelLoader.h"
 #include "Editor_LevelSaver.h"
 #include "Editor_IntField.h"
+#include "Editor_InputMap.h"
 using namespace std;
 
 //Functions
@@ -97,7 +98,7 @@ const int LEVEL_HEIGHT = 19;
 const int BLOCK_SIZE = 32;
 
 map<string,Menu> menus;
-map<HourglassInput,SwitchingInput> inputs;
+map<HourglassInput,SwitchingInput> inputs = InputMap::GetMap();
 
 
 #ifdef ALLEGRO_MINGW32
@@ -424,7 +425,7 @@ void DoAddingObject()
         objectY = static_cast<int>(floor(mouse_y));
     }
     
-    if((doingAddGuy && objectX <= LEVEL_WIDTH*BLOCK_SIZE-Guy().GetXSize() && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Guy().GetYSize()) || (doingAddBox && (objectX <= LEVEL_WIDTH*BLOCK_SIZE-Box().GetXSize() && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Box().GetYSize())))
+    if((doingAddGuy && objectX <= LEVEL_WIDTH*BLOCK_SIZE-Guy::WIDTH && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Guy::HEIGHT) || (doingAddBox && (objectX <= LEVEL_WIDTH*BLOCK_SIZE-Box::WIDTH && objectY <= LEVEL_HEIGHT*BLOCK_SIZE-Box::HEIGHT)))
     {
         if (doingAddGuy)
         {
