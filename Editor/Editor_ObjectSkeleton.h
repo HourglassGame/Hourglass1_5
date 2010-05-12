@@ -17,19 +17,23 @@ public:
 	~ObjectSkeleton();
 	
 	void SetPos(const int newXPos = 0,const int newYPos = 0);
-	void DoGui();
 	void SetSelected(const bool newSelected = 0);
 	bool DoSelectionCheck();
 	std::string GetOutputStringParts();
 	void InitGui();
 	void UpdateGui();
-	bool drawFacing;
-	bool selected;
+	int GetXPos();
+	int GetYPos();
+	bool IsFacingRight();
+	bool IsSelected();
+private:
 	int xPos;
 	int yPos;
 	int xSize;
 	int ySize;
-private:
+	bool drawFacing;
+	bool selected;
+	
 	IntField xPositionField;
 	IntField yPositionField;
 };

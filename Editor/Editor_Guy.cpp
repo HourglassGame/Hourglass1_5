@@ -18,7 +18,8 @@ void Guy::SetPos(const int newXPos,const int newYPos) {
 	object.SetPos(newXPos, newYPos);
 }
 void Guy::DoGui() {
-	object.DoGui();
+	InitGui();
+	UpdateGui();
 }
 void Guy::SetSelected(const bool newSelected) {
 	object.SetSelected(newSelected);
@@ -44,20 +45,20 @@ void Guy::UpdateGui()
 
 void Guy::DoDraw()
 {
-    if(object.drawFacing)
+    if(object.IsFacingRight())
     {
-        draw_sprite(buffer, guy_right_stop, object.xPos, object.yPos);
-        if(object.selected)
+        draw_sprite(buffer, guy_right_stop, object.GetXPos(), object.GetYPos());
+        if(object.IsSelected())
         {
-            rect(buffer,object.xPos,object.yPos,object.xPos+WIDTH,object.yPos+HEIGHT,makecol(255,0,0));
+            rect(buffer,object.GetXPos(),object.GetYPos(),object.GetXPos()+WIDTH,object.GetYPos()+HEIGHT,makecol(255,0,0));
         }
     }
     else
     {
-        draw_sprite(buffer, guy_left_stop, object.xPos, object.yPos);
-        if(object.selected)
+        draw_sprite(buffer, guy_left_stop, object.GetXPos(), object.GetYPos());
+        if(object.IsSelected())
         {
-            rect(buffer,object.xPos,object.yPos,object.xPos+WIDTH,object.yPos+HEIGHT,makecol(255,0,0));
+            rect(buffer,object.GetXPos(),object.GetYPos(),object.GetXPos()+WIDTH,object.GetYPos()+HEIGHT,makecol(255,0,0));
         }
     }   
 }

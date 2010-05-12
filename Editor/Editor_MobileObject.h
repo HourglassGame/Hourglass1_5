@@ -6,7 +6,7 @@ class MobileObject
 {
 public:
 	MobileObject(const double newXSpeed = 0,const double newYSpeed = 0);
-	~ MobileObject();
+	~MobileObject();
 	void InitGui();
 	void UpdateGui();
 	std::string GetOutputStringParts();

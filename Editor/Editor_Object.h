@@ -11,7 +11,7 @@
 class Object
 {
 public:
-	Object(const int newXPos = 0,const int newYPos = 0, const int newXSize = 0, const int newYSize = 0);
+	Object(const int newXPos = 0, const int newYPos = 0, const int newXSize = 0, const int newYSize = 0);
 	virtual ~Object() = 0;
 	
 	virtual void SetPos(const int newXPos, const int newYPos) = 0;

@@ -20,15 +20,10 @@ selected(false),
 xPositionField(IntField(100,628,10,1)),
 yPositionField(IntField(100,648,10,1))
 { }
+
 // class destructor
 ObjectSkeleton::~ObjectSkeleton()
 { }
-
-void ObjectSkeleton::DoGui()
-{
-	InitGui();
-	UpdateGui();
-}
 
 void ObjectSkeleton::InitGui()
 {
@@ -59,6 +54,13 @@ void ObjectSkeleton::SetSelected(bool newSelected)
 	selected = newSelected;    
 }
 
+int ObjectSkeleton::GetXPos() {
+	return xPos;
+}
+int ObjectSkeleton::GetYPos() {
+	return yPos;
+}
+
 bool ObjectSkeleton::DoSelectionCheck()
 {
 	if(mouse_x > xPos && mouse_x < xPos + xSize && mouse_y > yPos && mouse_y < yPos + ySize)
@@ -69,3 +71,9 @@ bool ObjectSkeleton::DoSelectionCheck()
 	return(false);
 }
 
+bool ObjectSkeleton::IsFacingRight() {
+	return drawFacing;
+}
+bool ObjectSkeleton::IsSelected() {
+	return selected;
+}

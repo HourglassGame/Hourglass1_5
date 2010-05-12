@@ -15,7 +15,8 @@ void Box::SetPos(const int newXPos, const int newYPos) {
 	object.SetPos(newXPos, newYPos);
 }
 void Box::DoGui() {
-	object.DoGui();
+	InitGui();
+	UpdateGui();
 }
 bool Box::DoSelectionCheck() {
 	return object.DoSelectionCheck();
@@ -38,10 +39,10 @@ void Box::UpdateGui()
 
 void Box::DoDraw()
 {
-    draw_sprite(buffer, box_sprite, object.xPos, object.yPos);
-    if(object.selected)
+    draw_sprite(buffer, box_sprite, object.GetXPos(), object.GetYPos());
+    if(object.IsSelected())
     {
-        rect(buffer,object.xPos,object.yPos,object.xPos+WIDTH,object.yPos+HEIGHT,makecol(255,0,0));
+        rect(buffer,object.GetXPos(),object.GetYPos(),object.GetXPos()+WIDTH,object.GetYPos()+HEIGHT,makecol(255,0,0));
     }
 }
 
