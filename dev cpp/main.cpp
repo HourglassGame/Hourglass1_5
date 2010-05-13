@@ -35,7 +35,11 @@ int newTimeDirection;
 const int MAX_GUYS = 200;
 const int MAX_BOXES = 200;
 
-int maxTime = 3000; // max abs time, no larger than 5400 or classes will need changing
+int maxTime = 500; // max abs time, no larger than 5400 or classes will need changing
+
+// [absoluteTime = 0] is to [absoluteTime = maxTime]
+// forwards positions at [absoluteTime = 0] are unchangeable
+// backwards positions at [absoluteTime = maxTime] are unchangeable
 
 bool viewPropagation = true;
 
@@ -164,7 +168,7 @@ int main()
     // load level
 	//allegro_message("y1");
     char tempPath[MAX_PATH];
-    StringAdd(levelPath,"testlevel.lvl",tempPath);
+    StringAdd(levelPath,"reverse_box_challenge.lvl",tempPath);
     try
     {
         LoadLevel(tempPath);//"C:/Dev-Cpp/Projects/time game/resources/levels/testlevel.lvl");
@@ -296,7 +300,7 @@ int main()
                 box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
             }
             
-            if (absoluteTime < maxTime-1 and absoluteTime > 0)
+            if (absoluteTime < maxTime and absoluteTime > 0)
             { 
                 // reverse boxes
                 activeBoxes = 0;
@@ -448,11 +452,11 @@ int main()
                  // progress abs time
                     absoluteTime = absoluteTime + absoluteTimeDirection;
         
-                    if (absoluteTime >= maxTime-1)
+                    if (absoluteTime > maxTime)
                     {
-                        absoluteTime = maxTime-1;
+                        absoluteTime = maxTime;
                     }
-                     if (absoluteTime <= 0)
+                     if (absoluteTime < 0)
                     {
                         absoluteTime = 0;
                     }   
@@ -571,7 +575,7 @@ void determineBoxesBothDirections(int startDirection)
             box[activeBoxOrder[i]].PhysicsStep(absoluteTime);
         }
         
-        if (absoluteTime < maxTime-1 and absoluteTime > 0)
+        if (absoluteTime < maxTime and absoluteTime > 0)
         {  
             // reverse boxes
             activeBoxes = 0;
@@ -675,7 +679,7 @@ void determineBoxesBothDirections(int startDirection)
                         break;   
                     }
                 }
-                if (absoluteTime <= 0)
+                if (absoluteTime < 0)
                 {
                     absoluteTime = 0;
                     if (startDirection == -1)

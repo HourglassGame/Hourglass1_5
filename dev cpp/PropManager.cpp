@@ -186,7 +186,7 @@ bool PropManager::UpdatePropagation()
         }
         else // if the most recent propagation is relative reverse
         {
-            if ( (absoluteTime == 1 and propDirection[queuedProps-1] == -1) or (absoluteTime == maxTime and propDirection[queuedProps-1] == 1) )
+            if ( (absoluteTime == 0 and propDirection[queuedProps-1] == -1) or (absoluteTime == maxTime and propDirection[queuedProps-1] == 1) )
             // abs time has reached the far past
             {
                 queuedProps--; // finish current propagation
